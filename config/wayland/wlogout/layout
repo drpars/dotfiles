@@ -1,0 +1,35 @@
+{
+    "label" : "lock",
+    "action" : "swaylock",
+    "text" : "Kilitle"
+}
+
+{
+    "label" : "hibernate",
+    "action" : "systemctl hibernate",
+    "text" : "Hazırda Beklet"
+}
+
+{
+    "label" : "logout",
+    "action" : "hyprctl dispatch exit 0",
+    "text" : "Oturumu Kapat"
+}
+
+{
+    "label" : "shutdown",
+    "action" : "systemctl poweroff",
+    "text" : "Bilgisayarı Kapat"
+}
+
+{
+    "label" : "suspend",
+    "action" : "systemctl suspend",
+    "text" : "Askıya Al"
+}
+
+{
+    "label" : "reboot",
+    "action" : "systemctl reboot",
+    "text" : "Yeniden Başlat"
+}
