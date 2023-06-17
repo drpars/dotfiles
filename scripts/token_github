@@ -4,7 +4,7 @@
 # clone dir
 DIR=~/Belgeler/lab/github
 if [ ! -d $DIR ]; then
-  mkdir -p $DIR
+	mkdir -p $DIR
 fi
 # paste güthub token --> token=
 token=try
@@ -16,8 +16,7 @@ install-arch
 nvim"
 
 for sel in $repo; do
-  git clone https://github.com/drpars/$sel.git $DIR
-  cd $sel
-  echo "git remote set-url origin https://drpars:$token@github.com/drpars/$sel.git"
-  cd ..
+	git clone https://github.com/drpars/$sel.git $DIR/$sel
+	cd $DIR/$sel
+	git remote set-url origin https://drpars:$token@github.com/drpars/$sel.git
 done
