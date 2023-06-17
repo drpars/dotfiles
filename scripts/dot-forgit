@@ -2,8 +2,20 @@
 
 BACKUPDIR=~/Belgeler/lab/github/backup$(date +%d-%H%M%S)
 if [ ! -d $BACKUPDIR/wayland ]; then
-	mkdir -p $BACKUPDIR/wayland
+	mkdir -p $BACKUPDIR/{dot,wayland}
 fi
+
+# check and backup user dir config files
+for DIR in .gtkrc-2.0 .zshrc; do
+  DOTDIR=~/Belgeler/lab/github/dotfiles/$DIR
+	if [ -d "$DOTDIR1" ]; then
+		echo -e "Config for $DIR located, backing up."
+		mv $DOTDIR1 $BACKUPDIR/dot
+		echo -e "Backed up $DIR to $BACKUPDIR"
+	fi
+	# copy used config files for git directory.
+	cp ~/.{.gtkrc-2.0,.zshrc} ~/Belgeler/lab/github/dotfiles/
+done
 
 # check for existing config folders and backup
 for DIR in hypr mako scripts swaylock waybar wlogout wofi; do
