@@ -1,0 +1,5 @@
+[Style]
+DolphinSidebarOpacity=90
+MenuOpacity=90
+SidePanelDrawFrame=true
+TabDrawHighlight=true

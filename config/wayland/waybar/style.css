@@ -16,10 +16,10 @@ tooltip {
     background: #1e1e2e;
     opacity: 0.95;
     border: none;
-    border-radius: 10px;
-    border-width: 2px;
-    border-style: solid;
-    border-color: #11111b;
+    /* border-radius: 10px; */
+    /* border-width: 2px; */
+    /* border-style: dashed; */
+    /* border-color: #11111b; */
 }
 
 tooltip label{
@@ -64,7 +64,7 @@ tooltip label{
 #custom-cycle_wall,
 #memory,
 #clock,
-#pulseaudio,
+#wireplumber,
 #bluetooth,
 #network,
 #tray,
@@ -79,7 +79,8 @@ tooltip label{
 }
 
 #tray  {
-    border-radius: 10px 0px 0px 10px;
+    border-radius: 10px 10px 10px 10px;
+    margin-left: 10px;
     margin-right: 10px;
 }
 
@@ -87,7 +88,7 @@ tooltip label{
     border-radius: 10px 0px 0px 10px;
 }
 
-#custom-power_btn, #workspaces, #pulseaudio.microphone, #disk {
+#custom-power_btn, #workspaces, #disk {
     border-radius: 0px 10px 10px 0px;
     margin-right: 10px;
 }
@@ -114,14 +115,9 @@ tooltip label{
     border-right: 0px;
 }
 
-#pulseaudio {
-    color: #89b4fa;
-    border-left: 0px;
-    border-right: 0px;
-}
-
-#pulseaudio.microphone {
-    color: #cba6f7;
+#wireplumber {
+    border-radius: 0px 10px 10px 0px;
+    /* color: #89b4fa; */
     border-left: 0px;
     border-right: 0px;
 }

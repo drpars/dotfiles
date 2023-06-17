@@ -1,5 +1,5 @@
 [Midnight-Commander]
-verbose=true
+verbose=false
 shell_patterns=true
 auto_save_setup=true
 preallocate_space=false
@@ -85,6 +85,8 @@ editor_stop_format_chars=-+*\\,.;:&>
 mcview_eof=
 skin=modarin256-defbg
 
+filepos_max_saved_entries=1024
+
 [Layout]
 output_lines=0
 left_panel_size=69
@@ -118,6 +120,8 @@ alacritty=
 color_terminals=
 
 xterm-kitty=
+
+xterm-256color=
 
 [Panels]
 show_mini_info=true

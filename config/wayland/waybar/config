@@ -9,7 +9,7 @@
 
     "modules-left": ["custom/launch_wofi","wlr/workspaces","cpu","memory","disk","hyprland/window"],
     "modules-center": ["custom/lock_screen","custom/updates","clock","custom/cycle_wall","custom/power_btn"],
-    "modules-right": ["temperature","pulseaudio","pulseaudio#microphone","tray"],
+    "modules-right": ["temperature","wireplumber","tray"],
 
     "hyprland/window": {
         "format": "{}"
@@ -120,36 +120,16 @@
                 }
     },
 
-    "pulseaudio": {
-        "format": "{icon} {volume}%",
-        "format-muted": "",
-        "on-click": "~/.config/scripts/waybar/volume --toggle",
-        "on-click-right": "pavucontrol",
-        "on-scroll-up": "~/.config/scripts/waybar/volume --inc",
-        "on-scroll-down": "~/.config/scripts/waybar/volume --dec",
-        "scroll-step": 5,
-        "format-icons": {
-            "headphone": "",
-            "hands-free": "",
-            "headset": "",
-            "phone": "",
-            "portable": "",
-            "car": "",
-            "default": ["", "", ""]
-        }
+    "wireplumber": {
+      "format": "{volume}% {icon}",
+      "format-muted": "",
+      "on-click": "pavucontrol",
+      "on-scroll-up": "wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%+",
+      "on-scroll-down": "wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%-",
+      "max-volume": 100,
+      "format-icons": ["", "", ""]
     },
 
-    "pulseaudio#microphone": {
-        "format": "{format_source}",
-        "format-source": " {volume}%",
-        "format-source-muted": "",
-        "on-click": "~/.config/scripts/waybar/volume --toggle-mic",
-        "on-click-right": "pavucontrol",
-        "on-scroll-up": "~/.config/scripts/waybar/volume --mic-inc",
-        "on-scroll-down": "~/.config/scripts/waybar/volume --mic-dec",
-        "scroll-step": 5
-    },
-    
     "temperature": {
         "interval": 1,
         "thermal-zone": 1,
