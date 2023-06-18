@@ -17,6 +17,18 @@ for DIR in .gtkrc-2.0 .zshrc; do
 	cp ~/.{.gtkrc-2.0,.zshrc} ~/Belgeler/lab/github/dotfiles/
 done
 
+# check for existing config folders or files and backup
+for DIR in btop gtk-3.0 imv kitty mc Mousepad nwg-look qt5ct qt6ct Thunar xfce4 xsettingsd dolphinrc kdeglobals krusaderrc lightlyrc; do
+  DOTDIR2=~/Belgeler/lab/github/dotfiles/config/$DIR
+  if [ -d "$DOTDIR2" ]; then
+    echo -e "Config for $DIR located, backing up."
+    mv $DOTDIR2 $BACKUPDIR
+    echo -e "Backed up $DIR to $BACKUPDIR"
+  fi
+  # copy used config files for git directory.
+  cp -r ~/.config/{btop,gtk-3.0,imv,kitty,mc,Mousepad,nwg-look,qt5ct,qt6ct,Thunar,xfce4,xsettingsd,dolphinrc,kdeglobals,krusaderrc,lightlyrc} ~/Belgeler/lab/github/dotfiles/config/
+done
+
 # check for existing config folders and backup
 for DIR in hypr mako scripts swaylock waybar wlogout wofi; do
 	DOTDIR1=~/Belgeler/lab/github/dotfiles/config/wayland/$DIR
@@ -27,16 +39,4 @@ for DIR in hypr mako scripts swaylock waybar wlogout wofi; do
 	fi
 	# copy used config files for git directory.
 	cp -r ~/.config/{hypr,mako,scripts,swaylock,waybar,wlogout,wofi} ~/Belgeler/lab/github/dotfiles/config/wayland/
-done
-
-# check for existing config folders or files and backup
-for DIR in btop gtk-3.0 imv kitty mc Mousepad nwg-look qt5ct qt6ct Thunar xfce4 xsettingsd dolphinrc kdeglobals krusaderrc lightlyrc; do
-	DOTDIR2=~/Belgeler/lab/github/dotfiles/config/$DIR
-	if [ -d "$DOTDIR2" ]; then
-		echo -e "Config for $DIR located, backing up."
-		mv $DOTDIR2 $BACKUPDIR
-		echo -e "Backed up $DIR to $BACKUPDIR"
-	fi
-	# copy used config files for git directory.
-	cp -r ~/.config/{btop,gtk-3.0,imv,kitty,mc,Mousepad,nwg-look,qt5ct,qt6ct,Thunar,xfce4,xsettingsd,dolphinrc,kdeglobals,krusaderrc,lightlyrc} ~/Belgeler/lab/github/dotfiles/config/
 done
