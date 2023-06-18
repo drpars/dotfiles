@@ -2,7 +2,7 @@
 
 # Dependencies
 # fzf kitty
-#will be updated zenity
+# will be updated zenity
 
 movies="/mnt/Data/Filmler"
 

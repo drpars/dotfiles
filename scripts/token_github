@@ -1,22 +1,26 @@
 #!/bin/bash
-# clone github repository want to work and authorized with token
+# clone github repository want to work and authorizing token
 
 # clone dir
 DIR=~/Belgeler/lab/github
 if [ ! -d $DIR ]; then
 	mkdir -p $DIR
 fi
+
+# github user name
+user="drpars"
 # paste güthub token --> token=
-token=try
+token=
 # github repositories
 repo="
 arch-de-install
 dotfiles
 install-arch
-nvim"
+nvim
+"
 
 for sel in $repo; do
-	git clone https://github.com/drpars/$sel.git $DIR/$sel
+	git clone https://github.com/$user/$sel.git $DIR/$sel
 	cd $DIR/$sel
-	git remote set-url origin https://drpars:$token@github.com/drpars/$sel.git
+	git remote set-url origin https://$user:$token@github.com/$user/$sel.git
 done
