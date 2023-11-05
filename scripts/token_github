@@ -4,7 +4,7 @@
 # clone dir
 DIR=~/Belgeler/lab/github
 if [ ! -d $DIR ]; then
-	mkdir -p $DIR
+  mkdir -p $DIR
 fi
 
 # github user name
@@ -19,8 +19,29 @@ install-arch
 nvim
 "
 
+pars() {
+  git clone https://github.com/$user/$sel.git $DIR/$sel
+  cd $DIR/$sel
+  git remote set-url origin https://$user:$token@github.com/$user/$sel.git
+}
+
 for sel in $repo; do
-	git clone https://github.com/$user/$sel.git $DIR/$sel
-	cd $DIR/$sel
-	git remote set-url origin https://$user:$token@github.com/$user/$sel.git
+  if [ ! -d $DIR/$sel ]; then
+    pars
+  else
+    read -n1 -rep "$sel directory exist do you want to delete? (y/n) " confirm
+    if [[ $confirm =~ ^[Yy]$ ]]; then
+      rm -r $DIR/$sel
+    else
+      echo "$sel didn't deleted ... \n"
+    fi
+  fi
 done
+
+# nvim clone to .config and authorized
+read -n1 -rep "Do you want to install neovim dotfiles (y/n) " nvm
+if [[ $nvm =~ ^[Yy]$ ]]; then
+  git clone https://github.com/$user/nvim.git ~/.config/nvim
+  cd ~/.config/nvim
+  git remote set-url origin https://$user:$token@github.com/$user/nvim.git
+fi
