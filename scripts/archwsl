@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# for nevim dependencies
+sudo pacman -S --needed make npm gcc clang zig fzf zip unzip unrar p7zip lzop tar
