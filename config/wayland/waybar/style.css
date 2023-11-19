@@ -1,9 +1,9 @@
 * {
     border: none;
     border-radius: 0;
-    font-family: "Ubuntu Nerd Font Light";
+    font-family: "JetBrainsMono Nerd Font";
     font-weight: bold;
-    font-size: 12px;
+    font-size: 16px;
     min-height: 0;
 }
 
@@ -14,12 +14,11 @@ window#waybar {
 
 tooltip {
     background: #1e1e2e;
-    opacity: 0.95;
-    border: none;
-    /* border-radius: 10px; */
-    /* border-width: 2px; */
-    /* border-style: dashed; */
-    /* border-color: #11111b; */
+    opacity: 0.8;
+    border-radius: 10px;
+    border-width: 2px;
+    border-style: solid;
+    border-color: #11111b;
 }
 
 tooltip label{
@@ -56,20 +55,24 @@ tooltip label{
 
 #custom-launch_wofi,
 #custom-lock_screen,
+#custom-cycle_wall,
+#custom-myhyprv,
 #custom-power_btn,
+#custom-power_profile,
+#custom-weather,
 #window,
 #cpu,
 #disk,
 #custom-updates,
-#custom-cycle_wall,
 #memory,
 #clock,
+#battery,
 #wireplumber,
-#bluetooth,
 #network,
 #tray,
 #temperature,
-#workspaces {
+#workspaces,
+#backlight {
     background: #1e1e2e;
     opacity: 0.8;
     padding: 0px 10px;
@@ -78,17 +81,22 @@ tooltip label{
     border: 0px;
 }
 
-#tray  {
-    border-radius: 10px 10px 10px 10px;
-    margin-left: 10px;
-    margin-right: 10px;
-}
-
-#custom-lock_screen, #temperature, #custom-launch_wofi, #cpu {
+#custom-lock_screen, #temperature, #backlight, #custom-launch_wofi, #cpu {
     border-radius: 10px 0px 0px 10px;
 }
 
-#custom-power_btn, #workspaces, #disk {
+#tray {
+  border-radius: 10px;
+}
+
+#custom-weather {
+  margin-left: 10px;
+  border-radius: 10px 0px 0px 10px;
+  margin-right: 10px;
+
+}
+
+#custom-light_dark, #custom-power_btn, #workspaces, #pulseaudio.microphone, #battery, #disk {
     border-radius: 0px 10px 10px 0px;
     margin-right: 10px;
 }
@@ -101,6 +109,12 @@ tooltip label{
 #workspaces {
     padding-right: 0px;
     padding-left: 5px;
+}
+
+#custom-power_profile {
+    color: #a6e3a1;
+    border-left: 0px;
+    border-right: 0px;
 }
 
 #window {
@@ -116,20 +130,18 @@ tooltip label{
 }
 
 #wireplumber {
-    border-radius: 0px 10px 10px 0px;
-    /* color: #89b4fa; */
+    color: #89b4fa;
     border-left: 0px;
     border-right: 0px;
 }
 
-#network {
-    color: #89b4fa;
-    margin-left: 0px;
+#pulseaudio.microphone {
+    color: #cba6f7;
+    border-left: 0px;
     border-right: 0px;
 }
 
-#bluetooth {
-    color: #89b4fa;
-    margin-left: 0px;
-    border-right: 0px;
+#battery {
+    color: #a6e3a1;
+    border-left: 0px;
 }
