@@ -16,7 +16,7 @@
   ],
   "modules-center": [
     "custom/lock_screen",
-    "custom/updates",
+    "custom/pacman",
     "clock",
     "custom/cycle_wall",
     "custom/power_btn"
@@ -88,12 +88,15 @@
     "tooltip": false
   },
 
-  "custom/updates": {
-    "format": "{}",
-    "exec": "~/.config/scripts/waybar/update-sys",
-    "on-click": "~/.config/scripts/waybar/update-sys update",
-    "interval": 300,
-    "tooltip": true
+  "custom/pacman": {
+    "format": "{icon}{}",
+    "return-type": "json",
+    "format-icons": {
+      "pending-updates": " ",
+      "updated": ""
+    },
+    "exec-if": "which waybar-updates",
+    "exec": "waybar-updates"
   },
 
   "clock": {
