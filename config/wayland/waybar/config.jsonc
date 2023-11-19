@@ -117,13 +117,12 @@
 // "modules-right"
     "temperature": {
         "interval": 1,
-        "thermal-zone": 1,
-        "hwmon-path-abs": "/sys/devices/platform/coretemp.0/hwmon",
-        "input-filename": "temp1_input",
+        // "hwmon-path-abs": "/sys/devices/platform/coretemp.0/hwmon",
+        // "input-filename": "temp1_input",
         "format": " {temperatureC}°C",
         "critical-threshold": 70,
         "format-critical": " {temperatureC}°C",
-        "on-click": "kitty --title btop sh -c 'btop'"
+        // "on-click": "kitty --title btop sh -c 'btop'"
     }, 
 
     "custom/power_profile": {
@@ -194,11 +193,10 @@
     },
 
     "custom/weather": {
-        //shows the current weather and forecast
-        "tooltip" : true,
-        "format" : "{}",
-        "interval" : 30,
-        "exec" : "~/.config/scripts/waybar/waybar-wttr-c.py",
-        "return-type" : "json"
+        "format": "{} °",
+        "tooltip": true,
+        "interval": 3600,
+        "exec": "wttrbar",
+        "return-type": "json"
     }
 }
