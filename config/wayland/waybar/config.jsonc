@@ -1,131 +1,148 @@
 {
-    "layer": "top",
-    "position": "top",
-    "mod": "dock",
-    "exclusive": true,
-    "passthrough": false,
-    "gtk-layer-shell": true,
-    "height": 50,
-    "modules-left": [ "custom/launch_wofi", "wlr/workspaces", "cpu", "memory", "disk", "hyprland/window" ],
-    "modules-center": [ "custom/lock_screen", "custom/updates", "clock", "custom/cycle_wall", "custom/power_btn" ],
-    "modules-right": [ "temperature", "custom/power_profile", "battery", "backlight", "wireplumber", "pulseaudio#microphone", "tray", "custom/weather"],
+  "layer": "top",
+  "position": "top",
+  "mod": "dock",
+  "exclusive": true,
+  "passthrough": false,
+  "gtk-layer-shell": true,
+  "height": 50,
+  "modules-left": [
+    "custom/launch_wofi",
+    "hyprland/workspaces",
+    "cpu",
+    "memory",
+    "disk",
+    "hyprland/window"
+  ],
+  "modules-center": [
+    "custom/lock_screen",
+    "custom/updates",
+    "clock",
+    "custom/cycle_wall",
+    "custom/power_btn"
+  ],
+  "modules-right": [
+    "temperature",
+    "custom/power_profile",
+    "battery",
+    "backlight",
+    "wireplumber",
+    "pulseaudio#microphone",
+    "tray",
+    "custom/weather"
+  ],
 
-// "modules-left"
-    "custom/launch_wofi": {
-        "format": "",
-        "on-click": "sh -c '(sleep 0.5s; wofi)' & disown",
-        "tooltip": false
-    },
+  // "modules-left"
+  "custom/launch_wofi": {
+    "format": "",
+    "on-click": "sh -c '(sleep 0.5s; wofi)' & disown",
+    "tooltip": false
+  },
 
-    "wlr/workspaces": {
-        "disable-scroll": false,
-        "all-outputs": false,
-        "on-click": "activate",
-        "persistent_workspaces": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "10": []
-        }
-    },
+  "hyprland/workspaces": {
+    "format": "{icon}",
+    "on-click": "activate",
+    "all-outputs": false,
+    "persistent_workspaces": {
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": []
+    }
+  },
 
-    "cpu": {
-        "interval": 10,
-        "format": " {usage}%",
-        "max-length": 10,
-        "on-click": "kitty --start-as=fullscreen --title btop sh -c 'btop'"
-    },
+  "cpu": {
+    "interval": 10,
+    "format": " {usage}%",
+    "max-length": 10,
+    "on-click": "kitty --start-as=fullscreen --title btop sh -c 'btop'"
+  },
 
-    "memory": {
-        "interval": 30,
-        "format": " {}%",
-        "max-length": 10,
-        "tooltip": true,
-        "tooltip-format": "Memory - {used:0.1f}GB used",
-        "on-click": "kitty --start-as=fullscreen --title btop sh -c 'btop'"
-    },
+  "memory": {
+    "interval": 30,
+    "format": " {}%",
+    "max-length": 10,
+    "tooltip": true,
+    "tooltip-format": "Memory - {used:0.1f}GB used",
+    "on-click": "kitty --start-as=fullscreen --title btop sh -c 'btop'"
+  },
 
-    "disk": {
-        "interval": 30,
-        "format": "󰋊 {percentage_used}%",
-        "path": "/",
-        "tooltip": true,
-        "tooltip-format": "HDD - {used} used out of {total} on {path} ({percentage_used}%)",
-        "on-click": "kitty --start-as=fullscreen --title btop sh -c 'btop'"
-    },
+  "disk": {
+    "interval": 30,
+    "format": "󰋊 {percentage_used}%",
+    "path": "/",
+    "tooltip": true,
+    "tooltip-format": "HDD - {used} used out of {total} on {path} ({percentage_used}%)",
+    "on-click": "kitty --start-as=fullscreen --title btop sh -c 'btop'"
+  },
 
-    "hyprland/window": {
-        "format": "{}"
-    },
+  "hyprland/window": {
+    "format": "{}"
+  },
 
-// "modules-center"
-    "custom/lock_screen": {
-        "format": "",
-        "on-click": "sh -c '(sleep 0.5s; swaylock)' & disown",
-        "tooltip": false
-    },
+  // "modules-center"
+  "custom/lock_screen": {
+    "format": "",
+    "on-click": "sh -c '(sleep 0.5s; swaylock)' & disown",
+    "tooltip": false
+  },
 
-    "custom/updates": {
-        "format": "{}",
-        "exec": "~/.config/scripts/waybar/update-sys",
-        "on-click": "~/.config/scripts/waybar/update-sys update",
-        "interval": 300,
-        "tooltip": true
-    },
+  "custom/updates": {
+    "format": "{}",
+    "exec": "~/.config/scripts/waybar/update-sys",
+    "on-click": "~/.config/scripts/waybar/update-sys update",
+    "interval": 300,
+    "tooltip": true
+  },
 
-    "clock": {
-      //"format": "{:%I:%M %p}",
-      "format": " {:%H:%M}",
-      "format-alt": " {:%H:%M   %Y, %d %B, %A}",
-      "tooltip-format": "<tt><small>{calendar}</small></tt>",
-      "calendar": {
-        "mode"          : "year",
-        "mode-mon-col"  : 3,
-        "weeks-pos"     : "right",
-        "on-scroll"     : 1,
-        "on-click-right": "mode",
-        "format": {
-        "months":     "<span color='#ffead3'><b>{}</b></span>",
-        "days":       "<span color='#ecc6d9'><b>{}</b></span>",
-        "weeks":      "<span color='#99ffdd'><b>W{}</b></span>",
-        "weekdays":   "<span color='#ffcc66'><b>{}</b></span>",
-        "today":      "<span color='#ff6699'><b><u>{}</u></b></span>"
-        },
-        }
-    },
+  "clock": {
+    //"format": "{:%I:%M %p}",
+    "format": " {:%H:%M}",
+    "format-alt": " {:%H:%M   %Y, %d %B, %A}",
+    "tooltip-format": "<tt><small>{calendar}</small></tt>",
+    "calendar": {
+      "mode": "year",
+      "mode-mon-col": 3,
+      "weeks-pos": "right",
+      "on-scroll": 1,
+      "on-click-right": "mode",
+      "format": {
+        "months": "<span color='#ffead3'><b>{}</b></span>",
+        "days": "<span color='#ecc6d9'><b>{}</b></span>",
+        "weeks": "<span color='#99ffdd'><b>W{}</b></span>",
+        "weekdays": "<span color='#ffcc66'><b>{}</b></span>",
+        "today": "<span color='#ff6699'><b><u>{}</u></b></span>"
+      }
+    }
+  },
 
-    "custom/cycle_wall":{
-      "format":" ",
-      "on-click": "~/.config/scripts/waybar/wallpaper-switcher",
-      "on-click-right": "~/.config/scripts/waybar/changeWallpaper2",
-      "tooltip": true,
-      "tooltip-format": "Change wallpaper"
-    },
+  "custom/cycle_wall": {
+    "format": " ",
+    "on-click": "~/.config/scripts/waybar/wallpaper-switcher",
+    "on-click-right": "~/.config/scripts/waybar/changeWallpaper2",
+    "tooltip": true,
+    "tooltip-format": "Change wallpaper"
+  },
 
-    "custom/power_btn": {
-        "format": "",
-        "on-click": "sh -c '(sleep 0.5s; wlogout --protocol layer-shell)' & disown",
-        "tooltip": false
-    },
+  "custom/power_btn": {
+    "format": "",
+    "on-click": "sh -c '(sleep 0.5s; wlogout --protocol layer-shell)' & disown",
+    "tooltip": false
+  },
 
-// "modules-right"
-    "temperature": {
-        "interval": 1,
-        // "hwmon-path-abs": "/sys/devices/platform/coretemp.0/hwmon",
-        // "input-filename": "temp1_input",
-        "format": " {temperatureC}°C",
-        "critical-threshold": 70,
-        "format-critical": " {temperatureC}°C",
-        // "on-click": "kitty --title btop sh -c 'btop'"
-    }, 
+  // "modules-right"
+  "temperature": {
+    "interval": 1,
+    // "hwmon-path-abs": "/sys/devices/platform/coretemp.0/hwmon",
+    // "input-filename": "temp1_input",
+    "format": " {temperatureC}°C",
+    "critical-threshold": 70,
+    "format-critical": " {temperatureC}°C"
+    // "on-click": "kitty --title btop sh -c 'btop'"
+  },
 
-    "custom/power_profile": {
+  "custom/power_profile": {
     //shows the current power profile and switches to next on click
     "exec": "~/.config/scripts/waybar/power_profile",
     "return-type": "json",
@@ -133,70 +150,70 @@
     "format": "{}",
     "on-click": "~/.config/scripts/waybar/power_profile next",
     "signal": 8
-    },
+  },
 
-    "battery": {
-        "states": {
-            "good": 95,
-            "warning": 30,
-            "critical": 20
-        },
-        "format": "{icon} {capacity}%",
-        "format-charging": " {capacity}%",
-        "format-plugged": " {capacity}%",
-        "format-alt": "{time} {icon}",
-        "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+  "battery": {
+    "states": {
+      "good": 95,
+      "warning": 30,
+      "critical": 20
     },
+    "format": "{icon} {capacity}%",
+    "format-charging": " {capacity}%",
+    "format-plugged": " {capacity}%",
+    "format-alt": "{time} {icon}",
+    "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+  },
 
-    "backlight": {
-        "device": "intel_backlight",
-        "format": "{icon} {percent}%",
-        "format-icons": ["󰃞", "󰃟", "󰃠"],
-        "on-scroll-up": "~/.config/scripts/waybar/brightness --inc",
-        "on-scroll-down": "~/.config/scripts/waybar/brightness --dec",
-        "min-length": 6
-    },
+  "backlight": {
+    "device": "intel_backlight",
+    "format": "{icon} {percent}%",
+    "format-icons": ["󰃞", "󰃟", "󰃠"],
+    "on-scroll-up": "~/.config/scripts/waybar/brightness --inc",
+    "on-scroll-down": "~/.config/scripts/waybar/brightness --dec",
+    "min-length": 6
+  },
 
-    "wireplumber": {
-      "format": "{icon} {volume}%",
-      "format-muted": "",
-      "on-click": "pavucontrol",
-      "on-scroll-up": "wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%+",
-      "on-scroll-down": "wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%-",
-      "max-volume": 100,
-      //"format-icons": ["", "", ""]
-      "format-icons": {
-          "headphone": "",
-          "hands-free": "",
-          "headset": "",
-          "phone": "",
-          "portable": "",
-          "car": "",
-          "default": ["", "", ""]
-      }
-    },
-    
-    "pulseaudio#microphone": {
-        "format": "{format_source}",
-        "format-source": " {volume}%",
-        "format-source-muted": "",
-        "on-click": "~/.config/scripts/waybar/volume --toggle-mic",
-        "on-click-right": "pavucontrol",
-        "on-scroll-up": "~/.config/scripts/waybar/volume --mic-inc",
-        "on-scroll-down": "~/.config/scripts/waybar/volume --mic-dec",
-        "scroll-step": 5
-    },
-
-    "tray": {
-        "icon-size": 18,
-        "spacing": 10
-    },
-
-    "custom/weather": {
-        "format": "{} °",
-        "tooltip": true,
-        "interval": 3600,
-        "exec": "wttrbar --location Cankiri",
-        "return-type": "json"
+  "wireplumber": {
+    "format": "{icon} {volume}%",
+    "format-muted": "",
+    "on-click": "pavucontrol",
+    "on-scroll-up": "wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%+",
+    "on-scroll-down": "wpctl set-volume -l 1.4 @DEFAULT_AUDIO_SINK@ 5%-",
+    "max-volume": 100,
+    //"format-icons": ["", "", ""]
+    "format-icons": {
+      "headphone": "",
+      "hands-free": "",
+      "headset": "",
+      "phone": "",
+      "portable": "",
+      "car": "",
+      "default": ["", "", ""]
     }
+  },
+
+  "pulseaudio#microphone": {
+    "format": "{format_source}",
+    "format-source": " {volume}%",
+    "format-source-muted": "",
+    "on-click": "~/.config/scripts/waybar/volume --toggle-mic",
+    "on-click-right": "pavucontrol",
+    "on-scroll-up": "~/.config/scripts/waybar/volume --mic-inc",
+    "on-scroll-down": "~/.config/scripts/waybar/volume --mic-dec",
+    "scroll-step": 5
+  },
+
+  "tray": {
+    "icon-size": 18,
+    "spacing": 10
+  },
+
+  "custom/weather": {
+    "format": "{} °",
+    "tooltip": true,
+    "interval": 3600,
+    "exec": "wttrbar --location Cankiri",
+    "return-type": "json"
+  }
 }
