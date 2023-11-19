@@ -8,7 +8,7 @@
     "height": 50,
     "modules-left": [ "custom/launch_wofi", "wlr/workspaces", "cpu", "memory", "disk", "hyprland/window" ],
     "modules-center": [ "custom/lock_screen", "custom/updates", "clock", "custom/cycle_wall", "custom/power_btn" ],
-    "modules-right": [ "temperature", "custom/power_profile", "battery", "backlight", "wireplumber", "pulseaudio#microphone", "tray", "custom/weather", ],
+    "modules-right": [ "temperature", "custom/power_profile", "battery", "backlight", "wireplumber", "pulseaudio#microphone", "tray", "custom/weather"],
 
 // "modules-left"
     "custom/launch_wofi": {
@@ -96,6 +96,7 @@
         "weeks":      "<span color='#99ffdd'><b>W{}</b></span>",
         "weekdays":   "<span color='#ffcc66'><b>{}</b></span>",
         "today":      "<span color='#ff6699'><b><u>{}</u></b></span>"
+        },
         }
     },
 
@@ -173,6 +174,7 @@
           "portable": "",
           "car": "",
           "default": ["", "", ""]
+      }
     },
     
     "pulseaudio#microphone": {
@@ -197,5 +199,6 @@
         "format" : "{}",
         "interval" : 30,
         "exec" : "~/.config/scripts/waybar/waybar-wttr-c.py",
+        "return-type" : "json"
     }
 }
