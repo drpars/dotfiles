@@ -10,7 +10,7 @@ fi
 # github user name
 user="drpars"
 # paste güthub token --> token=
-token=
+token=""
 # github repositories
 repo="
 arch-de-install
@@ -25,23 +25,28 @@ pars() {
   git remote set-url origin https://$user:$token@github.com/$user/$sel.git
 }
 
-for sel in $repo; do
-  if [ ! -d $DIR/$sel ]; then
-    pars
-  else
-    read -n1 -rep "$sel directory exist do you want to delete? (y/n) " confirm
-    if [[ $confirm =~ ^[Yy]$ ]]; then
-      rm -r $DIR/$sel
+echo "Defined folder : $DIR"
+read -n1 -rep "Do you want to clone all repos to defined folder? (y,n)" clonerepos
+if [[ $clonerepos =~ ^[Yy]$ ]]; then
+  for sel in $repo; do
+    if [ ! -d $DIR/$sel ]; then
+      pars
     else
-      echo "$sel didn't deleted ... \n"
+      read -n1 -rep "$sel directory exist do you want to delete? (y,n) " confirm
+      if [[ $confirm =~ ^[Yy]$ ]]; then
+        rm -r $DIR/$sel
+      else
+        echo "$sel didn't deleted ... \n"
+      fi
     fi
-  fi
-done
+  done
+fi
 
 # nvim clone to .config and authorized
-read -n1 -rep "Do you want to install neovim dotfiles (y/n) " nvm
+read -n1 -rep "Do you want to install neovim dotfiles (y,n) " nvm
 if [[ $nvm =~ ^[Yy]$ ]]; then
   git clone https://github.com/$user/nvim.git ~/.config/nvim
   cd ~/.config/nvim
   git remote set-url origin https://$user:$token@github.com/$user/nvim.git
 fi
+
