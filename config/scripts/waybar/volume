@@ -1,0 +1,107 @@
+#!/bin/bash
+
+get_volume() {
+  if [[ "$(wpctl get-volume @DEFAULT_AUDIO_SINK@)" == *"MUTED"* ]]; then
+    echo "Muted"
+  else
+    if [[ "$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | cut -d " " -f 2)" == "1.00" ]]; then
+      volume=100
+    else
+      volume=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | cut -d " " -f 2 | cut -c 3-)
+    fi
+    echo "$volume%"
+  fi
+}
+
+notify_user() {
+  if [[ "$(get_volume)" == "Muted" ]]; then
+    notify-send -e -h string:x-canonical-private-synchronous:info -u low "Ses: Kapalı"
+  else
+    notify-send -e -h int:value:"$(get_volume | sed 's/%//')" -h string:x-canonical-private-synchronous:info -u low "Ses: $(get_volume)"
+  fi
+}
+
+inc_volume() {
+  if [[ $(get_volume) == "Muted" ]]; then
+    toggle_mute
+  else
+    wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ && notify_user
+  fi
+}
+
+dec_volume() {
+  if [[ $(get_volume) == "Muted" ]]; then
+    toggle_mute
+  else
+    wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%- && notify_user
+  fi
+}
+
+toggle_mute() {
+  if [[ $(get_volume) == "Muted" ]]; then
+    wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && notify-send -e -u low "Ses Açık"
+  else
+    wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && notify-send -e -u low "Ses Kapalı"
+  fi
+
+}
+
+toggle_mic() {
+  if [[ "$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)" == *"MUTED"* ]]; then
+    wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle && notify-send -e -u low "Mikrofon Açık"
+  else
+    wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle && notify-send -e -u low "Mikrofon Kapalı"
+  fi
+}
+
+get_mic_volume() {
+  if [[ "$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)" == *"MUTED"* ]]; then
+    echo "Muted"
+  else
+    if [[ "$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | cut -d " " -f 2)" == "1.00" ]]; then
+      volume=100
+    else
+      volume=$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | cut -d " " -f 2 | cut -c 3-)
+    fi
+    echo "$volume%"
+  fi
+}
+
+notify_mic_user() {
+  volume=$(get_mic_volume)
+  notify-send -e -h int:value:"$volume" -h "string:x-canonical-private-synchronous:info" -u low "Mikrfon: $volume"
+}
+
+inc_mic_volume() {
+  if [[ "$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)" == *"MUTED"* ]]; then
+    toggle_mic
+  else
+    wpctl set-volume -l 1 @DEFAULT_AUDIO_SOURCE@ 5%+ && notify_mic_user
+  fi
+}
+
+dec_mic_volume() {
+  if [[ "$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@)" == *"MUTED"* ]]; then
+    toggle_mic
+  else
+    wpctl set-volume -l 1 @DEFAULT_AUDIO_SOURCE@ 5%- && notify_mic_user
+  fi
+}
+
+if [[ "$1" == "upvol" ]]; then
+  inc_volume
+elif [[ "$1" == "downvol" ]]; then
+  dec_volume
+elif [[ "$1" == "togglevol" ]]; then
+  toggle_mute
+elif [[ "$1" == "togglemic" ]]; then
+  toggle_mic
+elif [[ "$1" == "upmic" ]]; then
+  inc_mic_volume
+elif [[ "$1" == "downmic" ]]; then
+  dec_mic_volume
+elif [[ "$1" == "getmic" ]]; then
+  get_mic_volume
+else
+  get_volume
+fi

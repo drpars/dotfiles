@@ -1,0 +1,14 @@
+#!/bin/bash
+
+gpumode=$(supergfxctl -g)
+intgputemp=$(sensors -A amdgpu-pci-0600 | awk '/°C/ {print $2}' | cut -c2-3)
+
+if echo $gpumode | grep "Hybrid" >/dev/null; then
+  echo "{\"text\":\"GPU $(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits)°C\", \"tooltip\":\"Hybrid\"}"
+elif echo $gpumode | grep "Integrated" >/dev/null; then
+  # echo "Integrated"
+  echo "{\"text\":\"GPU $intgputemp°C\", \"tooltip\":\"Integrated\"}"
+elif echo $gpumode | grep "Vfio" >/dev/null; then
+  # echo "Vfio"
+  echo "{\"text\":\"Vfio\", \"tooltip\":\"Vfio\"}"
+fi

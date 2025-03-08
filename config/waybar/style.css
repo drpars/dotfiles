@@ -1,0 +1,284 @@
+* {
+  font-family: Ubuntu Nerd Font;
+  font-weight: bold;
+  font-size: 14px;
+  min-height: 28px;
+  /* font-size: 97%;  Uncomment if needed */
+  /* font-feature-settings: '"zero", "ss01", "ss02", "ss03", "ss04", "ss05", "cv31"'; */
+}
+
+window#waybar {
+  background: transparent;
+  color: #ffffff;
+}
+
+window#waybar.empty #window {
+  background-color: transparent;
+}
+
+/* Tooltip Styling */
+tooltip {
+  background: #1e1e2e;
+  opacity: 0.95;
+  border: none;
+  border-radius: 10px;
+  text-shadow: none;
+}
+
+tooltip label {
+  color: #cdd6f4;
+  text-shadow: none;
+}
+
+/* Global Module Styling */
+#custom-launch_rofi,
+#custom-hardware,
+#cpu,
+#memory,
+#disk,
+#window,
+#custom-lock_screen,
+#custom-pacman,
+#clock,
+#custom-wallpaper,
+#custom-power_btn,
+#tray,
+#custom-power_profile,
+#power-profiles-daemon,
+#bluetooth,
+#network,
+#custom-temp,
+#temperature,
+#custom-gputemp,
+#battery,
+#backlight,
+#wireplumber,
+#pulseaudio,
+#custom-weather,
+#custom-hypridle,
+#idle_inhibitor {
+  background: #1e1e2e;
+  opacity: 0.8;
+  margin-top: 8px;
+}
+
+/* Left Modules */
+#custom-launch_rofi {
+  font-size: 20px;
+  margin-left: 10px;
+  padding: 0 10px 0 20px;
+  border-radius: 10px 0 0 10px;
+  color: #ffffff;
+}
+
+#workspaces {
+  background: #1e1e2e;
+  margin: 8px 10px 0 0;
+  opacity: 0.8;
+  border-radius: 0 10px 10px 0;
+  padding: 0 10px;
+}
+
+#workspaces button {
+  padding: 0 5px;
+  margin: 4px 3px;
+  border-radius: 15px;
+  border: none;
+  color: #1e1e2e;
+  background-color: #ffffff;
+  transition: all 0.3s ease-in-out;
+  opacity: 0.4;
+}
+
+#workspaces button.active {
+  color: #1e1e2e;
+  background: #ffffff;
+  border-radius: 15px;
+  min-width: 40px;
+  transition: all 0.3s ease-in-out;
+  opacity: 1;
+}
+
+#workspaces button:hover {
+  color: #1e1e2e;
+  background: #ffffff;
+  border-radius: 15px;
+  opacity: 0.7;
+}
+
+#custom-hardware {
+  padding: 0 20px;
+  border-radius: 10px;
+  margin-right: 10px;
+}
+
+#cpu {
+  border-radius: 10px 0 0 10px;
+  padding: 0 10px 0 20px;
+}
+
+#memory {
+  padding: 0 10px;
+}
+
+#disk {
+  border-radius: 0 10px 10px 0;
+  padding: 0 20px 0 10px;
+  margin-right: 10px;
+}
+
+/* Temperature & GPU Temp */
+#custom-temp {
+  margin-right: 10px;
+  border-radius: 10px;
+  padding: 0 20px;
+}
+
+#temperature {
+  border-radius: 10px 0 0 10px;
+  padding: 0 10px 0 20px;
+  font-size: 12px;
+}
+
+#custom-gputemp {
+  margin-right: 10px;
+  border-radius: 0 10px 10px 0;
+  padding: 0 20px 0 10px;
+  font-size: 12px;
+}
+
+#window {
+  font-family: "JetBrainsMono Nerd Font Bold Italic";
+  font-style: italic;
+  border-radius: 10px;
+  padding: 0 20px;
+}
+
+/* Center Modules */
+#custom-lock_screen {
+  border-radius: 10px 0 0 10px;
+  padding: 0 10px 0 20px;
+}
+
+#custom-pacman {
+  font-size: 16px;
+  padding: 0 10px;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+#custom-pacman.pending-updates {
+  animation-name: blink-update;
+  animation-duration: 3s;
+}
+
+#clock,
+#custom-wallpaper {
+  padding: 0 10px;
+}
+
+#custom-power_btn {
+  border-radius: 0 10px 10px 0;
+  padding: 0 20px 0 10px;
+}
+
+/* Right Modules */
+#tray,
+#power-profiles-daemon,
+#custom-power_profile,
+#custom-weather {
+  margin-right: 10px;
+  border-radius: 10px;
+  padding: 0 20px;
+}
+
+#bluetooth {
+  border-radius: 10px 0 0 10px;
+  padding: 0 10px 0 20px;
+}
+
+#bluetooth.on,
+#custom-pacman.pending-updates,
+#battery.warning,
+#battery.critical {
+  transition: background-color 0.3s ease-in-out;
+}
+
+#bluetooth.on {
+  animation-name: blink-update;
+  animation-duration: 3s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+#bluetooth.off {
+  color: #6c6c74;
+}
+
+#bluetooth.connected {
+  color: #ffffff;
+}
+
+#network {
+  margin-right: 10px;
+  border-radius: 0 10px 10px 0;
+  padding: 0 20px 0 10px;
+}
+
+#network.linked {
+  color: #ffffff;
+}
+
+#network.disconnected {
+  color: #6c6c74;
+}
+
+#wireplumber {
+  border-radius: 10px 0 0 10px;
+  padding: 0 10px 0 20px;
+}
+
+#pulseaudio,
+#battery {
+  padding: 0 10px;
+}
+
+#battery.warning {
+  animation-iteration-count: infinite;
+  animation-name: blink-update;
+  animation-duration: 3s;
+}
+
+#battery.critical {
+  animation-iteration-count: infinite;
+  animation-name: blink-battery;
+  animation-duration: 3s;
+}
+
+#backlight {
+  margin-right: 10px;
+  border-radius: 0 10px 10px 0;
+  padding: 0 20px 0 8px;
+}
+
+#custom-hypridle,
+#idle_inhibitor {
+  margin-right: 10px;
+  border-radius: 10px;
+  padding: 0 25px 0 20px;
+}
+
+/* Animations */
+@keyframes blink-update {
+  to {
+    background-color: dodgerblue;
+  }
+}
+
+@keyframes blink-battery {
+  to {
+    background-color: red;
+  }
+}

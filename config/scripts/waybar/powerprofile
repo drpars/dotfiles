@@ -1,0 +1,39 @@
+#!/bin/bash
+
+get_pwr() {
+  PWR=$(asusctl profile -p | sed -n '2{p;q}' | sed s:'Active profile is '::)
+}
+
+get_pwr
+
+PWR_TR() {
+  get_pwr
+  if [ $PWR == Balanced ]; then
+    PWR="Dengeli"
+  elif [ $PWR == Performance ]; then
+    PWR="Performans"
+  elif [ $PWR == Quiet ]; then
+    PWR="Sessiz"
+  fi
+
+}
+
+if [ $PWR == Balanced ]; then
+  text="󰾅"
+  tooltip="Dengeli"
+elif [ $PWR == Performance ]; then
+  text="󰓅"
+  tooltip="Performans"
+elif [ $PWR == Quiet ]; then
+  text="󰾆"
+  tooltip="Sessiz"
+fi
+
+echo '{"text": "'$text'", "tooltip": "'$tooltip'"}'
+
+if [[ "$1" == "next" ]]; then
+  asusctl profile -n
+  pkill -SIGRTMIN+8 waybar
+  PWR_TR
+  notify-send -h string:x-canonical-private-synchronous:sys-notify -u low "Güç Profili: $PWR"
+fi

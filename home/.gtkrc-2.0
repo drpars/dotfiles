@@ -1,0 +1,13 @@
+gtk-theme-name="Tokyonight-Dark-BL-LB"
+gtk-icon-theme-name="Qogir-dark"
+gtk-font-name="Ubuntu Nerd Font Regular 10"
+gtk-cursor-theme-name="Mocu-White-Right"
+gtk-cursor-theme-size=24
+gtk-button-images=0
+gtk-menu-images=0
+gtk-enable-event-sounds=0
+gtk-enable-input-feedback-sounds=0
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle="hintslight"
+gtk-xft-rgba="rgb"

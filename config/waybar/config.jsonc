@@ -1,0 +1,42 @@
+{
+  "layer": "top",
+  "position": "top",
+  "mod": "dock",
+  "exclusive": true,
+  "passthrough": false,
+  "gtk-layer-shell": true,
+
+  "include": "~/.config/waybar/modules.json",
+
+  "modules-left": [
+    "custom/launch_rofi",
+    "hyprland/workspaces",
+    "group/hardware",
+    "group/temp",
+    // "cpu",
+    // "memory",
+    // "disk",
+    "hyprland/window"
+  ],
+  "modules-center": [
+    "custom/lock_screen",
+    // "custom/pacman",
+    "clock",
+    "custom/wallpaper",
+    "custom/power_btn"
+  ],
+  "modules-right": [
+    "tray",
+    "custom/power_profile",
+    // "power-profiles-daemon",
+    "bluetooth",
+    "network",
+    "wireplumber",
+    "pulseaudio#microphone",
+    "battery",
+    "backlight",
+    "custom/weather",
+    // "idle_inhibitor"
+    "custom/hypridle"
+  ]
+}

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+message="Açık pencere yok!"
+
+window=$(hyprctl clients)
+if [ "$window" = "unknown request" ]; then
+  notify-send "$message"
+  exit 0
+else
+  rofi -show window -theme $HOME/.config/rofi/window.rasi -matching normal -i
+fi

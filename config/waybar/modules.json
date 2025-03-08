@@ -1,0 +1,287 @@
+{
+  "custom/launch_rofi": {
+    "format": "",
+    "on-click": "rofi -show drun -disable-history -replace -theme ~/.config/rofi/launcher.rasi",
+    "tooltip": false,
+    "margin-top": 10
+  },
+
+  "custom/weather": {
+    "exec": "~/.config/scripts/waybar/get_weather Çankırı",
+    "return-type": "json",
+    "format": "{}",
+    "tooltip": true,
+    "interval": 3600,
+    "on-click": "~/.config/scripts/waybar/get_weather Çankırı"
+  },
+
+  "hyprland/workspaces": {
+    "persistent-workspaces": {
+      "*": 5
+    }
+  },
+
+  "group/hardware": {
+    "orientation": "inherit",
+    "drawer": {
+      "transition-duration": 500,
+      "children-class": "not-power",
+      "transition-left-to-right": true
+    },
+    "modules": ["custom/hardware", "cpu", "memory", "disk"]
+  },
+
+  "custom/hardware": {
+    "format": "󰭵",
+    "on-click-right": "kitty --title btop sh -c 'btop'"
+  },
+
+  "cpu": {
+    "interval": 10,
+    "format": "  {usage}%",
+    "max-length": 10
+  },
+
+  "memory": {
+    "interval": 30,
+    "format": "  {}%",
+    "max-length": 10,
+    "tooltip": true,
+    "tooltip-format": "RAM - {used:0.1f}GB kullanılıyor"
+  },
+
+  "disk": {
+    "interval": 30,
+    "format": "󰋊 {percentage_used}%",
+    "path": "/home",
+    "tooltip": true,
+    "tooltip-format": "HDD - {path} üzerinde {total} alandan {used} alan kullanılıyor ({percentage_used}%)"
+  },
+
+  "group/temp": {
+    "orientation": "inherit",
+    "drawer": {
+      "transition-duration": 500,
+      "children-class": "not-power",
+      "transition-left-to-right": true
+    },
+    "modules": ["custom/temp", "temperature", "custom/gputemp"]
+  },
+
+  "custom/temp": {
+    "format": ""
+  },
+
+  "temperature": {
+    "interval": 1,
+    "format": "CPU {temperatureC}°C",
+    "critical-threshold": 70,
+    "format-critical": "CPU {temperatureC}°C",
+    "tooltip": false,
+    "tooltip-format": "CPU {temperatureC}°C",
+    "on-click-right": "kitty --title btop sh -c 'btop'"
+  },
+
+  "custom/gputemp": {
+    "exec": "~/.config/scripts/waybar/gputemp",
+    "return-type": "json",
+    "format": "{}",
+    "tooltip": true,
+    "interval": 1,
+    "on-click-right": "kitty --title nvtop sh -c 'nvtop'"
+  },
+
+  "hyprland/window": {
+    "format": "{title}",
+    "max-length": 65
+  },
+
+  "custom/lock_screen": {
+    "format": "",
+    "return-type": "",
+    "on-click": "pidof hyprlock || hyprlock",
+    "tooltip": true,
+    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font Bold'>Kilitle</span>"
+  },
+
+  "custom/pacman": {
+    "format": "{icon}{}",
+    "return-type": "json",
+    "format-icons": {
+      "pending-updates": "",
+      "updated": ""
+    },
+    "on-click": "waybar-updates --tooltip '{ :pacman}{  :aur}{  :dev}'",
+    "exec-if": "which waybar-updates",
+    "exec": "waybar-updates --tooltip '{ :pacman}{  :aur}{  :dev}'"
+  },
+
+  "clock": {
+    "format": "{:%H:%M} ",
+    "format-alt": "{:L%d %B %A %Y (%R)} ",
+    "locale": "tr_TR.UTF-8",
+    "timezone": "Europe/Istanbul",
+    "tooltip-format": "<span size='10pt' font='JetBrainsMono Nerd Font Mono'>{calendar}</span>",
+    "calendar": {
+      "mode": "year",
+      "mode-mon-col": 3,
+      "weeks-pos": "right",
+      "on-scroll": 1,
+      "format": {
+        "months": "<span color='#ffead3'><b>{}</b></span>",
+        "days": "<span color='#ecc6d9'><b>{}</b></span>",
+        "weeks": "<span color='#99ffdd'><b>W{}</b></span>",
+        "weekdays": "<span color='#ffcc66'><b>{}</b></span>",
+        "today": "<span color='#ff6699'><b><u>{}</u></b></span>"
+      }
+    },
+    "actions": {
+      "on-click-right": "mode",
+      "on-click-forward": "tz_up",
+      "on-click-backward": "tz_down",
+      "on-scroll-up": "shift_up",
+      "on-scroll-down": "shift_down"
+    }
+  },
+
+  "custom/wallpaper": {
+    "format": "",
+    "on-click": "~/.config/scripts/waybar/wallselect",
+    "on-click-right": "~/.config/scripts/waybar/randomwallpaper",
+    "tooltip": true,
+    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font Bold'>Duvarkağıdını değiştir</span>"
+  },
+
+  "custom/power_btn": {
+    "format": "",
+    "return-type": "",
+    "on-click": "wlogout",
+    "tooltip": true,
+    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font Bold'>Kapat</span>"
+  },
+
+  "tray": {
+    "icon-size": 18,
+    "spacing": 10,
+    "show-passive-items": true
+  },
+
+  "custom/power_profile": {
+    "exec": "~/.config/scripts/waybar/powerprofile",
+    "return-type": "json",
+    "interval": 1,
+    "format": "{}",
+    "on-click": "~/.config/scripts/waybar/powerprofile next",
+    "on-click-right": "rog-control-center",
+    "signal": 8
+  },
+
+  "power-profiles-daemon": {
+    "format": "{icon}",
+    "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+    "tooltip": true,
+    "format-icons": {
+      "default": "",
+      "performance": "",
+      "balanced": "",
+      "power-saver": ""
+    }
+  },
+
+  "bluetooth": {
+    "interval": 1,
+    "format": "",
+    "format-connected": "",
+    "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
+    "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+    "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
+    "on-click": "blueberry"
+  },
+
+  "network": {
+    "interval": 1,
+    "format": "{ifname}",
+    "format-wifi": "",
+    "format-ethernet": "{ipaddr}/{cidr} 󰊗",
+    "format-disconnected": "",
+    "tooltip-format": "{ifname} via {gwaddr} 󰊗",
+    "tooltip-format-wifi": "{ifname}\n\n{essid}\t{signalStrength}%\t{ipaddr}\nDown: {bandwidthDownBits}\tUp: {bandwidthUpBits}",
+    "tooltip-format-ethernet": "{ifname} ",
+    "tooltip-format-disconnected": "Bağlantı Yok",
+    "max-length": 50,
+    "on-click": "iwgtk"
+  },
+
+  "battery": {
+    "interval": 1,
+    "states": {
+      "good": 70,
+      "warning": 30,
+      "critical": 20
+    },
+    "format": "{icon}",
+    "format-alt": "{time} {icon}",
+    "full-at": 100,
+    "format-full": "{icon} Full",
+    "format-charging": "󰂄",
+    "format-plugged": "",
+    "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+    "tooltip": true,
+    "tooltip-format": "{capacity}%"
+  },
+
+  "backlight": {
+    "device": "intel_backlight",
+    "format": "{icon}",
+    // "format-alt": "{icon} {percent}%",
+    "format-icons": ["󰃞", "󰃟", "󰃠"],
+    "on-click": "$HOME/.config/scripts/waybar/brightness up",
+    "on-click-right": "$HOME/.config/scripts/waybar/brightness down",
+    "on-scroll-up": "$HOME/.config/scripts/waybar/brightness up",
+    "on-scroll-down": "$HOME/.config/scripts/waybar/brightness down",
+    "tooltip-format": "{percent}%"
+  },
+
+  "wireplumber": {
+    "format": "{icon}",
+    "format-muted": "",
+    "on-click": "$HOME/.config/scripts/waybar/volume togglevol",
+    "on-click-right": "pavucontrol",
+    "max-volume": 100,
+    "on-scroll-up": "$HOME/.config/scripts/waybar/volume upvol",
+    "on-scroll-down": "$HOME/.config/scripts/waybar/volume downvol",
+    "format-icons": ["", "", ""],
+    "tooltip-format": "{volume}%"
+  },
+
+  "pulseaudio#microphone": {
+    "format": "{format_source}",
+    "format-source": "",
+    "format-source-muted": "",
+    "on-click": "$HOME/.config/scripts/waybar/volume togglemic",
+    "on-click-right": "pavucontrol",
+    "on-scroll-up": "$HOME/.config/scripts/waybar/volume upmic",
+    "on-scroll-down": "$HOME/.config/scripts/waybar/volume downmic",
+    "tooltip-format": "{source_volume}%"
+  },
+
+  "custom/hypridle": {
+    "format": "",
+    "format-alt": "",
+    "return-type": "json",
+    "escape": true,
+    "exec-on-event": true,
+    "interval": 60,
+    "exec": "$HOME/.config/scripts/waybar/hypr_idle status",
+    "on-click": "$HOME/.config/scripts/waybar/hypr_idle toggle"
+  },
+
+  "idle_inhibitor": {
+    "format": "{icon}",
+    "format-icons": {
+      "activated": "",
+      "deactivated": ""
+    }
+  }
+}
