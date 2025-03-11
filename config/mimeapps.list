@@ -1,13 +1,17 @@
 [Default Applications]
+# dolphin
+inode/directory=org.kde.dolphin.desktop;
+# nvim.desktop
 application/x-desktop=nvim.desktop;
 application/x-shellscript=nvim.desktop;
-image/heif=imv.desktop;
+text/plain=nvim.desktop;
+text/x-csrc=nvim.desktop;
+# imv-dir
+image/heif=imv-dir.desktop;
 image/jpeg=imv-dir.desktop;
 image/png=imv-dir.desktop;
 image/svg+xml=imv-dir.desktop;
 image/vnd.microsoft.icon=imv-dir.desktop;
-inode/directory=org.kde.dolphin.desktop
-text/plain=nvim.desktop;
-text/x-csrc=nvim.desktop;
+# mpv
 video/mp4=mpv.desktop;
 video/quicktime=mpv.desktop;

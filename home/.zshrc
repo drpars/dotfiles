@@ -68,6 +68,20 @@ export PATH="$PATH:$HOME/.local/bin"
 export EDITOR=nvim
 # export TERMINAL=kitty
 
+# Functions
+custompip(){
+  local option="$1"
+  local package="$2"
+  local constant="--break-system-packages"
+
+  if [[ $option == "install" ]] || [[ $option == "uninstall" ]] ;then   
+    pip $option $package $constant
+    return $? 
+  else
+    pip "$@"
+  fi
+}
+
 # alias
 alias v=nvim
 alias sv='sudo nvim'
@@ -81,6 +95,7 @@ alias ll='eza -al -h --color=always --icons --group-directories-first --octal-pe
 alias lt='eza -a --tree --level=1 --icons --group-directories-first'
 alias gs='git status'
 alias py='python'
+alias pipforce=custompip
 alias share='net usershare add'
 alias unshare='net usershare remove'
 alias sharelist='net usershare info'
