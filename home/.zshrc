@@ -13,8 +13,8 @@ source "$HOME/.config/zsh/alias.zsh"
 
 # User configuration
 export PATH="$PATH:$HOME/.local/bin"
-export $EDITOR=nvim
-# export $TERMINAL=kitty
+export EDITOR=nvim
+# export TERMINAL=kitty
 
 # Add plugins
 zinit light zsh-users/zsh-syntax-highlighting
