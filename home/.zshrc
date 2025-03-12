@@ -17,17 +17,21 @@ export EDITOR=nvim
 # export TERMINAL=kitty
 
 # Add plugins
-zinit light zsh-users/zsh-syntax-highlighting
-zinit light zsh-users/zsh-completions
-zinit light zsh-users/zsh-autosuggestions
+# Completion
+zinit wait lucid for \
+ atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
+    zdharma-continuum/fast-syntax-highlighting \
+ blockf \
+    zsh-users/zsh-completions \
+ atload"!_zsh_autosuggest_start" \
+    zsh-users/zsh-autosuggestions
+# Completion selection
+zinit light Aloxaf/fzf-tab
 # History
 zinit load zdharma-continuum/history-search-multi-word
 zinit light zsh-users/zsh-history-substring-search
-zinit light Aloxaf/fzf-tab
 
 # Add in snippets
-zinit snippet OMZL::git.zsh
-zinit snippet OMZP::git
 zinit snippet OMZP::sudo
 zinit snippet OMZP::colored-man-pages
 zinit snippet OMZP::command-not-found
@@ -58,11 +62,21 @@ bindkey '^R' history-search-multi-word
 
 # Styling
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND=(none)
+# disable sort when completing `git checkout`
+zstyle ':completion:*:git-checkout:*' sort false
+# set matcher-list
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+# set list-colors to enable filename colorizing
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
-zstyle ':completion:*' menu select
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+# force zsh not to show completion menu, which allows fzf-tab to capture the unambiguous prefix
+zstyle ':completion:*' menu no
+# preview directory's content with eza when completing cd
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+# custom fzf flags
+zstyle ':fzf-tab:*' fzf-flags --color=fg:1,fg+:2 --bind=tab:accept
+# To make fzf-tab follow FZF_DEFAULT_OPTS.
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
+zstyle :plugin:history-search-multi-word reset-prompt-protect 1
 
 # Shell integrations
 eval "$(fzf --zsh)"
