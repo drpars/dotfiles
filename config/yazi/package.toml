@@ -8,6 +8,11 @@ use = "yazi-rs/plugins:full-border"
 rev = "92f78dc"
 hash = "1f3dad061209081a6b04dd6ff2cb06c7"
 
+[[plugin.deps]]
+use = "yazi-rs/plugins:toggle-pane"
+rev = "92f78dc"
+hash = "812fd49667ab6823250f0411f8cf793a"
+
 [[flavor.deps]]
 use = "BennyOe/tokyo-night"
 rev = "695dac6"
