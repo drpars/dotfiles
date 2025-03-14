@@ -11,3 +11,8 @@ desc = "Open shell here"
 on   = "T"
 run  = "plugin toggle-pane min-preview"
 desc = "Show or hide the preview pane"
+
+[[manager.prepend_keymap]]
+on = [ "g", "d" ]
+run = "cd ~/İndirilenler"
+desc = "Goto ~/Downloads"
