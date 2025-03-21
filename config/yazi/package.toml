@@ -13,7 +13,17 @@ use = "yazi-rs/plugins:toggle-pane"
 rev = "92f78dc"
 hash = "812fd49667ab6823250f0411f8cf793a"
 
+[[plugin.deps]]
+use = "boydaihungst/restore"
+rev = "5d22884"
+hash = "8e6fc2d660f661c91e30b10dd1a251b8"
+
 [[flavor.deps]]
 use = "BennyOe/tokyo-night"
 rev = "695dac6"
 hash = "a8f426ea0d9cb843b081d62ab01364c8"
+
+[[flavor.deps]]
+use = "yazi-rs/flavors:catppuccin-mocha"
+rev = "68326b4"
+hash = "2ac87e1b3a61f5887472899e86535d29"
