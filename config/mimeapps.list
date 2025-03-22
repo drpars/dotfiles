@@ -1,6 +1,6 @@
 [Default Applications]
-# dolphin
-inode/directory=org.kde.dolphin.desktop;
+# directory
+inode/directory=yazi.desktop;
 # nvim.desktop
 application/x-desktop=nvim.desktop;
 application/x-shellscript=nvim.desktop;
