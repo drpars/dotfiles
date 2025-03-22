@@ -1,5 +1,8 @@
 [General]
 TerminalApplication=kitty
 
+[Icons]
+Theme=Qogir-Dark
+
 [KDE]
 widgetStyle=qt6ct-style

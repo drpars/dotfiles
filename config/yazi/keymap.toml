@@ -379,3 +379,8 @@ desc = "Show or hide the preview pane"
 on = [ "g", "d" ]
 run = "cd ~/İndirilenler"
 desc = "Goto ~/Downloads"
+
+[[manager.prepend_keymap]]
+on = [ "g", "m" ]
+run = "cd /run/media/$(whoami)"
+desc = "Goto Media"
