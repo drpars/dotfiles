@@ -4,3 +4,124 @@
 
 2025/03/11 (00:23:25) | ===> btop++ v.1.4.0
 2025/03/11 (00:23:25) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/12 (21:00:58) | ===> btop++ v.1.4.0
+2025/03/12 (21:00:58) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/19 (22:12:48) | ===> btop++ v.1.4.0
+2025/03/19 (22:12:48) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/20 (22:53:44) | ===> btop++ v.1.4.0
+2025/03/20 (22:53:44) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/20 (22:58:28) | ===> btop++ v.1.4.0
+2025/03/20 (22:58:28) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/20 (22:58:51) | ===> btop++ v.1.4.0
+2025/03/20 (22:58:51) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/21 (01:32:37) | ===> btop++ v.1.4.0
+2025/03/21 (01:32:37) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/21 (02:12:59) | ===> btop++ v.1.4.0
+2025/03/21 (02:12:59) | DEBUG: Running in DEBUG mode!
+2025/03/21 (02:12:59) | INFO: Logger set to DEBUG
+2025/03/21 (02:12:59) | DEBUG: Setting LC_ALL=tr_TR.UTF-8
+2025/03/21 (02:12:59) | INFO: Running on /dev/pts/0
+2025/03/21 (02:13:10) | DEBUG: Failed to initialize NVML, NVIDIA GPUs will not be detected: Driver Not Loaded
+2025/03/21 (02:13:10) | INFO: Failed to load librocm_smi64.so, AMD GPUs will not be detected: librocm_smi64.so.6: paylaşımlı nesne dosyası açılamıyor: Böyle bir dosya ya da dizin yok
+2025/03/21 (02:13:10) | DEBUG: Failed to find Intel GPU sysfs path, Intel GPUs will not be detected
+2025/03/21 (02:13:10) | DEBUG: Shared::init() : Initialized.
+2025/03/21 (02:13:10) | DEBUG: Loading theme file: /usr/share/btop/themes/tokyo-night.theme
+2025/03/21 (02:15:08) | DEBUG: Writing new config file
+2025/03/21 (02:15:08) | INFO: Quitting! Runtime: 00:02:09
+
+2025/03/21 (02:15:10) | ===> btop++ v.1.4.0
+2025/03/21 (02:15:10) | DEBUG: Running in DEBUG mode!
+2025/03/21 (02:15:10) | INFO: Logger set to DEBUG
+2025/03/21 (02:15:10) | DEBUG: Setting LC_ALL=tr_TR.UTF-8
+2025/03/21 (02:15:10) | INFO: Running on /dev/pts/0
+2025/03/21 (02:15:23) | DEBUG: Failed to initialize NVML, NVIDIA GPUs will not be detected: Driver Not Loaded
+2025/03/21 (02:15:23) | INFO: Failed to load librocm_smi64.so, AMD GPUs will not be detected: librocm_smi64.so.6: paylaşımlı nesne dosyası açılamıyor: Böyle bir dosya ya da dizin yok
+2025/03/21 (02:15:23) | DEBUG: Failed to find Intel GPU sysfs path, Intel GPUs will not be detected
+2025/03/21 (02:15:23) | DEBUG: Shared::init() : Initialized.
+2025/03/21 (02:15:23) | DEBUG: Loading theme file: /usr/share/btop/themes/tokyo-night.theme
+2025/03/21 (02:16:31) | DEBUG: Writing new config file
+2025/03/21 (02:16:31) | INFO: Quitting! Runtime: 00:01:21
+
+2025/03/21 (02:17:01) | ===> btop++ v.1.4.0
+2025/03/21 (02:17:01) | DEBUG: Running in DEBUG mode!
+2025/03/21 (02:17:01) | INFO: Logger set to DEBUG
+2025/03/21 (02:17:01) | DEBUG: Setting LC_ALL=tr_TR.UTF-8
+2025/03/21 (02:17:01) | INFO: Running on /dev/pts/0
+2025/03/21 (02:17:17) | DEBUG: Failed to initialize NVML, NVIDIA GPUs will not be detected: Driver Not Loaded
+2025/03/21 (02:17:17) | INFO: Failed to load librocm_smi64.so, AMD GPUs will not be detected: librocm_smi64.so.6: paylaşımlı nesne dosyası açılamıyor: Böyle bir dosya ya da dizin yok
+2025/03/21 (02:17:17) | DEBUG: Failed to find Intel GPU sysfs path, Intel GPUs will not be detected
+2025/03/21 (02:17:17) | DEBUG: Shared::init() : Initialized.
+2025/03/21 (02:17:17) | DEBUG: Loading theme file: /usr/share/btop/themes/tokyo-night.theme
+2025/03/21 (02:17:44) | INFO: Quitting! Runtime: 00:00:43
+
+2025/03/21 (02:17:45) | ===> btop++ v.1.4.0
+2025/03/21 (02:17:45) | DEBUG: Running in DEBUG mode!
+2025/03/21 (02:17:45) | INFO: Logger set to DEBUG
+2025/03/21 (02:17:45) | DEBUG: Setting LC_ALL=tr_TR.UTF-8
+2025/03/21 (02:17:45) | INFO: Running on /dev/pts/0
+2025/03/21 (02:17:59) | DEBUG: Failed to initialize NVML, NVIDIA GPUs will not be detected: Driver Not Loaded
+2025/03/21 (02:17:59) | INFO: Failed to load librocm_smi64.so, AMD GPUs will not be detected: librocm_smi64.so.6: paylaşımlı nesne dosyası açılamıyor: Böyle bir dosya ya da dizin yok
+2025/03/21 (02:17:59) | DEBUG: Failed to find Intel GPU sysfs path, Intel GPUs will not be detected
+2025/03/21 (02:17:59) | DEBUG: Shared::init() : Initialized.
+2025/03/21 (02:17:59) | DEBUG: Loading theme file: /usr/share/btop/themes/tokyo-night.theme
+2025/03/21 (02:19:10) | DEBUG: Writing new config file
+2025/03/21 (02:19:10) | INFO: Quitting! Runtime: 00:01:25
+
+2025/03/21 (02:19:11) | ===> btop++ v.1.4.0
+2025/03/21 (02:19:11) | DEBUG: Running in DEBUG mode!
+2025/03/21 (02:19:11) | INFO: Logger set to DEBUG
+2025/03/21 (02:19:11) | DEBUG: Setting LC_ALL=tr_TR.UTF-8
+2025/03/21 (02:19:11) | INFO: Running on /dev/pts/0
+2025/03/21 (02:19:21) | DEBUG: Failed to initialize NVML, NVIDIA GPUs will not be detected: Driver Not Loaded
+2025/03/21 (02:19:21) | INFO: Failed to load librocm_smi64.so, AMD GPUs will not be detected: librocm_smi64.so.6: paylaşımlı nesne dosyası açılamıyor: Böyle bir dosya ya da dizin yok
+2025/03/21 (02:19:21) | DEBUG: Failed to find Intel GPU sysfs path, Intel GPUs will not be detected
+2025/03/21 (02:19:21) | DEBUG: Shared::init() : Initialized.
+2025/03/21 (02:19:21) | DEBUG: Loading theme file: /usr/share/btop/themes/tokyo-night.theme
+2025/03/21 (02:19:26) | INFO: Quitting! Runtime: 00:00:15
+
+2025/03/21 (02:19:28) | ===> btop++ v.1.4.0
+2025/03/21 (02:19:28) | DEBUG: Running in DEBUG mode!
+2025/03/21 (02:19:28) | INFO: Logger set to DEBUG
+2025/03/21 (02:19:28) | DEBUG: Setting LC_ALL=tr_TR.UTF-8
+2025/03/21 (02:19:28) | INFO: Running on /dev/pts/0
+2025/03/21 (02:19:38) | DEBUG: Failed to initialize NVML, NVIDIA GPUs will not be detected: Driver Not Loaded
+2025/03/21 (02:19:38) | INFO: Failed to load librocm_smi64.so, AMD GPUs will not be detected: librocm_smi64.so.6: paylaşımlı nesne dosyası açılamıyor: Böyle bir dosya ya da dizin yok
+2025/03/21 (02:19:38) | DEBUG: Failed to find Intel GPU sysfs path, Intel GPUs will not be detected
+2025/03/21 (02:19:38) | DEBUG: Shared::init() : Initialized.
+2025/03/21 (02:19:38) | DEBUG: Loading theme file: /usr/share/btop/themes/tokyo-night.theme
+2025/03/21 (02:19:44) | INFO: Quitting! Runtime: 00:00:16
+
+2025/03/21 (12:37:56) | ===> btop++ v.1.4.0
+2025/03/21 (12:37:56) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/21 (12:38:29) | ===> btop++ v.1.4.0
+2025/03/21 (12:38:29) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/21 (12:48:09) | ===> btop++ v.1.4.0
+2025/03/21 (12:48:09) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/21 (18:23:21) | ===> btop++ v.1.4.0
+2025/03/21 (18:23:21) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/21 (20:46:53) | ===> btop++ v.1.4.0
+2025/03/21 (20:46:53) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/22 (00:45:03) | ===> btop++ v.1.4.0
+2025/03/22 (00:45:03) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+2025/03/22 (00:45:31) | ERROR: Exception during Config::unlock() : unordered_map::at
+
+2025/03/22 (00:45:53) | ===> btop++ v.1.4.0
+2025/03/22 (00:45:53) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/22 (01:35:18) | ===> btop++ v.1.4.0
+2025/03/22 (01:35:18) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
+
+2025/03/22 (01:36:23) | ===> btop++ v.1.4.0
+2025/03/22 (01:36:23) | WARNING: NVML: Failed to get maximum GPU power draw, defaulting to 225W: Not Supported
