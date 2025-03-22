@@ -46,6 +46,7 @@ pipupdatewithpipreview() {
 
 # alias
 alias c='clear'
+alias ..='cd ..'
 alias v='nvim'
 alias sv='sudo nvim'
 alias install='sudo pacman -S --needed'
