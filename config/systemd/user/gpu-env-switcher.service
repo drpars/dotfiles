@@ -1,0 +1,17 @@
+[Unit]
+Description=Hyprland GPU Environment Switcher
+After=graphical.target dbus.socket
+Requires=dbus.socket
+
+[Service]
+Type=exec
+ExecStart=/bin/bash -c "source /home/%u/.config/scripts/hypr/gpu-env-switcher"
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=%h/.Xauthority"
+Environment="XDG_RUNTIME_DIR=/run/user/$(id -u)"
+WorkingDirectory=%h
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
