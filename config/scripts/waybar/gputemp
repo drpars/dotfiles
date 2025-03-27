@@ -1,13 +1,53 @@
 #!/bin/bash
 
-gpumode=$(supergfxctl -g)
-internalgpu=$(sensors -A amdgpu-pci-0600 | awk '/°C/ {print $2}' | cut -c2-3)
-externalgpu=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits)
+# Set safer script defaults
+set -euo pipefail
 
-if echo $gpumode | grep -q "Hybrid"; then 
-  echo "{\"text\":\"I-GPU $internalgpu°C      E-GPU $externalgpu°C\", \"tooltip\":\"Hybrid\"}"
-elif echo $gpumode | grep -q "Integrated";  then
-  echo "{\"text\":\"GPU $internalgpu°C\", \"tooltip\":\"Integrated\"}"
-elif echo $gpumode | grep -q "Vfio" ; then
-  echo "{\"text\":\"Vfio\", \"tooltip\":\"Vfio\"}"
-fi
+# Configuration
+GFX_MODE=$(supergfxctl -g 2>/dev/null || echo "unknown")
+INTERNAL_GPU_ID="amdgpu-pci-0600"
+TIMEOUT=5 # Timeout in seconds for sensor readings
+
+get_internal_temp() {
+  # Only attempt reading if not in dGPU-only mode
+  if [[ "$GFX_MODE" != *"AsusMuxDgpu"* ]]; then
+    sensors -A "$INTERNAL_GPU_ID" 2>/dev/null | awk '/°C/ {print $2; exit}' | tr -d '+°C' || echo "N/A"
+  else
+    echo "OFF" # Internal GPU is disabled in AsusMuxDgpu mode
+  fi
+}
+
+get_external_temp() {
+  timeout "$TIMEOUT" nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null || echo "N/A"
+}
+
+# Get temperatures
+internalgpu=$(get_internal_temp)
+externalgpu=$(get_external_temp)
+
+# Create output based on graphics mode
+case "$GFX_MODE" in
+*Hybrid*)
+  text="I-GPU ${internalgpu}°C   E-GPU ${externalgpu}°C"
+  tooltip="Hybrid Mode"
+  ;;
+*Integrated*)
+  text="GPU ${internalgpu}°C"
+  tooltip="Integrated Mode"
+  ;;
+*Vfio*)
+  text="I-GPU ${internalgpu}°C   VFIO Active"
+  tooltip="VFIO Mode"
+  ;;
+*AsusMuxDgpu*)
+  text="E-GPU ${externalgpu}°C"
+  tooltip="Asus MUX DGPU Mode"
+  ;;
+*)
+  text="GPU Status Unknown"
+  tooltip="Unknown Graphics Mode: ${GFX_MODE}"
+  ;;
+esac
+
+# Output JSON with proper escaping
+printf '{"text":"%s", "tooltip":"%s"}\n' "$text" "$tooltip"
