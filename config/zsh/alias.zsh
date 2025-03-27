@@ -8,7 +8,7 @@ function y() {
 	rm -f -- "$tmp"
 }
 
-custompip() {
+pipforce() {
   if ! command -v pip &>/dev/null; then
     echo "Error: pip is not installed or not in PATH." >&2
     return 1
@@ -33,7 +33,7 @@ custompip() {
   esac
 }
 
-pipupdatewithpipreview() {
+pipupdate() {
   # Ensure pip-review is installed
   if ! command -v pip-review &>/dev/null; then
     echo "Installing pip-review..."
@@ -59,8 +59,6 @@ alias ll='eza -al -h --color=always --icons --group-directories-first --octal-pe
 alias lt='eza -a --tree --level=1 --icons --group-directories-first'
 alias gs='git status'
 alias py='python'
-alias pipforce='custompip'
-alias pipupdate='pipupdatewithpipreview'
 alias share='net usershare add'
 alias unshare='net usershare remove'
 alias sharelist='net usershare info'
