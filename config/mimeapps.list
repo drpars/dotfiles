@@ -1,6 +1,6 @@
 [Default Applications]
 # directory
-inode/directory=yazi.desktop;
+inode/directory=dolphin.desktop;
 # nvim.desktop
 application/x-desktop=nvim.desktop;
 application/x-shellscript=nvim.desktop;
