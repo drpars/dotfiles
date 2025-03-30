@@ -5,4 +5,9 @@ TerminalApplication=kitty
 Theme=Qogir-Dark
 
 [KDE]
+ShowDeleteCommand=false
 widgetStyle=qt6ct-style
+
+[PreviewSettings]
+EnableRemoteFolderThumbnail=false
+MaximumRemoteSize=0

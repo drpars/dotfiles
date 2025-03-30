@@ -1,34 +1,70 @@
 #!/bin/bash
 
-check_gpumode=$(supergfxctl -g)
+# Safer script execution
+set -euo pipefail
 
-if [[ $check_gpumode == "AsusMuxDgpu" ]]; then
-  cat >~/.config/hypr/conf/gpu-env.conf <<EOF
-# NVIDIA Specific
+# Configuration
+CONFIG_FILE="${HOME}/.config/hypr/conf/gpu-env.conf"
+GFX_MODE=$(supergfxctl -g 2>/dev/null || echo "unknown")
 
-# To force GBM as a backend, set the following environment variables
+# Create config directory if missing
+mkdir -p "${HOME}/.config/hypr/conf"
+
+# Clear previous config
+>"${CONFIG_FILE}"
+
+# Check NVIDIA ICDs (with sudo validation)
+if [ ! -f /usr/share/vulkan/icd.d/nvidia_icd.json ] && [ -f /usr/share/vulkan/icd.d/nvidia_icd.json_inactive ]; then
+  sudo ln -svf /usr/share/vulkan/icd.d/nvidia_icd.json_inactive /usr/share/vulkan/icd.d/nvidia_icd.json
+fi
+
+case "${GFX_MODE}" in
+"AsusMuxDgpu")
+  # NVIDIA dGPU-only configuration
+  cat <<EOF | tee "${CONFIG_FILE}" >/dev/null
+# NVIDIA dGPU Mode Configuration (AsusMuxDgpu)
 env = GBM_BACKEND,nvidia-drm
 env = __GLX_VENDOR_LIBRARY_NAME,nvidia
-
-# Hardware acceleration on NVIDIA GPUs
 env = LIBVA_DRIVER_NAME,nvidia
-
-# VA-API hardware video acceleration
 env = NVD_BACKEND,direct
-env = cursor:no_hardware_cursors
-
-# Controls if G-Sync capable monitors should use Variable Refresh Rate (VRR)
-env = __GL_GSYNC_ALLOWED,
-
-# Controls if Adaptive Sync should be used. Recommended to set as “0” to avoid having problems on some games.
-env = __GL_VRR_ALLOWED,0
-
-# Use legacy DRM interface instead of atomic mode setting. Might fix flickering issues.
+# env = cursor:no_hardware_cursors
+# env = WLR_NO_HARDWARE_CURSORS,1
 env = WLR_DRM_NO_ATOMIC,1
+
+# Monitor configuration
+env = __GL_GSYNC_ALLOWED,1
+env = __GL_VRR_ALLOWED,0
 EOF
-else
-  cat >~/.config/hypr/conf/gpu-env.conf <<EOF
-# To tell Hyprland the GPU we want to use primarily.
+  ;;
+
+"Integrated")
+  # For Integrated mode (AMD iGPU)
+  cat <<EOF | tee "${CONFIG_FILE}" >/dev/null
+# AMD iGPU Configuration
+env = AQ_DRM_DEVICES,/dev/dri/card1
+env = LIBVA_DRIVER_NAME,radeonsi
+env = VK_ICD_FILENAMES,/usr/share/vulkan/icd.d/radeon_icd.x86_64.json
+
+# Optional AMD performance tweaks
+env = AMD_DEBUG,noopt,nohyperz
+env = RADV_PERFTEST,gpl,nggc
+EOF
+  ;;
+
+*)
+  # Hybrid/Default configuration
+  cat <<EOF | tee "${CONFIG_FILE}" >/dev/null
+# Hybrid Configuration (AMD + NVIDIA)
 env = AQ_DRM_DEVICES,/dev/dri/card1:/dev/dri/card0
+
+# VA-API: Use AMD for decoding
+env = LIBVA_DRIVER_NAME,radeonsi
+
+# Vulkan: Both drivers
+env = VK_ICD_FILENAMES,/usr/share/vulkan/icd.d/radeon_icd.x86_64.json:/usr/share/vulkan/icd.d/nvidia_icd.json_inactive
 EOF
-fi
+  ;;
+esac
+
+# Set proper permissions
+chmod 600 "${CONFIG_FILE}"

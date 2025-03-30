@@ -11,7 +11,7 @@ Environment="XAUTHORITY=%h/.Xauthority"
 Environment="XDG_RUNTIME_DIR=/run/user/$(id -u)"
 WorkingDirectory=%h
 Restart=on-failure
-RestartSec=5s
+; RestartSec=5s
 
 [Install]
 WantedBy=default.target
