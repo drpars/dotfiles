@@ -10,6 +10,7 @@ ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 # Source/Load
 source "${ZINIT_HOME}/zinit.zsh"
 source "$HOME/.config/zsh/alias.zsh"
+source "$HOME/.config/zsh/functions.zsh"
 
 # User configuration
 export PATH="$PATH:$HOME/.local/bin"
