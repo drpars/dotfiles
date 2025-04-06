@@ -14,9 +14,9 @@ mkdir -p "${HOME}/.config/hypr/conf"
 >"${CONFIG_FILE}"
 
 # Check NVIDIA ICDs (with sudo validation)
-if [ ! -f /usr/share/vulkan/icd.d/nvidia_icd.json ] && [ -f /usr/share/vulkan/icd.d/nvidia_icd.json_inactive ]; then
-  sudo ln -svf /usr/share/vulkan/icd.d/nvidia_icd.json_inactive /usr/share/vulkan/icd.d/nvidia_icd.json
-fi
+# if [ ! -f /usr/share/vulkan/icd.d/nvidia_icd.json ] && [ -f /usr/share/vulkan/icd.d/nvidia_icd.json_inactive ]; then
+#   sudo ln -svf /usr/share/vulkan/icd.d/nvidia_icd.json_inactive /usr/share/vulkan/icd.d/nvidia_icd.json
+# fi
 
 case "${GFX_MODE}" in
 "AsusMuxDgpu")

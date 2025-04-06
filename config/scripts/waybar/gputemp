@@ -40,7 +40,7 @@ externalgpu=$(get_external_temp)
 # Create output based on graphics mode
 case "$GFX_MODE" in
 *Hybrid*)
-  text="I-GPU ${internalgpu}°C      E-GPU ${externalgpu}°C"
+  text="GPU ${internalgpu}°C      eGPU ${externalgpu}°C"
   tooltip="Hibrid Mod"
   ;;
 *Integrated*)
@@ -48,11 +48,11 @@ case "$GFX_MODE" in
   tooltip="Entegre Mod"
   ;;
 *Vfio*)
-  text="I-GPU ${internalgpu}°C      VFIO Active"
+  text="GPU ${internalgpu}°C      VFIO Active"
   tooltip="VFIO Mod"
   ;;
 *AsusMuxDgpu*)
-  text="E-GPU ${externalgpu}°C"
+  text="eGPU ${externalgpu}°C"
   tooltip="Asus MUX DGPU Mod"
   ;;
 *)
