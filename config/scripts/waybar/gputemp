@@ -4,7 +4,11 @@
 set -euo pipefail
 
 # Configuration
+if pacman -Qs supergfxctl >/dev/null;then
 GFX_MODE=$(supergfxctl -g 2>/dev/null || echo "unknown")
+else
+  GFX_MODE="NVIDIA"
+fi
 INTERNAL_GPU_ID="amdgpu-pci-0600"
 TIMEOUT=5 # Timeout in seconds for sensor readings
 
@@ -54,6 +58,10 @@ case "$GFX_MODE" in
 *AsusMuxDgpu*)
   text="eGPU ${externalgpu}°C"
   tooltip="Asus MUX DGPU Mod"
+  ;;
+*NVIDIA*)
+  text="GPU ${externalgpu}°C"
+  tooltip="GPU"
   ;;
 *)
   text="GPU Durum Bilinmiyor"

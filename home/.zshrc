@@ -57,9 +57,20 @@ setopt hist_find_no_dups
 setopt menu_complete
 
 # Bindkey
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
-bindkey '^R' history-search-multi-word
+bindkey '^?'      backward-delete-char          # bs         delete one char backward
+bindkey '^[[3~'   delete-char                   # delete     delete one char forward
+bindkey '^[[H'    beginning-of-line             # home       go to the beginning of line
+bindkey '^[[F'    end-of-line                   # end        go to the end of line
+bindkey '^[[1;5C' forward-word                  # ctrl+right go forward one word
+bindkey '^[[1;5D' backward-word                 # ctrl+left  go backward one word
+bindkey '^H'      backward-kill-word            # ctrl+bs    delete previous word
+bindkey '^[[3;5~' kill-word                     # ctrl+del   delete next word
+bindkey '^J'      backward-kill-line            # ctrl+j     delete everything before cursor
+bindkey '^[[D'    backward-char                 # left       move cursor one char backward
+bindkey '^[[C'    forward-char                  # right      move cursor one char forward
+bindkey '^[[A'    history-substring-search-up   # up         prev command in history
+bindkey '^[[B'    history-substring-search-down # down       next command in history
+bindkey '^R'      history-search-multi-word
 
 # Styling
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND=(none)

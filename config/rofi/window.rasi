@@ -27,7 +27,7 @@
 }
 
 configuration {
-  font      : "Ubuntu Nerd Font 13";
+  font      : "Ubuntu Nerd Font 12";
 
   timeout {
     delay   : 10;
@@ -69,7 +69,7 @@ element-icon {
 
 element-text {
   background-color  : transparent;
-  padding           : 10px 0;
+  padding           : 15px 0;
 }
 
 element normal.normal {

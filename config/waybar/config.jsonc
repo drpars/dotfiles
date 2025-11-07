@@ -20,7 +20,7 @@
   ],
   "modules-center": [
     "custom/lock_screen",
-    // "custom/pacman",
+    "custom/pacman",
     "clock",
     "custom/wallpaper",
     "custom/power_btn"
@@ -34,7 +34,7 @@
     "wireplumber",
     "pulseaudio#microphone",
     "battery",
-    "backlight",
+    // "backlight",
     "custom/weather",
     // "idle_inhibitor"
     "custom/hypridle"

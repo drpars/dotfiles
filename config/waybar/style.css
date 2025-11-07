@@ -1,8 +1,8 @@
 * {
   font-family: Ubuntu Nerd Font;
-  font-weight: bold;
-  font-size: 14px;
-  min-height: 28px;
+  /* font-weight: bold; */
+  font-size: 12px;
+  min-height: 24px;
   /* font-size: 97%;  Uncomment if needed */
   /* font-feature-settings: '"zero", "ss01", "ss02", "ss03", "ss04", "ss05", "cv31"'; */
 }
@@ -137,14 +137,14 @@ tooltip label {
 #temperature {
   border-radius: 10px 0 0 10px;
   padding: 0 10px 0 20px;
-  font-size: 12px;
+  /* font-size: 12px; */
 }
 
 #custom-gputemp {
   margin-right: 10px;
   border-radius: 0 10px 10px 0;
   padding: 0 20px 0 10px;
-  font-size: 12px;
+  /* font-size: 12px; */
 }
 
 #window {
@@ -161,7 +161,6 @@ tooltip label {
 }
 
 #custom-pacman {
-  font-size: 16px;
   padding: 0 10px;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
@@ -176,6 +175,7 @@ tooltip label {
 #clock,
 #custom-wallpaper {
   padding: 0 10px;
+  font-weight: bold;
 }
 
 #custom-power_btn {
@@ -191,6 +191,10 @@ tooltip label {
   margin-right: 10px;
   border-radius: 10px;
   padding: 0 20px;
+}
+
+#custom-weather {
+  font-weight: bold;
 }
 
 #bluetooth {
@@ -243,6 +247,12 @@ tooltip label {
 #pulseaudio,
 #battery {
   padding: 0 10px;
+}
+
+#pulseaudio.microphone {
+  margin-right: 10px;
+  border-radius: 0 10px 10px 0;
+  padding: 0 20px 0 8px;
 }
 
 #battery.warning {
