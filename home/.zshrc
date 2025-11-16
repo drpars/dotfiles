@@ -70,7 +70,7 @@ bindkey '^[[D'    backward-char                 # left       move cursor one cha
 bindkey '^[[C'    forward-char                  # right      move cursor one char forward
 bindkey '^[[A'    history-substring-search-up   # up         prev command in history
 bindkey '^[[B'    history-substring-search-down # down       next command in history
-bindkey '^R'      history-search-multi-word
+bindkey '^R'      history-search-multi-word     # ctrl+R     history search
 
 # Styling
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND=(none)

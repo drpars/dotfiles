@@ -1,0 +1,12 @@
+[Common]
+ShadowIntensity=Low
+ShadowSize=ShadowNone
+
+[Style]
+AnimationsDuration=100
+AnimationsEnabled=false
+DisableDolphinUrlNavigatorBackground=false
+RoundedRubberBandFrame=false
+
+[Windeco]
+AnimationsEnabled=false

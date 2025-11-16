@@ -9,17 +9,17 @@
 
 window#waybar {
   background: transparent;
-  color: #ffffff;
+  /* color: #ffffff; */
 }
 
 window#waybar.empty #window {
-  background-color: transparent;
+  background: transparent;
 }
 
 /* Tooltip Styling */
 tooltip {
   background: #1e1e2e;
-  opacity: 0.95;
+  opacity: 1;
   border: none;
   border-radius: 10px;
   text-shadow: none;
@@ -193,6 +193,12 @@ tooltip label {
   padding: 0 20px;
 }
 
+/* #tray, */
+/* #tray menu, */
+/* #tray menu menuitem { */
+/*   all:unset */
+/* } */
+
 #custom-weather {
   font-weight: bold;
 }
@@ -250,9 +256,8 @@ tooltip label {
 }
 
 #pulseaudio.microphone {
-  margin-right: 10px;
-  border-radius: 0 10px 10px 0;
-  padding: 0 20px 0 8px;
+  border-radius: 0px;
+  padding: 0 10px;
 }
 
 #battery.warning {

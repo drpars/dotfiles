@@ -1,35 +1,28 @@
+; Notlar
+; xdg-mime query filetype /yol/dosyanız.pdf
+; xdg-mime default firefox.desktop application/pdf
+
 [Default Applications]
-inode/directory=dolphin.desktop;
 application/x-desktop=nvim.desktop;
-application/x-shellscript=nvim.desktop;
-text/plain=nvim.desktop;
-text/x-csrc=nvim.desktop;
+application/x-extension-htm=zen.desktop
+application/x-extension-html=zen.desktop
+application/x-extension-shtml=zen.desktop
+application/x-extension-xht=zen.desktop
+application/x-extension-xhtml=zen.desktop
+application/x-shellscript=nvim.desktop
+text/x-shellscript=nvim-wrapper.desktop
+application/xhtml+xml=zen.desktop
 image/heif=imv-dir.desktop;
 image/jpeg=imv-dir.desktop;
 image/png=imv-dir.desktop;
 image/svg+xml=imv-dir.desktop;
 image/vnd.microsoft.icon=imv-dir.desktop;
+inode/directory=dolphin.desktop;
+text/html=zen.desktop
+text/plain=nvim.desktop;
+text/x-csrc=nvim.desktop;
 video/mp4=mpv.desktop;
 video/quicktime=mpv.desktop;
+x-scheme-handler/chrome=zen.desktop
 x-scheme-handler/http=zen.desktop
 x-scheme-handler/https=zen.desktop
-x-scheme-handler/chrome=zen.desktop
-text/html=zen.desktop
-application/x-extension-htm=zen.desktop
-application/x-extension-html=zen.desktop
-application/x-extension-shtml=zen.desktop
-application/xhtml+xml=zen.desktop
-application/x-extension-xhtml=zen.desktop
-application/x-extension-xht=zen.desktop
-
-[Added Associations]
-x-scheme-handler/http=zen.desktop;
-x-scheme-handler/https=zen.desktop;
-x-scheme-handler/chrome=zen.desktop;
-text/html=zen.desktop;
-application/x-extension-htm=zen.desktop;
-application/x-extension-html=zen.desktop;
-application/x-extension-shtml=zen.desktop;
-application/xhtml+xml=zen.desktop;
-application/x-extension-xhtml=zen.desktop;
-application/x-extension-xht=zen.desktop;

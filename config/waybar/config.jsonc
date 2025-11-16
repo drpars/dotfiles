@@ -27,14 +27,14 @@
   ],
   "modules-right": [
     "tray",
-    "custom/power_profile",
-    // "power-profiles-daemon",
+    // "custom/power_profile",
+    "power-profiles-daemon",
     "bluetooth",
     "network",
     "wireplumber",
     "pulseaudio#microphone",
     "battery",
-    // "backlight",
+    "backlight",
     "custom/weather",
     // "idle_inhibitor"
     "custom/hypridle"
