@@ -84,10 +84,11 @@ editor_filesize_threshold=64M
 editor_stop_format_chars=-+*\\,.;:&>
 mcview_eof=
 skin=modarin256-defbg-thin
+filepos_max_saved_entries=1024
 
 [Layout]
 output_lines=0
-left_panel_size=139
+left_panel_size=160
 top_panel_size=0
 message_visible=true
 keybar_visible=true
@@ -115,6 +116,7 @@ clipboard_paste=
 base_color=
 xterm-kitty=
 color_terminals=
+linux=
 
 [Panels]
 show_mini_info=true
@@ -138,7 +140,7 @@ quick_search_mode=2
 select_flags=6
 
 [Panelize]
-Değiştirilmiş git dosyaları=git ls-files --modified
 Yamadan sonraki .orig dosyalarını bul=find . -name \\*.orig -print
-Yamadan sonraki reddedilenleri bul=find . -name \\*.rej -print
 SUID ve SGID uygulamaları bul=find . \\( \\( -perm -04000 -a -perm /011 \\) -o \\( -perm -02000 -a -perm /01 \\) \\) -print
+Yamadan sonraki reddedilenleri bul=find . -name \\*.rej -print
+Değiştirilmiş git dosyaları=git ls-files --modified

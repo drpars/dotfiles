@@ -1,0 +1,118 @@
+/*
+ * Rofi Duvar Kağıdı Seçici Teması: Saf (Sıfırdan Yazıldı)
+ * Geometri: 980x180, Üst Orta (north/center)
+ * Düzen: 5 Sütun, İkon Odaklı
+ */
+
+* {
+    /* Özel Renk Tanımlamaları */
+    main-bg: #11111be6;     /* Koyu Arka Plan (Şeffaf) */
+    main-fg: #cdd6f4ff;     /* Ana Yazı Rengi */
+    main-br: #b4befeff;     /* Kenarlık/Vurgu (Lavanta) */
+    select-bg: #b4befeff;   /* Seçili Vurgu Rengi (Lavanta) */
+    select-fg: #11111bff;   /* Seçili Yazı (Koyu, Yüksek Kontrast) */
+    
+    /* Genel Rofi Stil Ayarları */
+    border-color: @main-br; 
+    separatorcolor: transparent; /* İstenildiği gibi */
+
+    background-color: @main-bg;
+    text-color: @main-fg;
+
+    border: 0;
+    margin: 0;
+    padding: 0;
+    spacing: 0;
+    dpi: 128;
+    font: "Ubuntu Nerd Font 12";
+}
+
+configuration {
+    show-icons: true;
+    hover-select: true;
+    me-select-entry: "";
+    me-accept-entry: "MousePrimary";
+}
+
+/* 1. ANA PENCERE (KONUM VE GEOMETRİ) */
+window {
+    /* İstenen Konum ve Boyut */
+    location: north;
+    anchor: center;
+    width: 800px;
+    height: 180px;
+    x-offset: 0px;
+    y-offset: 10px;
+
+    /* Sınır Ayarları */
+    border: 1px; /* İstenen 1px pencere sınırı */
+    border-radius: 6px;
+    border-color: @main-br; /* Lavanta renginde çerçeve */
+}
+
+/* 2. ANA KUTU (mainbox) */
+mainbox {
+    orientation: horizontal;
+    children: [listview];
+    // background-color: transparent;
+}
+
+/* Inputbar (Arama çubuğu - Görsel Seçici için devre dışı) */
+inputbar {
+    enabled: false;
+}
+
+/* 3. LİSTE GÖRÜNÜMÜ */
+listview {
+    columns: 5; /* İstenen 5 sütun */
+    layout: vertical; /* İstenen dikey düzen */
+    spacing: 10px;
+    padding: 10px;
+    cycle: false;
+    background-color: transparent;
+}
+
+/* 4. LİSTE ÖĞELERİ (element) */
+element {
+    /* İkon Ortalaması için Temizlik */
+    margin: 0px;
+    padding: 0px;
+    
+    border-radius: 6px;
+    layout: vertical;
+    children: [element-icon]; /* Metin kaldırıldı */
+
+    /* Normal durumda görünmez sınır */
+    border-width: 2px;
+    border-color: @main-bg;
+}
+
+/* 5. İKON STİLLERİ */
+element-icon {
+    size: 140px; 
+    vertical-align: 0.5;
+    horizontal-align: 0.5;
+    padding: 3px; /* İkonun ortalanmasına yardımcı olmak için küçük bir iç boşluk */
+    background-color: transparent;
+}
+
+/* 6. DURUM STİLLERİ */
+
+/* Normal Öğeler */
+element normal.normal,
+element normal.active,
+element alternate.normal,
+element alternate.active {
+    background-color: transparent;
+    border-color: @main-bg; /* Arka plan renginde sınır (gizli) */
+    text-color: @main-fg;
+}
+
+/* Seçili Öğeler (Vurgulu) */
+element selected.normal,
+element selected.active {
+    background-color: @select-bg; /* Seçili arka planı korundu, altındaki vurgu border olacak */
+    border-color: @select-bg; /* Lavanta vurgu sınır */
+    border-width: 2px;
+    text-color: @select-fg; /* Koyu metin */
+}

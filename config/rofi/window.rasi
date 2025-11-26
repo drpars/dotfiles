@@ -1,103 +1,101 @@
 /*
- * ROFI color theme
- *
- * Based on Something Found in the Internet
- *
- * User: Contributors
- * Copyright: *!
+ * Rofi Window Switcher Theme: Tokyo Night (Minimal/No Input)
+ * Theme Focus: Minimal list for quick window selection.
  */
 
 * {
-  border    : 0;
-  margin    : 0;
-  padding   : 0;
-  spacing   : 0;
-  dpi       : 96;
+  /* Tokyo Night Renk Paleti */
+  background: #1a1b26;         /* Çok Koyu Arka Plan */
+  background-alt: #24283b;     /* Seçili Arka Plan / Alternatif */
+  foreground: #c0caf5;         /* Genel Metin (Parlak) */
+  selected-foreground: #1a1b26;/* Seçili Öğede Metin (Koyu) */
+  normal-foreground: #a9b1d6;  /* Normal Öğede Metin (Soluk) */
+  border-color: #b4befe;       /* Vurgu/Çerçeve Rengi (Lavanta Mavi) */
+  accent: #7aa2f7;             /* İkincil Vurgu (Mavi) */
 
-  bg        : #1a1b26;
-  bg3       : rgb(21,22,30,0.9);
-  bg-alt    : #232433;
-  fg        : #6a6f87;
-  fg-alt    : #a9b1d6;
-  txt       : #cad3f5;
-  brdr      : #ffe9a0; 
-
-  background-color  : @bg3;
-  text-color        : @fg;
+  /* Temel Sıfırlamalar */
+  border: 0;
+  margin: 0;
+  padding: 0;
+  spacing: 0;
 }
 
 configuration {
-  font      : "Ubuntu Nerd Font 12";
-
-  timeout {
-    delay   : 10;
-    action  : "kb-cancel";
-  }
+  font: "Ubuntu Nerd Font 11";
 }
 
+/* 1. ANA PENCERE (ROFI'NİN ÇERÇEVESİ) */
 window {
-  transparency  : "reel";
-  location      : center;
-  width         : 800px;
-  border           : 1px;
-  border-radius    : 8px;
-  border-color     : @brdr; 
+  transparency: "real";
+  location: center;
+  width: 28%; /* Pencereler arası geçiş için daha dar hale getirildi */
+  x-offset: 0;
+  y-offset: 0;
+  
+  background-color: @background;
+  border: 1px;
+  border-radius: 8px;
+  border-color: @border-color;
+  padding: 10px;
 }
 
+/* 2. ANA KUTU */
 mainbox {
-  padding : 10px;
-  background-color : transparent;
-  children         : [ listview ];
+  border: 0;
+  padding: 0;
 }
 
+/* 3. ARAMA KUTUSU / GİRİŞ ÇUBUĞU - TAMAMEN KALDIRILDI */
+inputbar {
+    enabled: false;
+}
+
+/* 4. LİSTE GÖRÜNÜMÜ */
 listview {
-  columns       : 1;
-  lines         : 8;
-  background-color : transparent;
+  columns: 1;
+  lines: 8; 
+  cycle: true;
+  dynamic: true;
+  scrollbar: false;
+  
+  background-color: @background;
 }
 
+/* 5. ÖĞELER (PENCERE BAŞLIKLARI) */
 element {
-  border-radius : 2px;
-  children          : [element-icon, element-text];
+  padding: 10px;
+  border-radius: 4px;
+  orientation: horizontal;
+  children: [ element-icon, element-text ];
 }
 
+/* Normal Durum */
+element normal {
+  background-color: @background;
+  text-color: @normal-foreground;
+}
+
+/* Seçili (Vurgulu) Durum */
+element selected {
+  background-color: @border-color; /* Lavanta Mavi Vurgu */
+  text-color: @selected-foreground; /* Koyu Metin */
+}
+
+element alternate {
+  background-color: @background;
+  text-color: @normal-foreground;
+}
+
+/* 6. İKON VE METİN STİLLERİ */
 element-icon {
-  background-color  : transparent;
-  padding           : 10px 10px;
-  size              : 28px;
+  size: 20px;
+  padding: 0 10px 0 0;
+  background-color: transparent;
+  text-color: inherit;
 }
 
 element-text {
-  background-color  : transparent;
-  padding           : 15px 0;
-}
-
-element normal.normal {
-  background-color  : transparent;
-  text-color        : @fg;
-}
-
-element normal.active {
-  background-color  : transparent;
-  text-color        : @fg;
-}
-
-element selected.normal {
-  text-color        : @bg-alt;
-  background-color  : @fg-alt;
-}
-
-element selected.active {
-  text-color        : @bg-alt;
-  background-color  : @fg-alt;
-}
-
-element alternate.normal {
-  background-color  : transparent;
-  text-color        : @fg;
-}
-
-element alternate.active {
-  background-color  : transparent;
-  text-color        : @fg;
+  background-color: transparent;
+  text-color: inherit;
+  highlight: none; /* Arama çubuğu olmadığı için vurgulama kaldırıldı */
 }

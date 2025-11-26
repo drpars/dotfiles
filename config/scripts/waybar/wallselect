@@ -23,7 +23,7 @@ astyle() {
 bstyle() {
   selected=$(find "$DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) -exec basename {} \; | sort -g | while read -r rfile; do
   echo -en "$rfile\x00icon\x1f$DIR/${rfile}\n"
-  done | rofi -dmenu -replace -theme ~/.config/rofi/wallselect.rasi -disable-history)
+  done | rofi -dmenu -replace -theme ~/.config/rofi/wallpaper.rasi -disable-history)
   swww img "$DIR"/$selected $swww_opt
 }
 

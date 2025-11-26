@@ -1,0 +1,186 @@
+/*
+ * =========================================================
+ * about:newtab ve about:blank için Tokyo Night Teması
+ * userContent.css dosyasına eklenmelidir.
+ * =========================================================
+ */
+
+/* ----- Included functions ----- */
+@import url("spill-style-part2-file.css");
+@import url("thin_scrollbar_windows10.css");
+@import url("wallpaper-edition.css");
+@import url("remove_homepage_shortcut_title_text.css");
+@import url("circular_homepage_shortcuts.css");
+
+/*=====================================================================
+================= D A R K   T H E M E   C O L O R S ===================
+=====================================================================*/
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Tokyo Night Color Palette (userChrome.css ile aynı) */
+    --tokyo-night-bg: #1a1b26; /* Main Background (Ana Sayfa/İçerik Arka Planı) */
+    --tokyo-night-bg-light: #24283b; /* Lighter Background (Arama Kutusu/Kart Arka Planı) */
+    --tokyo-night-accent: #3b4260; /* Highlight/Border (Vurgu/Kenarlık) */
+    --tokyo-night-text: #a9b1d6; /* Foreground Text (Metin Rengi) */
+    --tokyo-night-purple: #bb9af7; /* Private Browsing Vurgu Rengi */
+
+    /* ---------------------------------------------------- */
+    /* userContent.css için kullanılan değişkenleri Tokyo Night renkleriyle güncelle */
+    --firefoxcss-main-bg-color: var(--tokyo-night-bg);
+    --firefoxcss-item-bg-color: var(--tokyo-night-bg-light);
+    --firefoxcss-item-hover-bg-color: color-mix(in srgb, var(--tokyo-night-bg-light) 75%, var(--tokyo-night-accent));
+    --firefoxcss-text-color: var(--tokyo-night-text);
+    --firefoxcss-other-color: var(--tokyo-night-accent); /* Alternatif bir vurgu rengi */
+
+    /* ----- Private Page Colors (Özel Gezinme Sayfaları) ----- */
+    --firefoxcss-private-search-bg-color: color-mix(in srgb, var(--tokyo-night-purple) 20%, transparent);
+    --firefoxcss-private-search-top-border: color-mix(in srgb, var(--tokyo-night-purple) 30%, transparent);
+    --firefoxcss-private-search-fill: color-mix(in srgb, var(--tokyo-night-purple) 40%, transparent);
+    --firefoxcss-private-search-placeholder: var(--tokyo-night-text);
+
+    /* ----- New Tab Page Colors (Yeni Sekme Sayfası) ----- */
+    --firefoxcss-newtab-bg-color: var(--tokyo-night-bg);
+    /* Arama çubuğu ve hızlı erişim kartları için şeffaf arka plan kullanıyoruz. */
+    --firefoxcss-newtab-search-bg-color: transparent; 
+    --firefoxcss-newtab-top-sites-bg-color: transparent;
+  }
+}
+
+/*=====================================================================
+================= L I G H T   T H E M E   C O L O R S =================
+=====================================================================*/
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --firefoxcss-main-bg-color: hsl(200, 5%, 98%);
+    --firefoxcss-item-bg-color: hsl(200, 5%, 96%);
+    --firefoxcss-item-hover-bg-color: hsl(200, 5%, 90%);
+    --firefoxcss-text-color: hsl(0, 0%, 10%);
+    --firefoxcss-other-color: hsl(200, 5%, 75%);
+
+    /* ----- Private Page Colors ----- */
+    --firefoxcss-private-search-bg-color: hsla(275, 13%, 33%, 0.3);
+    --firefoxcss-private-search-top-border: hsla(275, 13%, 40%, 0.3);
+    --firefoxcss-private-search-fill: hsl(275, 13%, 33%);
+    --firefoxcss-private-search-placeholder: hsl(0, 0%, 50%);
+
+    /* ----- New Tab Page Colors (Hafif temada kutuları koruyabiliriz veya kaldırabiliriz) ----- */
+    --firefoxcss-newtab-bg-color: hsl(200, 5%, 98%);
+    --firefoxcss-newtab-search-bg-color: hsl(200, 5%, 96%);
+    --firefoxcss-newtab-top-sites-bg-color: hsl(200, 5%, 94%);
+  }
+}
+
+/*=====================================================================
+==================== G L O B A L   V A R I A B L E S ==================
+=====================================================================*/
+
+:root {
+  --firefoxcss-newtab-card-radius: 12px;
+  --firefoxcss-newtab-card-padding: 12px;
+}
+
+
+/*=====================================================================
+================= A B O U T : B L A N K   A N D   N E W T A B =========
+=====================================================================*/
+
+@-moz-document url-prefix("about:blank"), url-prefix("about:newtab") {
+  body {
+    background-color: var(--firefoxcss-newtab-bg-color) !important;
+    color: var(--firefoxcss-text-color) !important;
+  }
+  
+  /* Arama çubuğu - Arka plan rengini ana sayfa arka planına eşitler */
+  .search-wrapper,
+  .search-wrapper input {
+    background-color: var(--firefoxcss-newtab-search-bg-color) !important;
+    color: var(--firefoxcss-text-color) !important;
+    border-color: var(--firefoxcss-other-color) !important;
+  }
+  
+  /* Hızlı erişim sitelerinin arka planı - Arka plan rengini ana sayfa arka planına eşitler */
+  .top-sites-list .top-site-outer .top-site-icon,
+  .outer-wrapper .top-site-outer .top-site-icon,
+  .outer-wrapper .top-site-outer .top-site-inner {
+    background-color: var(--firefoxcss-newtab-top-sites-bg-color) !important;
+    border-radius: var(--firefoxcss-newtab-card-radius) !important;
+  }
+  
+  /* Yerleşik sayfalar */
+  .outer-wrapper {
+    background-color: var(--firefoxcss-newtab-bg-color) !important;
+  }
+}
+
+/*=====================================================================
+=================== A B O U T : P R I V A T E   B R O W S I N G =======
+=====================================================================*/
+
+@-moz-document url(about:privatebrowsing) {
+  body {
+    background-color: var(--firefoxcss-main-bg-color) !important;
+  }
+
+  .search-wrapper {
+    background-color: var(--firefoxcss-private-search-bg-color) !important;
+    border-top: 1px solid var(--firefoxcss-private-search-top-border) !important;
+  }
+
+  .search-wrapper input {
+    color: var(--firefoxcss-text-color) !important;
+  }
+
+  .search-wrapper input::placeholder {
+    color: var(--firefoxcss-private-search-placeholder) !important;
+  }
+
+  .search-wrapper .icon-search,
+  .search-wrapper .icon-close {
+    fill: var(--firefoxcss-text-color) !important;
+  }
+}
+
+/*=====================================================================
+================== P O C K E T   C A R D S   F I X E S ================
+=====================================================================*/
+
+@-moz-document url(about:newtab) {
+  /* Pocket Kart Arka Planı - Şeffaf yapıldı */
+  .outer-wrapper .section-content .snippet-card {
+    background-color: var(--firefoxcss-newtab-top-sites-bg-color) !important; /* Artık şeffaf */
+    border-radius: var(--firefoxcss-newtab-card-radius) !important;
+    padding: var(--firefoxcss-newtab-card-padding) !important;
+    box-shadow: none !important;
+  }
+
+  .outer-wrapper .section-content .snippet-card .snippet-inner {
+    color: var(--firefoxcss-text-color) !important;
+  }
+
+  /* Pocket Kart Üzerine Gelme (Hover) rengi daha belirgin olmalı, ana arkaplan değil. */
+  .outer-wrapper .section-content .snippet-card:hover {
+    background-color: var(--firefoxcss-item-hover-bg-color) !important;
+  }
+
+  /* Pocket Metin Renkleri */
+  .outer-wrapper .section-content .snippet-card .snippet-title,
+  .outer-wrapper .section-content .snippet-card .snippet-metadata,
+  .outer-wrapper .section-content .snippet-card .snippet-metadata a {
+    color: var(--firefoxcss-text-color) !important;
+    opacity: 0.8;
+  }
+
+  /* Pocket kart sayısı düzenlemeleri (Mevcut ayarlarınızı korur) */
+  @media not (-moz-bool-pref: "firefoxcss.pocket.5.cards.enable") {
+    .outer-wrapper .section-content .snippet-list {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+      column-gap: 16px !important;
+    }
+    @media (-moz-bool-pref: "firefoxcss.pocket.5.cards.enable") {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+      column-gap: 12px !important;
+    }
+  }
+}

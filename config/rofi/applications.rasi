@@ -1,0 +1,151 @@
+/*******************************************************************************
+ * ROFI Color Theme
+ * Theme: Tokyonight (Night) with LAVENDER Accent
+ *******************************************************************************/
+
+* {
+    /* --- Tokyonight Renk Paleti --- */
+    tn-bg:          #1a1b26;    /* Ana Arka Plan */
+    tn-bg-alt:      #24283b;    /* Alternatif Arka Plan (Input bar) */
+    tn-fg:          #c0caf5;    /* Ana Metin Rengi */
+    tn-fg-alt:      #565f89;    /* Pasif/Sönük Metin */
+    tn-accent:      #b4befe;    /* YENİ VURGU RENGİ: Lavanta (Çok daha açık) */
+    tn-urgent:      #f7768e;    /* Uyarı Rengi */
+
+    /* --- Genel Değişkenler --- */
+    border:         0;
+    margin:         0;
+    padding:        0;
+    spacing:        0;
+    dpi:            96;
+
+    background-color: @tn-bg;
+    text-color:       @tn-fg;
+}
+
+configuration {
+    font:            "Ubuntu Nerd Font 11";
+
+    timeout {
+        delay:  10;
+        action: "kb-cancel";
+    }
+
+    modi:            "drun,run,filebrowser,window";
+    show-icons:      true;
+    icon-theme:      "Qogir-dark";
+
+    /* İkonlar ve Format */
+    display-drun:        " ";
+    display-run:         " ";
+    display-filebrowser: " ";
+    display-window:      " ";
+    drun-display-format: "{name}";
+
+    filebrowser {
+        directory:         "~";
+        directories-first: true;
+        sorting-method:    "name";
+        show-hidden:       true;
+        command:           "xdg-open";
+    }
+}
+
+window {
+    transparency:    "real";
+    width:           740px;
+    border:          1px;
+    border-radius:   10px;
+    border-color:    @tn-accent; /* #b4befe */
+    background-color: @tn-bg;
+}
+
+mainbox {
+    padding:         20px;
+    children:        [ inputbar, listview ];
+    background-color: transparent;
+}
+
+/* --- Arama Çubuğu (Input Bar) --- */
+inputbar {
+    enabled:         true;
+    background-color: @tn-bg-alt;
+    border-radius:   8px;
+    padding:         12px;
+    margin:          0 0 15px 0;
+    children:        [ prompt, entry ];
+}
+
+entry {
+    background-color: transparent;
+    text-color:       @tn-fg;
+    placeholder:      "Ara...";
+    placeholder-color:@tn-fg-alt;
+    padding:          0 5px;
+    vertical-align:   0.5;
+}
+
+prompt {
+    background-color: transparent;
+    text-color:       @tn-accent; /* #b4befe */
+    padding:          0 10px 0 0;
+    vertical-align:   0.5;
+}
+
+/* --- Liste Görünümü --- */
+listview {
+    background-color: transparent;
+    columns:          2;
+    lines:            7;
+    spacing:          5px;
+    scrollbar:        false;
+}
+
+element {
+    orientation:      horizontal;
+    border-radius:    8px;
+    padding:          8px;
+    background-color: transparent;
+    text-color:       @tn-fg;
+}
+
+element-icon {
+    background-color: transparent;
+    size:             28px;
+    margin:           0 10px 0 0;
+    vertical-align:   0.5;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    vertical-align:   0.5;
+}
+
+/* --- Seçim Durumları --- */
+
+element normal.normal {
+    background-color: transparent;
+    text-color:       @tn-fg;
+}
+
+/* Seçili Öğe (Vurgulu) */
+element selected.normal {
+    background-color: @tn-accent; /* #b4befe */
+    text-color:       @tn-bg;     /* Koyu yazı (Okunabilirlik için korundu) */
+}
+
+/* Aktif Pencereler */
+element normal.active {
+    text-color:       @tn-accent; /* #b4befe */
+}
+
+element selected.active {
+    background-color: @tn-accent; /* #b4befe */
+    text-color:       @tn-bg;
+}
+
+element alternate.normal {
+    background-color: transparent;
+    text-color:       @tn-fg;
+}

@@ -8,11 +8,13 @@
 }
 
 window#waybar {
+  /* border-bottom: 1px solid @unfocused_borders; */
+  color: @theme_text_color;
   background: transparent;
   /* color: #ffffff; */
 }
 
-window#waybar.empty #window {
+window#waybar.hidden {
   background: transparent;
 }
 
@@ -193,11 +195,13 @@ tooltip label {
   padding: 0 20px;
 }
 
-/* #tray, */
-/* #tray menu, */
-/* #tray menu menuitem { */
-/*   all:unset */
-/* } */
+#tray menu * {
+  min-height: 16px;
+}
+
+#tray menu separator {
+  min-height: 0px;
+}
 
 #custom-weather {
   font-weight: bold;

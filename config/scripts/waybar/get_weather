@@ -33,4 +33,4 @@ for ((i = 1; i <= max_retries; i++)); do
 done
 
 # Output error if all retries failed
-echo '{"text":"error", "tooltip":"error"}'
+echo '{"text":"drpars", "tooltip":"drpars"}'

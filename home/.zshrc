@@ -15,6 +15,7 @@ source "$HOME/.config/zsh/functions.zsh"
 # User configuration
 export PATH="$PATH:$HOME/.local/bin"
 export EDITOR=nvim
+export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
 # export TERMINAL=kitty
 
 # Add plugins

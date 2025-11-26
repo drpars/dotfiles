@@ -1,7 +1,7 @@
 {
   "custom/launch_rofi": {
     "format": "",
-    "on-click": "rofi -show drun -disable-history -replace -theme ~/.config/rofi/launcher.rasi",
+    "on-click": "rofi -show drun -disable-history -replace -theme ~/.config/rofi/menu.rasi",
     "tooltip": false,
     "margin-top": 10
   },
@@ -103,7 +103,7 @@
     "return-type": "",
     "on-click": "pidof hyprlock || hyprlock",
     "tooltip": true,
-    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font Bold'>Kilitle</span>"
+    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font'>Kilitle</span>"
   },
 
   "custom/pacman": {
@@ -150,7 +150,7 @@
     "on-click": "~/.config/scripts/waybar/wallselect",
     "on-click-right": "~/.config/scripts/waybar/randomwallpaper",
     "tooltip": true,
-    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font Bold'>Duvarkağıdını değiştir</span>"
+    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font'>Duvarkağıdını değiştir</span>"
   },
 
   "custom/power_btn": {
@@ -158,7 +158,7 @@
     "return-type": "",
     "on-click": "wlogout",
     "tooltip": true,
-    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font Bold'>Kapat</span>"
+    "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font'>Kapat</span>"
   },
 
   "tray": {
