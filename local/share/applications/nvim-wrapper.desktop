@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=Neovim Shell Script Editor
-Comment=Edit shell scripts in Neovim
-Exec=/home/drpars/.local/bin/nvim-wrapper.sh %f
-Terminal=false
-Type=Application
-Categories=Development;Utility;TextEditor;
-MimeType=application/x-shellscript;
