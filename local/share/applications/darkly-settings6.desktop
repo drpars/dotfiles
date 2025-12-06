@@ -2,7 +2,7 @@
 Name=Darkly Settings 6
 Comment=Darkly Theme Configuration Utility (Qt6/KDE)
 Exec=/usr/bin/darkly-settings6
-Icon=/usr/share/icons/hicolor/scalable/apps/darkly-settings.svgz
+Icon=org.xfce.settings.manager
 Terminal=false
 Type=Application
 Categories=Settings;Utility;

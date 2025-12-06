@@ -1,18 +1,22 @@
-; Notlar
-; xdg-mime query filetype /yol/dosyanız.pdf
-; xdg-mime default firefox.desktop application/pdf
-
 [Default Applications]
-application/x-desktop=nvim.desktop;
-application/x-shellscript=nvim.desktop
-text/x-shellscript=nvim-wrapper.desktop
+; dolphin
+inode/directory=dolphin.desktop;
+
+; imv-dir
 image/heif=imv-dir.desktop;
 image/jpeg=imv-dir.desktop;
 image/png=imv-dir.desktop;
 image/svg+xml=imv-dir.desktop;
 image/vnd.microsoft.icon=imv-dir.desktop;
-inode/directory=dolphin.desktop;
-text/plain=nvim.desktop;
-text/x-csrc=nvim.desktop;
+
+; mpv
 video/mp4=mpv.desktop;
 video/quicktime=mpv.desktop;
+
+; nvim-terminal
+application/x-desktop=nvim-terminal.desktop;
+application/x-shellscript=nvim-terminal.desktop
+application/xml=nvim-terminal.desktop;
+text/plain=nvim-terminal.desktop;
+text/x-csrc=nvim-terminal.desktop;
+text/x-shellscript=nvim-terminal.desktop;

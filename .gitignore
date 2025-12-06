@@ -2,3 +2,5 @@ config/zsh/.zsh_history
 config/btop/btop.log
 config/hypr/conf/gpu-env.conf
 config/OpenRGB/logs/
+config/OpenRGB/sizes.ors
+home/.fonts/.uuid

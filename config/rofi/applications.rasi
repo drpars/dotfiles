@@ -43,7 +43,7 @@ configuration {
     drun-display-format: "{name}";
 
     filebrowser {
-        directory:         "~";
+        directory:         "/home/drpars";
         directories-first: true;
         sorting-method:    "name";
         show-hidden:       true;

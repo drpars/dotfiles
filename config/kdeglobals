@@ -1,12 +1,15 @@
 [General]
 TerminalApplication=kitty
 
+[UiSettings]
+ColorScheme=TokyoNight
+
 [Icons]
 Theme=Qogir-Dark
 
 [KDE]
 ShowDeleteCommand=false
-widgetStyle=qt6ct-style
+widgetStyle=Darkly
 
 [PreviewSettings]
 EnableRemoteFolderThumbnail=false

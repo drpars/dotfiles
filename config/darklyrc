@@ -1,4 +1,6 @@
 [Common]
+CornerRadius=4
+FancyMargins=false
 MenuItemHeight=2
 ShadowIntensity=Low
 ShadowSize=ShadowNone

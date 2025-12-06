@@ -28,10 +28,12 @@
 }
 
 configuration {
+    modi: "drun";
     show-icons: true;
-    hover-select: true;
-    me-select-entry: "";
-    me-accept-entry: "MousePrimary";
+    drun-display-format: "{name}";
+    // hover-select: true;
+    // me-select-entry: "";
+    // me-accept-entry: "MousePrimary";
 }
 
 /* 1. ANA PENCERE (KONUM VE GEOMETRİ) */

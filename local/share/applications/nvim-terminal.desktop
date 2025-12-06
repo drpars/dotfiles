@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Neovim (Kitty Terminali)
+Comment=Metin dosyalarını Kitty terminali içinde Neovim ile açar
+Icon=nvim
+Exec=$TERMINAL nvim %f
+Terminal=false
+Type=Application
+MimeType=text/plain;application/x-shellscript;application/x-perl;application/x-python;
+Categories=Development;Utility;TextEditor;
+Keywords=metin;düzenleyici;cli;
+NoDisplay=true
