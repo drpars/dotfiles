@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# --- Ayarlar ---
+# Chromium komutunun yolu (gerekirse değiştirin)
+CHROMIUM_CMD="chromium"
+# ----------------
+
+echo "--- Chromium Eklenti İndirme Aracı ---"
+
+# 1. Chromium Versiyonunu Otomatik Olarak Al
+# 'chromium --version' çıktısından sürüm numarasını $(\text{142.0.7444.175})$ ayıkla
+echo "Chromium sürümü alınıyor..."
+
+# İlk olarak çıktıyı alıyoruz
+CHROMIUM_VERSION_OUTPUT=$($CHROMIUM_CMD --version 2>/dev/null)
+
+if [ $? -ne 0 ]; then
+    echo "Hata: '$CHROMIUM_CMD --version' komutu çalıştırılamadı. Lütfen Chromium'un sistem yolunuzda olduğundan emin olun."
+    exit 1
+fi
+
+# sed veya awk kullanarak sürüm numarasını ayıkla
+# 'Chromium', 'Google Chrome' veya 'Ungoogled Chromium' önekini ve sonundaki diğer metinleri atar.
+VERSION=$(echo "$CHROMIUM_VERSION_OUTPUT" | sed -E 's/^(Chromium|Google Chrome|Ungoogled Chromium) ([0-9\.]+).*$/\2/' | head -n 1)
+if [ -z "$VERSION" ]; then
+    echo "Hata: Chromium sürümü otomatik olarak alınamadı. Çıktı: '$CHROMIUM_VERSION_OUTPUT'"
+    exit 1
+fi
+
+echo "Tespit edilen Chromium Sürümü: **$VERSION**"
+
+# 2. Uzantı Kimliğini (EXTENSION_ID) Kullanıcıdan Al
+read -rp "Lütfen indirmek istediğiniz uzantının ID'sini (EXTENSION_ID) girin: " EXTENSION_ID
+
+# EXTENSION_ID boşsa çıkış yap
+if [ -z "$EXTENSION_ID" ]; then
+    echo "Hata: Uzantı ID'si boş bırakılamaz."
+    exit 1
+fi
+
+# 3. Chromium'u İndirme URL'si ile Çalıştır
+DOWNLOAD_URL="https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&prodversion=$VERSION&x=id%3D$EXTENSION_ID%26installsource%3Dondemand%26uc"
+
+echo ""
+echo "Oluşturulan URL:"
+echo "$DOWNLOAD_URL"
+echo ""
+
+echo "Chromium tarayıcısı aracılığıyla indirme işlemi başlatılıyor..."
+# İndirme işlemini doğrudan Chromium'a yönlendir
+$CHROMIUM_CMD "$DOWNLOAD_URL"
+
+echo ""
+echo "✅ İşlem tamamlandı. İndirme, tarayıcınızın varsayılan indirme konumunda başlamış olmalıdır."
+
+exit 0

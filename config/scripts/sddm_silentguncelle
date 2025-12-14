@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# --- Ayarlar ---
+TARGET_DIR="/usr/share/sddm/themes/silent/configs"
+
+# --- Güvenlik Kontrolü ---
+if [[ $EUID -ne 0 ]]; then
+  echo "HATA: Bu betik root (yönetici) yetkileriyle çalıştırılmalıdır."
+  echo "Lütfen 'sudo $0' şeklinde çalıştırın."
+  exit 1
+fi
+
+echo "SDDM Yapılandırma Dosyaları Güncelleniyor..."
+echo "Hedef Dizini: $TARGET_DIR"
+echo "---"
+
+# --- İşlem ---
+# *.conf uzantılı tüm dosyalar üzerinde döngü oluştur
+for file in "$TARGET_DIR"/*.conf; do
+  
+  # Dosyanın varlığını kontrol et
+  if [ -f "$file" ]; then
+    echo "-> Güncelleniyor: $(basename "$file")"
+    
+    # sed komutu ile zincirleme değişimler:
+    # -i: Değişiklikleri dosyaya yazar.
+    # s/eski/yeni/: Değiştirme komutu. Her bir değişim ; ile ayrılmıştır.
+    sed -i \
+      -e 's/en-US/tr_TR/' \
+      -e 's/Logging in/Giriş yapılıyor/' \
+      -e 's/Press any key/Bir tuşa basın/' \
+      "$file"
+  fi
+done
+
+echo "---"
+echo "Başarılı! Tüm .conf dosyalarındaki metinler güncellendi."
+echo "Değişikliklerin SDDM tarafından uygulanması için sistemi yeniden başlatmanız veya SDDM hizmetini yeniden yüklemeniz gerekebilir."

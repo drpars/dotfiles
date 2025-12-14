@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# --- Ayarlar ---
+DIR=$HOME/Resimler/Wallpaper/
+MONITOR="DP-1" # Hyprpaper için monitör adınız
+# ----------------
+
+# Rastgele resim seçimi
+PICS=($(find "${DIR}" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" \)))
+RANDOMPICS=${PICS[$RANDOM % ${#PICS[@]}]}
+
+# Hyprpaper kontrolü
+if pgrep -x "hyprpaper" >/dev/null; then
+  # Hyprpaper aktifse burası çalışır
+
+  # Belleği şişirmemek için eski preload'ları temizle
+  hyprctl hyprpaper unload all
+
+  # Yeni resmi önyükle (preload)
+  hyprctl hyprpaper preload "$RANDOMPICS"
+
+  # Resmi belirtilen monitöre döşe
+  hyprctl hyprpaper wallpaper "$MONITOR,$RANDOMPICS"
+
+# SWWW kontrolü (Hyprpaper yoksa buraya bakar)
+elif pgrep -x "swww-daemon" >/dev/null; then
+  # Eğer swaybg varsa kapat
+  if [[ $(pidof swaybg) ]]; then
+    pkill swaybg
+  fi
+
+  # swww komutunu çalıştır
+  swww img "${RANDOMPICS}" --transition-fps 30 --transition-type any --transition-duration 3
+
+else
+  # Hiçbir duvar kağıdı yöneticisi açık değilse, swww başlatıp devam et (Varsayılan davranış)
+  swww-daemon
+  swww img "${RANDOMPICS}" --transition-fps 30 --transition-type any --transition-duration 3
+fi

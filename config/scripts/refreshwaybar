@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# 1. Waybar çalışıyorsa sonlandır
+# -q: Sessiz mod (hata mesajı basmaz eğer çalışmıyorsa)
+killall -q waybar
+
+# 2. İşlemin tamamen kapandığından emin ol
+# Waybar işlemi sürdüğü müddetçe bekle (Race condition önler)
+while pgrep -x waybar >/dev/null; do sleep 1; done
+
+# 3. Waybar'ı arka planda başlat
+waybar &

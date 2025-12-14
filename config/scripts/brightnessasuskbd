@@ -1,0 +1,29 @@
+#!/bin/bash
+
+get_kbd_backlight() {
+	echo $(brightnessctl -d 'asus::kbd_backlight' -m | cut -d, -f4)
+}
+
+get_current() {
+	current=$(get_kbd_backlight | sed 's/%//')
+}
+
+notify_user() {
+	notify-send -e -h string:x-canonical-private-synchronous:info -h int:value:$current -u low "Klavye Parlaklığı : $current%"
+}
+
+change_kbd_backlight() {
+	brightnessctl -d asus::kbd_backlight set "$1" && get_current && notify_user
+}
+
+case "$1" in
+	"up")
+		change_kbd_backlight "33%+"
+		;;
+	"down")
+		change_kbd_backlight "33%-"
+		;;
+	*)
+		get_kbd_backlight
+		;;
+esac

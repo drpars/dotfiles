@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+location="$1"
+max_retries=5
+timeout=10
+retry_delay=2
+
+for ((i = 1; i <= max_retries; i++)); do
+  # Fetch weather status with timeout
+  if ! text=$(curl -s -m "$timeout" "https://wttr.in/$location?format=1"); then
+    sleep "$retry_delay"
+    continue
+  fi
+
+  # Check for content errors
+  if echo "$text" | grep -iqE "unknown|error"; then
+    text=$(whoami)
+  fi
+
+  # Fetch detailed tooltip
+  if ! tooltip=$(curl -s -m "$timeout" "https://wttr.in/$location?format=4"); then
+    sleep "$retry_delay"
+    continue
+  fi
+
+  # Clean up whitespace
+  text=$(echo "$text" | sed -E 's/\s+/ /g')
+  tooltip=$(echo "$tooltip" | sed -E 's/\s+/ /g')
+
+  # Output successful result
+  printf '{"text":"%s", "tooltip":"%s"}\n' "$text" "$tooltip"
+  exit 0
+done
+
+# Output error if all retries failed
+echo '{"text":"drpars", "tooltip":"drpars"}'

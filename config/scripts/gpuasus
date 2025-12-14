@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Set safer script defaults
+set -euo pipefail
+
+# Configuration
+if pacman -Qs supergfxctl >/dev/null; then
+  GFX_MODE=$(supergfxctl -g 2>/dev/null || echo "unknown")
+else
+  GFX_MODE="NVIDIA"
+fi
+INTERNAL_GPU_ID="amdgpu-pci-0600"
+TIMEOUT=5 # Timeout in seconds for sensor readings
+
+get_internal_temp() {
+  # Only attempt reading if not in dGPU-only mode
+  if [[ "$GFX_MODE" != *"AsusMuxDgpu"* ]]; then
+    # Try multiple temperature fields if first one returns 0
+    temp=$(sensors -A "$INTERNAL_GPU_ID" 2>/dev/null | awk '
+            /Tdie|edge|junction/ && /°C/ {
+                val = $2; sub(/\+/, "", val); sub(/\..*/, "", val); 
+                if (val+0 > 0) print val; else next
+            }
+            /°C/ {
+                val = $2; sub(/\+/, "", val); sub(/\..*/, "", val);
+                if (val+0 > 0) print val
+            }' | head -1)
+
+    [[ -n "$temp" ]] && echo "$temp" || echo "N/A"
+  else
+    echo "OFF" # Internal GPU is disabled in AsusMuxDgpu mode
+  fi
+}
+
+get_external_temp() {
+  temp=$(timeout "$TIMEOUT" nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | awk -F. '{print $1}')
+  [[ -n "$temp" ]] && echo "$temp" || echo "N/A"
+}
+
+# Get temperatures
+internalgpu=$(get_internal_temp)
+externalgpu=$(get_external_temp)
+
+# Create output based on graphics mode
+case "$GFX_MODE" in
+*Hybrid*)
+  text="GPU ${internalgpu}°C      eGPU ${externalgpu}°C"
+  tooltip="Hibrid Mod"
+  ;;
+*Integrated*)
+  text="GPU ${internalgpu}°C"
+  tooltip="Entegre Mod"
+  ;;
+*Vfio*)
+  text="GPU ${internalgpu}°C      VFIO Active"
+  tooltip="VFIO Mod"
+  ;;
+*AsusMuxDgpu*)
+  text="eGPU ${externalgpu}°C"
+  tooltip="Asus MUX DGPU Mod"
+  ;;
+*NVIDIA*)
+  text="GPU ${externalgpu}°C"
+  tooltip="GPU"
+  ;;
+*)
+  text="GPU Durum Bilinmiyor"
+  tooltip="Bilinmeyen Grafik Modu: ${GFX_MODE}"
+  ;;
+esac
+
+# Output JSON with proper escaping
+printf '{"text":"%s", "tooltip":"%s"}\n' "$text" "$tooltip"

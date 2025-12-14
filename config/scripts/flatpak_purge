@@ -1,0 +1,54 @@
+#!/bin/bash
+# Flatpak Temizleme Betiği: Tüm uygulama, veri ve kalıntıları kaldırır.
+
+echo "================================================"
+echo "⚠️ UYARI: BU İŞLEM GERİ ALINAMAZ!"
+echo "   Flatpak ile kurulu TÜM uygulamalar ve kaydettikleri"
+echo "   TÜM kullanıcı verileri silinecektir."
+echo "================================================"
+
+# Kullanıcıdan onay isteme (Zsh ile uyumlu ayrılmış prompt)
+echo -n "Tüm Flatpak uygulamalarını ve verilerini silmek istediğinizden emin misiniz? (E/h): "
+read -r confirmation
+
+if [[ "$confirmation" =~ ^[EeYy]$ ]]; then
+
+    # --- 1. TÜM UYGULAMALARI VE VERİLERİNİ KALDIRMA ---
+    echo ""
+    echo ">>> Adım 1/3: Kurulu TÜM uygulamalar ve verileri kaldırılıyor (Otomatik Onay)..."
+    
+    # -y (veya --noninteractive): Onay sormadan işlemi otomatik olarak 'Evet' ile devam ettirir.
+    flatpak uninstall --all --delete-data -y 
+
+    if [ $? -eq 0 ]; then
+        echo "✅ Tüm uygulamalar ve verileri başarıyla kaldırıldı."
+    else
+        echo "❌ Uygulama kaldırma işleminde hata oluştu. Devam ediliyor..."
+    fi
+
+    # --- 2. KULLANILMAYAN ÇALIŞMA ZAMANLARINI (RUNTIME) TEMİZLEME ---
+    echo ""
+    echo ">>> Adım 2/3: Kullanılmayan çalışma zamanları (runtime) ve bağımlılıklar temizleniyor..."
+    
+    # Kullanılmayan kütüphaneleri otomatik olarak kaldırır.
+    flatpak uninstall --unused -y
+    echo "✅ Kullanılmayan çalışma zamanları temizlendi."
+
+    # --- 3. KULLANICI AYARLARI VE ÖN BELLEĞİNİ SIFIRLAMA ---
+    echo ""
+    echo ">>> Adım 3/3: Flatpak kullanıcı geçersiz kılmaları (override) ve önbellek temizleniyor..."
+
+    # a) Global ve Uygulama Override'larını (İzinler, Tema Zorlamaları) Sıfırlama
+    flatpak override --user --reset
+    
+    # b) Kullanıcı Ön Belleğini Silme
+    rm -rf ~/.cache/flatpak
+    echo "✅ Tüm geçersiz kılmalar ve önbellek temizlendi."
+    
+    echo ""
+    echo "🎉 Flatpak sistemi ve tüm kalıntıları başarıyla temizlendi."
+
+else
+    echo ""
+    echo "İşlem iptal edildi. Flatpak uygulamaları ve verileri korunuyor."
+fi

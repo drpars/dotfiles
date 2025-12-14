@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# ==========================================================
+# AYARLANACAK DEĞİŞKENLERİ BURAYA GİRİN
+# ==========================================================
+
+# Hyprland'de kullandığınız GTK Tema Adı (Örn: Catppuccin-Mocha-Standard-Dark)
+GTK_TEMA_ADI="Tokyonight-Dark"
+
+# Hyprland'de kullandığınız İkon Tema Adı (Örn: Papirus-Dark)
+IKON_TEMA_ADI="Qogir-Dark"
+
+# QT Tema Motoru/Platformu (qt5ct veya kvantum en yaygın olanlardır)
+# Hyprland için GTK uyumu amacıyla 'qt5ct' kullanılması önerilir.
+QT_PLATFORM="qt6ct"
+
+# ==========================================================
+# 1. DOSYA SİSTEMİ ERİŞİM İZİNLERİNİ VERME
+# ==========================================================
+# Flatpak uygulamalarının sistemdeki ve kullanıcıdaki temalara, ikonlara
+# ve fontlara salt okunur (read-only) erişimini sağlar.
+
+echo ">>> Flatpak: Dosya sistemi erişim izinleri ayarlanıyor..."
+
+flatpak -u override --user \
+    --filesystem=xdg-data/icons:ro \
+    --filesystem=xdg-data/themes:ro \
+    --filesystem=~/.icons:ro \
+    --filesystem=~/.themes:ro \
+    --filesystem=~/.fonts:ro \
+    --filesystem=xdg-config/fontconfig:ro \
+    --filesystem=xdg-config/qt6ct:ro \
+    --filesystem=xdg-config/Kvantum:ro
+
+echo "Dosya sistemi erişimi başarıyla ayarlandı."
+
+# ==========================================================
+# 2. ORTAM DEĞİŞKENLERİNİ ZORLAMA (THEME SELECTION)
+# ==========================================================
+# GTK, İkon ve QT uygulamalarına hangi temayı kullanmaları gerektiğini zorla bildirir.
+
+echo ">>> Flatpak: Ortam değişkenleri (Tema Seçimi) ayarlanıyor..."
+
+# GTK Theme (Tema)
+flatpak -u override --user --env=GTK_THEME="${GTK_TEMA_ADI}"
+
+# Icon Theme (İkon Teması)
+flatpak -u override --user --env=ICON_THEME="${IKON_TEMA_ADI}"
+
+# QT Theme (QT Teması)
+# QT uygulamaları için platform temasını ayarlar (Örn: qt5ct)
+flatpak -u override --user --env=QT_QPA_PLATFORMTHEME="${QT_PLATFORM}"
+
+# QT/GTK Font Ayarı
+# QT uygulamalarının font ayarlarını GTK'dan veya sistemden doğru alması için
+# XDG masaüstü ortamını 'kde' olarak ayarlamak bazı durumlarda uyumu artırır.
+flatpak -u override --user --env=XDG_CURRENT_DESKTOP=KDE
+
+echo "Tema ve ikon değişkenleri başarıyla ayarlandı."
+
+# ==========================================================
+# 3. QT AYARLARI İÇİN EK BİLGİ
+# ==========================================================
+echo ""
+echo "!!! ÖNEMLİ BİLGİ !!!"
+echo "QT uygulamalarının temaları ve fontları tam olarak uygulaması için"
+echo "'qt5ct' veya 'qt6ct' uygulamalarını çalıştırarak (eğer kuruluysa) ve"
+echo "içinden GTK teması ve sistem fontunu seçerek ayarları sonlandırmanız gerekebilir."
