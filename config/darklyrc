@@ -1,15 +1,17 @@
 [Common]
 CornerRadius=4
 FancyMargins=false
-MenuItemHeight=2
+MenuItemHeight=3
 ShadowIntensity=Low
 ShadowSize=ShadowNone
+UseNewCheckBox=false
 
 [Style]
 AnimationsDuration=100
 AnimationsEnabled=false
 DisableDolphinUrlNavigatorBackground=false
 RoundedRubberBandFrame=false
+WindowDragMode=WD_NONE
 
 [Windeco]
 AnimationsEnabled=false

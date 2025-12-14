@@ -32,11 +32,12 @@
     "bluetooth",
     "network",
     "wireplumber",
-    "pulseaudio#microphone",
+    // "wireplumber#source",
+    // "pulseaudio#microphone",
     "battery",
     "backlight",
     "custom/weather",
-    // "idle_inhibitor"
-    "custom/hypridle"
+    "idle_inhibitor"
+    // "custom/hypridle"
   ]
 }

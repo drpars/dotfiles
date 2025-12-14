@@ -12,12 +12,7 @@ source "${ZINIT_HOME}/zinit.zsh"
 source "$HOME/.config/zsh/alias.zsh"
 source "$HOME/.config/zsh/functions.zsh"
 source "$HOME/.config/zsh/colors.zsh"
-
-# User environment
-export PATH="$PATH:$HOME/.local/bin"
-export EDITOR=nvim
-export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
-# export TERMINAL=kitty
+source "$HOME/.config/zsh/variables.zsh"
 
 # Add plugins
 # Completion

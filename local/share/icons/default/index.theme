@@ -1,0 +1,5 @@
+/* buraya sembolik link gerekli olabilir /usr/share/icons/default/index.theme */
+[Icon Theme]
+Name=Default
+Comment=Default Cursor Theme
+Inherits=Mocu-White-Right
