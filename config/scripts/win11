@@ -1,9 +1,0 @@
-#!/bin/bash
-
-if supergfxctl -g | grep "Hybrid" >/dev/null; then
-  echo "Ekran kartı dahili modda değil!"
-else
-  virsh --connect=qemu:///system start win11
-  sleep 13
-  looking-glass-client -F -S -f /dev/kvmfr0
-fi

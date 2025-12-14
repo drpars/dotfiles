@@ -1,9 +1,0 @@
-#!/bin/bash
-
-STATUS=$(iwctl device wlan0 show | grep "Powered" | awk '{print $4}')
-
-if [ "$STATUS" = "on" ]; then
-  iwctl device wlan0 set-property Powered off
-else
-  iwctl device wlan0 set-property Powered on
-fi
