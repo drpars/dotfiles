@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Name=Gemini
+Comment=Web Uygulaması
+Exec=chromium --app="https://gemini.google.com/app" --class=WebApp-Gemini5514 --name=WebApp-Gemini5514 --user-data-dir=/home/drpars/.local/share/ice/profiles/Gemini5514
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=/home/drpars/.local/share/ice/icons/Gemini.png
+Categories=GTK;WebApps;
+MimeType=text/html;text/xml;application/xhtml_xml;
+StartupWMClass=WebApp-Gemini5514
+StartupNotify=true
+X-WebApp-Browser=Chromium
+X-WebApp-URL=https://gemini.google.com/app
+X-WebApp-CustomParameters=
+X-WebApp-Navbar=false
+X-WebApp-PrivateWindow=false
+X-WebApp-Isolated=true
+

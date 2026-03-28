@@ -2,7 +2,7 @@
 Name=Neovim (Kitty Terminali)
 Comment=Metin dosyalarını Kitty terminali içinde Neovim ile açar
 Icon=nvim
-Exec=$TERMINAL nvim %f
+Exec=kitty nvim %f
 Terminal=false
 Type=Application
 MimeType=text/plain;application/x-shellscript;application/x-perl;application/x-python;

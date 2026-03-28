@@ -1,0 +1,19 @@
+[Desktop Entry]
+Version=1.0
+Name=deepseek
+Comment=Web Uygulaması
+Exec=chromium --app="https://chat.deepseek.com/" --class=WebApp-deepseek1890 --name=WebApp-deepseek1890 --user-data-dir=/home/drpars/.local/share/ice/profiles/deepseek1890
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=/home/drpars/.local/share/ice/icons/deepseek.png
+Categories=GTK;WebApps;
+MimeType=text/html;text/xml;application/xhtml_xml;
+StartupWMClass=WebApp-deepseek1890
+StartupNotify=true
+X-WebApp-Browser=Chromium
+X-WebApp-URL=https://chat.deepseek.com/
+X-WebApp-CustomParameters=
+X-WebApp-Navbar=false
+X-WebApp-PrivateWindow=false
+X-WebApp-Isolated=true

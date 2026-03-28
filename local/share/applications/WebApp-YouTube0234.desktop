@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Name=YouTube
+Comment=Web Uygulaması
+Exec=chromium --app="https://www.youtube.com/" --class=WebApp-YouTube0234 --name=WebApp-YouTube0234 --user-data-dir=/home/drpars/.local/share/ice/profiles/YouTube0234
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=/home/drpars/.local/share/ice/icons/YouTube.png
+Categories=GTK;WebApps;
+MimeType=text/html;text/xml;application/xhtml_xml;
+StartupWMClass=WebApp-YouTube0234
+StartupNotify=true
+X-WebApp-Browser=Chromium
+X-WebApp-URL=https://www.youtube.com/
+X-WebApp-CustomParameters=
+X-WebApp-Navbar=false
+X-WebApp-PrivateWindow=false
+X-WebApp-Isolated=true
+

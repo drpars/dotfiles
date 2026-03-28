@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Name=Prime Video
+Comment=Web Uygulaması
+Exec=chromium --app="https://www.primevideo.com/region/eu/storefront" --class=WebApp-PrimeVideo1480 --name=WebApp-PrimeVideo1480 --user-data-dir=/home/drpars/.local/share/ice/profiles/PrimeVideo1480
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=/home/drpars/.local/share/ice/icons/PrimeVideo.png
+Categories=GTK;WebApps;
+MimeType=text/html;text/xml;application/xhtml_xml;
+StartupWMClass=WebApp-PrimeVideo1480
+StartupNotify=true
+X-WebApp-Browser=Chromium
+X-WebApp-URL=https://www.primevideo.com/region/eu/storefront
+X-WebApp-CustomParameters=
+X-WebApp-Navbar=false
+X-WebApp-PrivateWindow=false
+X-WebApp-Isolated=true
+

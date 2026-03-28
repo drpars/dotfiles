@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Name=TV Plus
+Comment=Web Uygulaması
+Exec=chromium --app="https://tvplus.com.tr/" --class=WebApp-TVPlus5757 --name=WebApp-TVPlus5757 --user-data-dir=/home/drpars/.local/share/ice/profiles/TVPlus5757
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=/home/drpars/.local/share/ice/icons/TVPlus.png
+Categories=GTK;WebApps;
+MimeType=text/html;text/xml;application/xhtml_xml;
+StartupWMClass=WebApp-TVPlus5757
+StartupNotify=true
+X-WebApp-Browser=Chromium
+X-WebApp-URL=https://tvplus.com.tr/
+X-WebApp-CustomParameters=
+X-WebApp-Navbar=false
+X-WebApp-PrivateWindow=false
+X-WebApp-Isolated=true
+

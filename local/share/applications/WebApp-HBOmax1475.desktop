@@ -1,0 +1,20 @@
+[Desktop Entry]
+Version=1.0
+Name=HBO max
+Comment=Web Uygulaması
+Exec=chromium --app="https://www.hbomax.com/tr/tr" --class=WebApp-HBOmax1475 --name=WebApp-HBOmax1475 --user-data-dir=/home/drpars/.local/share/ice/profiles/HBOmax1475
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=/home/drpars/.local/share/ice/icons/HBOmax.png
+Categories=GTK;AudioVideo;
+MimeType=text/html;text/xml;application/xhtml_xml;
+StartupWMClass=WebApp-HBOmax1475
+StartupNotify=true
+X-WebApp-Browser=Chromium
+X-WebApp-URL=https://www.hbomax.com/tr/tr
+X-WebApp-CustomParameters=
+X-WebApp-Navbar=false
+X-WebApp-PrivateWindow=false
+X-WebApp-Isolated=true
+
