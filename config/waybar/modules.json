@@ -296,7 +296,7 @@
       "activated": "",
       "deactivated": ""
     },
-    "tooltip-format-activated": "Ekran kilidi devredışı",
-    "tooltip-format-deactivated": "Ekran kilidi devrede"
+    "tooltip-format-activated": "Otomatik uyku/kilit devre dışı",
+    "tooltip-format-deactivated": "Otomatik uyku/kilit devrede"
   }
 }

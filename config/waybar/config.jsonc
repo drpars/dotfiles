@@ -28,7 +28,7 @@
   "modules-right": [
     "tray",
     // "custom/power_profile",
-    "power-profiles-daemon",
+    // "power-profiles-daemon",
     "bluetooth",
     "network",
     "wireplumber",
