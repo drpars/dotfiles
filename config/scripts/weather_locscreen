@@ -1,0 +1,5 @@
+#!/bin/bash
+# Çankırı için hava durumunu çeker
+# %c: Hava durumu simgesi (Güneş, Bulut vb.)
+# %t: Sıcaklık (+2°C gibi)
+curl -s "wttr.in/Cankiri?format=%c+%t" | tr -d '\n'

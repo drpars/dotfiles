@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Önceki süreçleri temizle
+pkill swayidle
+
+swayidle -w \
+    timeout 5 'brightnessctl -s set 10 && openrgb -p pars-off' \
+    resume 'brightnessctl -r && openrgb -p pars-white' \
+    timeout 10 'hyprlock' \
+    timeout 20 'hyprctl dispatch dpms off' \
+    resume 'hyprctl dispatch dpms on && brightnessctl -r' \
+    timeout 30 'systemctl suspend' \
+    before-sleep 'hyprlock' &

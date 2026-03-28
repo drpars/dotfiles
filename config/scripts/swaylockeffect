@@ -1,0 +1,21 @@
+#!/bin/bash
+
+pkill swaylock
+
+swaylock \
+  --screenshots \
+  --clock \
+  --indicator \
+  --indicator-radius 100 \
+  --indicator-thickness 7 \
+  --effect-blur 5x2 \
+  --effect-vignette 0.5:0.5 \
+  --ring-color 151515 \
+  --key-hl-color dddddd \
+  --text-color f0f0f0 \
+  --line-color 00000000 \
+  --inside-color 15151580 \
+  --separator-color 00000000 \
+  --fade-in 0.2 \
+  --font 'Ubuntu Nerd Font Propo' \
+  --image $HOME/.config/hypr/images/wallpaper_symlink

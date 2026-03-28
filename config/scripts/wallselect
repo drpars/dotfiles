@@ -10,8 +10,9 @@ DIR=$(xdg-user-dir PICTURES)/Wallpaper
 # Hyprlock'un okuyacağı sabit Sembolik Bağın yolu
 SYMLINK_PATH="$HOME/.config/hypr/images/wallpaper_symlink"
 
-# hyprpaper için sabit monitör adı
+# hyprpaper için ayarlar
 MONITOR_NAME="DP-1" 
+FIT_MODE="cover" # contain|cover|tile|fill
 
 # swww için Geçiş Ayarları
 bezier=.43,1.19,1,.99
@@ -49,9 +50,7 @@ cstyle() {
   if [[ -n "$selected_file" ]]; then
     FULL_PATH="$DIR/$selected_file"
     
-    hyprctl hyprpaper preload "$FULL_PATH"
-    hyprctl hyprpaper wallpaper "$MONITOR_NAME,$FULL_PATH"
-    hyprctl hyprpaper unload all
+    hyprctl hyprpaper wallpaper "$MONITOR_NAME,$FULL_PATH,$FIT_MODE"
     
     SELECTED_WALLPAPER_PATH="$FULL_PATH"
   fi

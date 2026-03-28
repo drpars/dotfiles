@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# --- Ayarlar ---
+THEME_DIR="/usr/share/sddm/themes/silent"
+TEMP_DIR="/tmp/sddm_silent_v9_2"
+FIRST_BACKUP="/usr/share/sddm/themes/silent_original_backup"
+
+# --- Renkler ---
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# --- Fonksiyonlar ---
+
+show_help() {
+  echo -e "${BLUE}====================================================${NC}"
+  echo -e "${BLUE}   SilentSDDM Yönetim ve Onarım Paneli v9.2         ${NC}"
+  echo -e "${BLUE}====================================================${NC}"
+  echo -e "${YELLOW}Kullanım:${NC} $0 [SEÇENEK]"
+  echo ""
+  echo -e "${GREEN}  -t, --translate${NC}   Türkçeleştirme, Klavye Yaması ve Onarım yapar."
+  echo -e "${GREEN}  -r, --restore${NC}     İlk orijinal yedeğe geri döner."
+  echo -e "${GREEN}  -s, --scan${NC}        Mevcut temadaki metinleri tarar."
+  echo -e "${GREEN}  --test${NC}            Temayı test modunda açar (sudo gerekmez)."
+  echo ""
+  echo -e "${BLUE}====================================================${NC}"
+}
+
+restore_original() {
+  if [ ! -d "$FIRST_BACKUP" ]; then
+    echo -e "${RED}HATA: Orijinal yedek bulunamadı.${NC}"
+    exit 1
+  fi
+  echo -e "${YELLOW}Orijinal dosyalar geri yükleniyor...${NC}"
+  sudo rm -rf "$THEME_DIR"
+  sudo cp -r "$FIRST_BACKUP" "$THEME_DIR"
+  echo -e "${GREEN}✔ Tema orijinal haline döndürüldü.${NC}"
+}
+
+run_test() {
+  if [ -f "$THEME_DIR/test.sh" ]; then
+    echo -e "${BLUE}--- Tema Test Ekranı Açılıyor ---${NC}"
+    (cd "$THEME_DIR" && ./test.sh)
+  else
+    echo -e "${RED}HATA: $THEME_DIR/test.sh bulunamadı!${NC}"
+  fi
+}
+
+translate_theme() {
+  echo -e "${BLUE}--- İşlem Başlatılıyor ---${NC}"
+  [ ! -d "$THEME_DIR" ] && {
+    echo -e "${RED}HATA: Tema dizini bulunamadı!${NC}"
+    exit 1
+  }
+
+  # 1. Hazırlık (Geçici Dizin)
+  rm -rf "$TEMP_DIR" && cp -r "$THEME_DIR" "$TEMP_DIR"
+
+  # 2. LoginScreen.qml: Klavye Yaması Enjeksiyonu
+  echo -e "${YELLOW}-> Klavye ayarları ve arayüz metinleri işleniyor...${NC}"
+  if ! grep -q "VirtualKeyboardSettings.locale" "$TEMP_DIR/components/LoginScreen.qml"; then
+    # Ana ID satırından sonraya klavye bloğunu ekler
+    sed -i '/id: loginScreen\|id: root/a \
+    \
+    // Klavye gösterildiğinde Türkçe yap\
+    onShowKeyboardChanged: {\
+        if (showKeyboard) {\
+            VirtualKeyboardSettings.locale = Languages.getKBCodeFor("tr");\
+        }\
+    }' "$TEMP_DIR/components/LoginScreen.qml"
+    echo -e "${BLUE}[EKLEME]: Sanal klavye Türkçe yerelleştirmesi eklendi.${NC}"
+  fi
+
+  # 3. LoginScreen.qml: Metin Çevirileri
+  sed -i '/userName/s/"Password"/"Kullanıcı Adı"/' "$TEMP_DIR/components/LoginScreen.qml"
+  sed -i -e 's/"Password"/"Şifre"/g' \
+    -e 's/"Login"/"Giriş Yap"/g' \
+    -e 's/"Caps Lock is on"/"Caps Lock Açık"/g' \
+    -e 's/"Login failed"/"Giriş Başarısız"/g' \
+    -e 's/"Enter your user!"/"Kullanıcı adınızı girin!"/g' \
+    "$TEMP_DIR/components/LoginScreen.qml"
+
+  # 4. MenuArea.qml: Tooltip Çevirileri
+  sed -i -e 's/"Change keyboard layout"/"Klavye düzenini değiştir"/g' \
+    -e 's/"Change session"/"Oturumu değiştir"/g' \
+    -e 's/"Power options"/"Güç seçenekleri"/g' \
+    -e 's/"Toggle virtual keyboard"/"Sanal klavyeyi aç\/kapat"/g' \
+    "$TEMP_DIR/components/MenuArea.qml"
+
+  # 5. UserSelector.qml: Kullanıcı Seçimi Çevirileri
+  sed -i -e 's/"Close user selection"/"Kullanıcı seçimini kapat"/g' \
+    -e 's/"Select user"/"Kullanıcı seç"/g' \
+    -e 's/`Select user ${model.name}`/`Kullanıcı seç: ${model.name}`/g' \
+    "$TEMP_DIR/components/UserSelector.qml"
+
+  # 6. .conf Dosyaları: Zincirleme Değişim
+  echo -e "${YELLOW}-> Yapılandırma dosyaları güncelleniyor (.conf)...${NC}"
+  for conf in "$TEMP_DIR/configs"/*.conf; do
+    if [ -f "$conf" ]; then
+      sed -i \
+        -e 's/en_US/tr_TR/g' \
+        -e 's/en-US/tr_TR/g' \
+        -e 's/Logging in/Giriş yapılıyor.../g' \
+        -e 's/Press any key/Bir tuşa basın/g' \
+        "$conf"
+    fi
+  done
+
+  # 7. Uygulama ve Yetki İstemi
+  echo -e "${YELLOW}Değişiklikler sisteme yazılıyor (Şifre gerekebilir)...${NC}"
+
+  # İlk yedek yoksa oluştur
+  if [ ! -d "$FIRST_BACKUP" ]; then
+    sudo cp -r "$THEME_DIR" "$FIRST_BACKUP"
+    echo -e "${BLUE}[YEDEK]: Orijinal yapı $FIRST_BACKUP adresine saklandı.${NC}"
+  fi
+
+  # Dosyaları asıl dizine kopyala
+  sudo cp -rf "$TEMP_DIR/." "$THEME_DIR/"
+
+  # Geçici dosyaları temizle
+  rm -rf "$TEMP_DIR"
+
+  echo -e "${GREEN}✔ İŞLEM TAMAMLANDI!${NC}"
+  echo -e "${YELLOW}Test etmek için:${NC} $0 --test"
+}
+
+# --- Başlatıcı ---
+case "$1" in
+-t | --translate) translate_theme ;;
+-r | --restore) restore_original ;;
+-s | --scan)
+  echo -e "${YELLOW}--- Mevcut Temadaki Metin Durumu ---${NC}"
+  grep -rE '"(Login|Password|Caps Lock is on|Login failed|Enter your user!|Change keyboard layout|Change session|Power options|Toggle virtual keyboard|Close user selection|Select user|Logging in|Press any key)"' "$THEME_DIR" --exclude-dir={backgrounds,icons,fonts}
+  ;;
+--test) run_test ;;
+-h | --help | *) show_help ;;
+esac

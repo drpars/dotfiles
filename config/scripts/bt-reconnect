@@ -1,0 +1,6 @@
+#!/bin/bash
+# 'echo' kullanarak interaktif moddan listeyi zorla alıyoruz
+echo -e "devices\nquit" | bluetoothctl | grep "Device" | awk '{print $2}' | while read -r mac; do
+    echo "Bağlanılıyor: $mac"
+    bluetoothctl connect "$mac"
+done
