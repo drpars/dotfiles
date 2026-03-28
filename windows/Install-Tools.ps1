@@ -1,9 +1,4 @@
-## Scoop ve Temel Geliştirici Araçları Kurulum Betiği
-#
-# Betiği çalıştırmak için:
-# 1. Powershell'i açın.
-# 2. Betiğin bulunduğu dizine gidin (örneğin cd C:\Users\KullanıcıAdınız\Desktop).
-# 3. .\Install-Tools.ps1 komutunu çalıştırın.
+## Scoop ve Temel Geliştirici Araçları Kurulum Betiği (Build Tools Destekli)
 
 # --- 1. Güvenlik Politikası Ayarlama ---
 Write-Host "1. Güvenlik politikasını ayarlama (RemoteSigned)..." -ForegroundColor Yellow
@@ -17,72 +12,63 @@ if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
         Write-Host "   -> Scoop başarıyla kuruldu." -ForegroundColor Green
     }
     catch {
-        Write-Error "Scoop kurulumu başarısız oldu. Lütfen internet bağlantınızı kontrol edin."
+        Write-Error "Scoop kurulumu başarısız oldu."
         exit 1
     }
-}
-else {
-    Write-Host "   -> Scoop zaten kurulu, kurulum adımı atlanıyor." -ForegroundColor Cyan
 }
 
 # --- 3. Temel Araçları Kurma ---
 Write-Host "3. Temel geliştirici araçlarını (git, nvim, eza, fzf vb.) kurma..." -ForegroundColor Yellow
-$PrimaryTools = @(
-    "7zip", "eza", "fastfetch", "fzf", "gcc", "git",
-    "make", "neovim", "nodejs", "oh-my-posh", "python",
-    "ripgrep", "yazi", "tree-sitter"
-)
+$PrimaryTools = @("git", "neovim", "eza", "fzf", "ripgrep", "fastfetch", "7zip", "make", "zoxide", "yazi")
 foreach ($Tool in $PrimaryTools) {
-    Write-Host "   -> $Tool kuruluyor..." -NoNewline
+    Write-Host "   -> $Tool kontrol ediliyor..."
     scoop install $Tool
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host " Tamamlandı." -ForegroundColor Green
-    } else {
-        Write-Host " Başarısız (Hata Kodu: $LASTEXITCODE)." -ForegroundColor Red
-    }
 }
 
-# --- 4. Extras Bucket Ekleme ---
-Write-Host "4. 'extras' paket deposunu (bucket) ekleme..." -ForegroundColor Yellow
-if (-not (scoop bucket list | Select-String -Pattern "extras")) {
-    scoop bucket add extras
-    Write-Host "   -> 'extras' deposu eklendi." -ForegroundColor Green
-}
-else {
-    Write-Host "   -> 'extras' deposu zaten mevcut." -ForegroundColor Cyan
-}
+# --- 4. VS Build Tools (cl.exe) Kurulumu ---
+Write-Host "4. Microsoft Visual C++ Build Tools (cl.exe) kuruluyor..." -ForegroundColor Yellow
+Write-Host "   -> Yükleyici indiriliyor..." -NoNewline
+Invoke-RestMethod -Uri https://aka.ms/vs/17/release/vs_buildtools.exe -OutFile vs_buildtools.exe
+Write-Host " Tamam." -ForegroundColor Green
 
-# --- 5. Ekstra Araçları Kurma ---
-Write-Host "5. Ekstra araçları (PSfzf, wezterm) kurma..." -ForegroundColor Yellow
+Write-Host "   -> Kurulum başlıyor (Bu işlem internet hızına göre zaman alabilir)..." -ForegroundColor Cyan
+Start-Process -FilePath .\vs_buildtools.exe -ArgumentList "--add", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "--add", "Microsoft.VisualStudio.Component.Windows10SDK.19041", "--quiet", "--norestart", "--wait" -Wait -PassThru
+Remove-Item vs_buildtools.exe
+Write-Host "   -> C++ Derleme Araçları kurulumu bitti." -ForegroundColor Green
+
+# --- 5. Scoop Kovalarını (Buckets) Ekleme ---
+Write-Host "5. Scoop 'extras' deposu ekleniyor..." -ForegroundColor Yellow
+scoop bucket add extras
+
+# --- 6. Ekstra Araçları Kurma ---
 $ExtraTools = @("PSfzf", "wezterm")
 foreach ($Tool in $ExtraTools) {
-    Write-Host "   -> $Tool kuruluyor..." -NoNewline
     scoop install $Tool
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host " Tamamlandı." -ForegroundColor Green
-    } else {
-        Write-Host " Başarısız (Hata Kodu: $LASTEXITCODE)." -ForegroundColor Red
-    }
 }
 
-# --- 6. PowerShell Profil Klasörünü Kopyalama ---
-Write-Host "6. Özelleştirilmiş PowerShell profil klasörünü kopyalama..." -ForegroundColor Yellow
+# --- 7. cl.exe PATH Tanımlaması ---
+Write-Host "7. cl.exe için PATH ayarlanıyor..." -ForegroundColor Yellow
+$ClPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64"
+
+# Mevcut PATH'i al ve yeni yolu ekle (Eğer zaten yoksa)
+$CurrentPath = [Environment::GetEnvironmentVariable("Path", "User")]
+if ($CurrentPath -notlike "*$ClPath*") {
+    $NewPath = "$CurrentPath;$ClPath"
+    [Environment::SetEnvironmentVariable("Path", $NewPath, "User")]
+    $env:Path += ";$ClPath"
+    Write-Host "   -> PATH başarıyla güncellendi." -ForegroundColor Green
+} else {
+    Write-Host "   -> PATH zaten tanımlı." -ForegroundColor Cyan
+}
+
+# --- 8. PowerShell Profil Klasörünü Kopyalama ---
+Write-Host "8. PowerShell profil klasörü kopyalanıyor..." -ForegroundColor Yellow
 $SourcePath = Join-Path (Get-Location) "PowerShell"
 $DestinationPath = Join-Path $Env:USERPROFILE "Documents"
 
-if (Test-Path $SourcePath -PathType Container) {
-    Write-Host "   -> Hedef: $DestinationPath" -NoNewline
-    try {
-        # Klasör içeriğini (profil dosyaları dahil) Documents altına kopyalar.
-        Copy-Item -Path $SourcePath -Destination $DestinationPath -Recurse -Force
-        Write-Host " Tamamlandı." -ForegroundColor Green
-    }
-    catch {
-        Write-Host " Başarısız. Kopyalama hatası." -ForegroundColor Red
-    }
-}
-else {
-    Write-Host "   -> 'PowerShell' kaynak klasörü bulunamadı. Kopyalama adımı atlanıyor." -ForegroundColor Cyan
+if (Test-Path $SourcePath) {
+    Copy-Item -Path $SourcePath -Destination $DestinationPath -Recurse -Force
+    Write-Host "   -> Profil kopyalandı." -ForegroundColor Green
 }
 
-Write-Host "`nKurulum betiği tamamlandı. Powershell'i yeniden başlatmanız önerilir." -ForegroundColor Green
+Write-Host "`nİşlem tamamlandı! Lütfen terminali yeniden başlatın." -ForegroundColor Magenta
