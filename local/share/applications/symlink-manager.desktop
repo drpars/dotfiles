@@ -1,0 +1,27 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Symlink Yöneticisi
+Name[tr]=Symlink Yöneticisi
+Comment=Dosya ve klasörleri sembolik bağlantı olarak kopyalayın
+Comment[tr]=Dosya ve klasörleri sembolik bağlantı olarak kopyalayın
+Exec=python /home/drpars/.config/scripts/symlink-gui.py
+Icon=emblem-symbolic-link
+Terminal=false
+Categories=Utility;FileTools;System;
+Keywords=symlink;link;symbolic;bağlantı;sembolik;
+StartupWMClass=Tk
+StartupNotify=true
+Actions=Klasor;Dosya;
+
+[Desktop Action Klasor]
+Name=Klasör Modunda Aç
+Name[tr]=Klasör Modunda Aç
+Exec=python /home/drpars/.config/scripts/symlink-gui.py
+Icon=folder-symbolic
+
+[Desktop Action Dosya]
+Name=Tek Dosya Modunda Aç
+Name[tr]=Tek Dosya Modunda Aç
+Exec=python /home/drpars/.config/scripts/symlink-gui.py --single-file
+Icon=document-symbolic
