@@ -3,4 +3,5 @@ config/btop/btop.log
 config/hypr/conf/gpu-env.conf
 config/OpenRGB/logs/
 config/OpenRGB/sizes.ors
+config/mc/ini
 home/.fonts/.uuid
