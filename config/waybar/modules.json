@@ -190,6 +190,16 @@
     }
   },
 
+  "custom/solaar-battery": {
+    "exec": "~/.config/scripts/solaar-battery.py",
+    "interval": 30,
+    "format": "{}",
+    "return-type": "json",
+    "on-click": "solaar --window=show",
+    "tooltip": true,
+    "show": "json"
+  },
+
   "bluetooth": {
     "interval": 1,
     "format": "",
@@ -238,7 +248,6 @@
   "backlight": {
     "device": "intel_backlight",
     "format": "{icon}",
-    // "format-alt": "{icon} {percent}%",
     "format-icons": ["󰃞", "󰃟", "󰃠"],
     "on-click": "$HOME/.config/scripts/brightness up",
     "on-click-right": "$HOME/.config/scripts/brightness down",
@@ -285,7 +294,6 @@
     "return-type": "json",
     "escape": true,
     "exec-on-event": true,
-    "interval": 60,
     "exec": "$HOME/.config/scripts/hypridle status",
     "on-click": "$HOME/.config/scripts/hypridle toggle"
   },

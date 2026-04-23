@@ -37,6 +37,7 @@
     "battery",
     "backlight",
     "custom/weather",
+    "custom/solaar-battery",
     "idle_inhibitor"
     // "custom/hypridle"
   ]

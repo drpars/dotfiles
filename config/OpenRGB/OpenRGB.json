@@ -1754,6 +1754,9 @@
             "Z370 AORUS Ultra Gaming-CF"
         ]
     },
+    "LogManager": {
+        "log_file": false
+    },
     "Theme": {
         "theme": "Dark"
     },

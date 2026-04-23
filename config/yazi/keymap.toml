@@ -169,7 +169,9 @@ keymap = [
 
   # Mount
   { on = "M", run = "plugin mount", desc = "Mount/Unmount filesystems" },
-  { on = "!", run = 'shell "$SHELL" --block', desc = "Open shell here (Blocking)" },
+  # Open shell here
+  { on = "!", run = 'shell "zsh" --block', desc = "Open shell here (Blocking)" },
+  # Toggle pane
   { on = "T", run = "plugin toggle-pane min-preview", desc = "Show or hide the preview pane" },
 ]
 
