@@ -1,39 +1,38 @@
 #!/bin/bash
 
 # --- Ayarlar ---
-DIR=$HOME/Resimler/Wallpaper/
-MONITOR="DP-1" # Hyprpaper için monitör adınız
+DIR=$(xdg-user-dir PICTURES)/Wallpaper
+MONITOR="DP-1"
 # ----------------
 
-# Rastgele resim seçimi
-PICS=($(find "${DIR}" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" \)))
-RANDOMPICS=${PICS[$RANDOM % ${#PICS[@]}]}
+# Desteklenen dosya türleri
+find "${DIR}" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \) -print0 > /tmp/wallpapers.list 2>/dev/null
+
+# Rastgele seçim
+RANDOMPICS=$(shuf -n1 < <(find "${DIR}" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \)))
+
+if [[ -z "$RANDOMPICS" ]]; then
+  notify-send -u critical "Random Wallpaper" "Duvar kağıdı bulunamadı!\n$DIR"
+  exit 1
+fi
 
 # Hyprpaper kontrolü
 if pgrep -x "hyprpaper" >/dev/null; then
-  # Hyprpaper aktifse burası çalışır
-
-  # Belleği şişirmemek için eski preload'ları temizle
   hyprctl hyprpaper unload all
-
-  # Yeni resmi önyükle (preload)
   hyprctl hyprpaper preload "$RANDOMPICS"
-
-  # Resmi belirtilen monitöre döşe
   hyprctl hyprpaper wallpaper "$MONITOR,$RANDOMPICS"
-
-# SWWW kontrolü (Hyprpaper yoksa buraya bakar)
-elif pgrep -x "swww-daemon" >/dev/null; then
-  # Eğer swaybg varsa kapat
-  if [[ $(pidof swaybg) ]]; then
-    pkill swaybg
-  fi
-
-  # swww komutunu çalıştır
-  swww img "${RANDOMPICS}" --transition-fps 30 --transition-type any --transition-duration 3
-
+  
+# awww kontrolü
+elif pgrep -x "awww-daemon" >/dev/null; then
+  pkill swaybg 2>/dev/null
+  awww img "$RANDOMPICS" --transition-fps 60 --transition-type any --transition-duration 2
+  
 else
-  # Hiçbir duvar kağıdı yöneticisi açık değilse, swww başlatıp devam et (Varsayılan davranış)
-  swww-daemon
-  swww img "${RANDOMPICS}" --transition-fps 30 --transition-type any --transition-duration 3
+  # Hiçbiri yoksa awww başlat
+  awww-daemon &
+  sleep 0.5
+  awww img "$RANDOMPICS" --transition-fps 60 --transition-type any --transition-duration 2
 fi
+
+# Bildirim (isteğe bağlı)
+notify-send -t 2000 "Duvar Kağıdı Değişti" "$(basename "$RANDOMPICS")"

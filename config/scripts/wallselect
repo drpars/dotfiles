@@ -4,78 +4,88 @@
 # GLOBAL AYARLAR
 #-----------------------------------------------------------
 
-# Duvar Kağıtlarının Ana Dizini
 DIR=$(xdg-user-dir PICTURES)/Wallpaper
-
-# Hyprlock'un okuyacağı sabit Sembolik Bağın yolu
 SYMLINK_PATH="$HOME/.config/hypr/images/wallpaper_symlink"
+MONITOR_NAME="DP-1"
+FIT_MODE="fill"
 
-# hyprpaper için ayarlar
-MONITOR_NAME="DP-1" 
-FIT_MODE="cover" # contain|cover|tile|fill
+# awww için Geçiş Ayarları
+awww_opt="--transition-bezier .43,1.19,1,.99 --transition-fps 165 --transition-type wave --transition-duration 3"
 
-# swww için Geçiş Ayarları
-bezier=.43,1.19,1,.99
-fps=165
-type="wave" 
-duration=3
-swww_opt="--transition-bezier $bezier --transition-fps $fps --transition-type $type --transition-duration $duration"
-
-# Seçilen duvar kağıdı yolunu tutacak global değişken
 SELECTED_WALLPAPER_PATH=""
+
+# Mevcut duvar kağıdını bul
+get_current_wallpaper() {
+  if [[ -L "$SYMLINK_PATH" ]] && [[ -f "$SYMLINK_PATH" ]]; then
+    CURRENT=$(basename "$(readlink "$SYMLINK_PATH")")
+  elif pgrep -x "hyprpaper" >/dev/null; then
+    # Hyprpaper'dan mevcut duvar kağıdını al
+    CURRENT=$(hyprctl hyprpaper listactive | grep -oP '(?<=/)[^/]+\.(jpg|jpeg|png)' | head -1)
+  elif pgrep -x "awww-daemon" >/dev/null; then
+    # awww'dan mevcut duvar kağıdını al (awww komutu yoksa boş bırak)
+    CURRENT=""
+  else
+    CURRENT=""
+  fi
+  echo "$CURRENT"
+}
 
 #-----------------------------------------------------------
 # FONKSİYONLAR
 #-----------------------------------------------------------
 
-# bstyle: İkonlu rofi seçimi (swww kullanır)
 bstyle() {
-  selected=$(find "$DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) -exec basename {} \; | sort -g | while read -r rfile; do
+  CURRENT_WALL=$(get_current_wallpaper)
+  
+  selected=$(find "$DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) -exec basename {} \; | sort | while read -r rfile; do
     echo -en "$rfile\x00icon\x1f$DIR/${rfile}\n"
-  done | rofi -dmenu -replace -theme ~/.config/rofi/wallpaper.rasi -disable-history)
+  done | rofi -dmenu -replace -theme ~/.config/rofi/wallpaper.rasi -disable-history -select "$CURRENT_WALL")
 
   if [[ -n "$selected" ]]; then
     FULL_PATH="$DIR/$selected"
-    swww img "$FULL_PATH" $swww_opt
+    awww img "$FULL_PATH" $awww_opt
     SELECTED_WALLPAPER_PATH="$FULL_PATH"
+    
+    notify-send -t 2000 -u normal "Duvar Kağıdı Değişti" "$(basename "$selected")"
   fi
 }
 
-# cstyle: İkonlu rofi seçimi (hyprpaper kullanır)
 cstyle() {
-  selected_file=$(find "$DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) -exec basename {} \; | sort -g | while read -r rfile; do
+  CURRENT_WALL=$(get_current_wallpaper)
+  
+  selected_file=$(find "$DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) -exec basename {} \; | sort | while read -r rfile; do
     echo -en "$rfile\x00icon\x1f$DIR/${rfile}\n"
-  done | rofi -dmenu -replace -theme ~/.config/rofi/wallpaper.rasi -disable-history)
+  done | rofi -dmenu -replace -theme ~/.config/rofi/wallpaper.rasi -disable-history -select "$CURRENT_WALL")
 
   if [[ -n "$selected_file" ]]; then
     FULL_PATH="$DIR/$selected_file"
-    
+    hyprctl hyprpaper unload all
+    hyprctl hyprpaper preload "$FULL_PATH"
     hyprctl hyprpaper wallpaper "$MONITOR_NAME,$FULL_PATH,$FIT_MODE"
-    
     SELECTED_WALLPAPER_PATH="$FULL_PATH"
+    
+    notify-send -t 2000 -u normal "Duvar Kağıdı Değişti" "$(basename "$selected_file")"
   fi
 }
 
 #-----------------------------------------------------------
-# KOŞULLU ÇALIŞTIRMA MANTIĞI
+# KOŞULLU ÇALIŞTIRMA
 #-----------------------------------------------------------
 
-if pidof swww-daemon > /dev/null; then
+if pidof awww-daemon > /dev/null; then
   bstyle
-    
 elif pidof hyprpaper > /dev/null; then
   cstyle
-    
 else
-  notify-send -u critical "Duvar Kağıdı Hatası" "Aktif duvar kağıdı yöneticisi bulunamadı! (swww-daemon veya hyprpaper)"
+  notify-send -u critical "Duvar Kağıdı Hatası" "Aktif duvar kağıdı yöneticisi bulunamadı!"
+  exit 1
 fi
 
 #-----------------------------------------------------------
-# HYPRLOCK SENKRONİZASYON BLOĞU (SYMLINK YÖNETİMİ)
+# HYPRLOCK SENKRONİZASYONU
 #-----------------------------------------------------------
 
-# Eğer duvar kağıdı seçimi yapıldıysa, sembolik bağı güncelle.
 if [[ -n "$SELECTED_WALLPAPER_PATH" ]]; then
-  # Yeni duvar kağıdına işaret eden symlink oluştur
+  mkdir -p "$(dirname "$SYMLINK_PATH")"
   ln -sf "$SELECTED_WALLPAPER_PATH" "$SYMLINK_PATH"
 fi

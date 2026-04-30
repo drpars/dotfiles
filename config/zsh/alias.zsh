@@ -37,7 +37,7 @@ alias jpgtopng='mogrify -format png'
 # PAKET VE SİSTEM YÖNETİMİ (PACMAN & SYSTEM)
 # ==========================================================
 # Kurulum
-alias install='sudo pacman -S --needed'
+alias install='yay -S --needed'
 alias remove='sudo pacman -R'
 # Güncelleme
 alias update='yay --noconfirm'

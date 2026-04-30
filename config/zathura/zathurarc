@@ -1,0 +1,54 @@
+# ============================================
+# Zathura Configuration - TokyoNight Night
+# ============================================
+
+# ---------- Ana Renkler ----------
+set default-bg "#1a1b26"          # Arka plan (bg)
+set default-fg "#c0caf5"          # Ön plan metin (fg)
+
+# ---------- Statusline (Durum Çubuğu) ----------
+set statusbar-bg "#1a1b26"        # Statusbar arka plan
+set statusbar-fg "#c0caf5"        # Statusbar metin
+set statusbar-home-tilde true     # Ana dizini "~" olarak göster
+
+# ---------- Inputbar (Komut Satırı) ----------
+set inputbar-bg "#1a1b26"         # Inputbar arka plan
+set inputbar-fg "#c0caf5"         # Inputbar metin
+
+# ---------- Vurgulama ve Seçimler ----------
+# TokyoNight'ın orijinal seçim rengi (Visual highlight group)
+set highlight-color "rgba(64, 72, 109, 0.6)"
+
+# Aktif arama rengi (isteğe bağlı - transparan kırmızı)
+set highlight-active-color "rgba(247, 118, 142, 0.4)"
+
+# ---------- Ters Renk Modu (recolor) ----------
+set recolor true                  # Varsayılan olarak ters renk modunda aç
+set recolor-lightcolor "#1a1b26"  # Ters modda "açık" renkler (arka plan)
+set recolor-darkcolor "#c0caf5"   # Ters modda "koyu" renkler (metin)
+
+# ---------- Index (İçindekiler Tablosu) ----------
+set index-bg "#1a1b26"            # Index arka plan
+set index-fg "#c0caf5"            # Index metin
+set index-active-bg "#7aa2f7"     # Aktif index arka plan (mavi)
+set index-active-fg "#1a1b26"     # Aktif index metin
+
+# ---------- Görünüm Ayarları ----------
+set font "JetBrainsMono Nerd Font 11"  # Yazı tipi
+set window-title-basename true         # Pencerede sadece dosya adını göster
+# set selection-clipboard clipboard      # Kopyalama için panoyu kullan
+
+# ---------- GUI Bileşenleri ----------
+# set guioptions "vs"               # v = dikey ilerleme çubuğu + statusline
+                                  # s = yatay kaydırma çubuğu
+
+# ---------- Kısayollar ----------
+# Ctrl+r ile renkleri ters çevir
+map <C-r> recolor
+
+# ---------- İsteğe Bağlı İyileştirmeler ----------
+# Daha rahat okuma için satır aralığı (bazı versiyonlarda çalışır)
+# set line-spacing 2
+
+# Sayfa kenar boşlukları (piksel cinsinden)
+# set page-margin 2,2,2,2
