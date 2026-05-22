@@ -190,14 +190,20 @@
     }
   },
 
-  "custom/solaar-battery": {
-    "exec": "~/.config/scripts/solaar-battery.py",
-    "interval": 30,
+  "custom/battery-status": {
+    "exec": "~/.config/scripts/battery-status.py",
     "format": "{}",
     "return-type": "json",
-    "on-click": "solaar --window=show",
+    "tooltip": true
+  },
+
+  "custom/language": {
+    "exec": "~/.config/scripts/get-layout.sh",
+    "interval": 1,
+    "format": "{}",
+    "return-type": "json",
     "tooltip": true,
-    "show": "json"
+    "on-click": "hyprctl switchxkblayout $(hyprctl devices -j | jq -r '.keyboards[] | select(.main == true) | .name' | head -1) next && pkill -SIGRTMIN+8 waybar"
   },
 
   "bluetooth": {

@@ -97,3 +97,5 @@ _comp_options+=(globdots)
 zinit cdreplay -q
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
+
+. "$HOME/.local/share/../bin/env"

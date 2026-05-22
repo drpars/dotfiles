@@ -13,7 +13,7 @@ window#waybar.hidden {
   background: transparent;
 }
 
-/* Tooltip Styling */
+Tooltip Styling
 tooltip {
   background: #1e1e2e;
   opacity: 1;
@@ -43,7 +43,8 @@ tooltip label {
 #custom-power_profile,
 #power-profiles-daemon,
 #bluetooth,
-#custom-solaar-battery,
+#custom-battery-status,
+#custom-language,
 #network,
 #custom-temp,
 #temperature,
@@ -296,34 +297,53 @@ tooltip label {
   }
 }
 
-/* Solaar Mouse */
-#custom-solaar-battery {
+/* Mouse ve Klavye Batarya Durumu */
+#custom-battery-status {
   margin-right: 10px;
   border-radius: 10px;
   padding: 0 20px;
+  background: #1e1e2e;
+  opacity: 0.8;
 }
 
-#custom-solaar-battery.high {
+#custom-battery-status.high {
   color: #a6e3a1;
 }
 
-#custom-solaar-battery.medium-high {
+#custom-battery-status.medium-high {
   color: #cba6f7;
 }
 
-#custom-solaar-battery.medium {
+#custom-battery-status.medium {
   color: #f9e2af;
 }
 
-#custom-solaar-battery.low {
+#custom-battery-status.low {
   color: #f38ba8;
 }
 
-#custom-solaar-battery.critical {
+#custom-battery-status.critical {
   color: #f38ba8;
   animation: blink-battery 1s infinite;
 }
 
-#custom-solaar-battery.na {
+#custom-battery-status.na {
   color: #6c7086;
+}
+
+/* Klavye Dili */
+#custom-language {
+  margin-right: 10px;
+  border-radius: 10px;
+  padding: 0 20px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+#custom-language.us {
+  color: #7AA2F7;
+}
+
+#custom-language.tr {
+  color: #F7768E;
 }

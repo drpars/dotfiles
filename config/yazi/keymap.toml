@@ -1,6 +1,6 @@
 # A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
 # If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
-"$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+schema = "https://yazi-rs.github.io/schemas/keymap.json"
 
 [mgr]
 
@@ -126,8 +126,6 @@ keymap = [
   # Goto (Dizinlere Hızlı Gitme)
   { on = [ "g", "h" ], run = "cd ~", desc = "Go home" },
   { on = [ "g", "c" ], run = "cd ~/.config", desc = "Goto ~/.config" },
-  { on = [ "g", "d" ], run = "cd ~/İndirilenler", desc = "Goto ~/Downloads (İndirilenler)" },
-  { on = [ "g", "b" ], run = "cd ~/Belgeler", desc = "Goto ~/Documents (Belgeler)" },
   { on = [ "g", "t" ], run = "cd ~/.local/share/Trash/files", desc = "Goto trash" },
   { on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Jump interactively" },
 	{ on = [ "g", "f" ],       run = "follow",           desc = "Follow hovered symlink" },

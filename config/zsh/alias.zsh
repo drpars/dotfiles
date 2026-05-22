@@ -79,6 +79,8 @@ alias share='net usershare add'
 alias unshare='net usershare remove'
 alias sharelist='net usershare info'
 
+# Razer DeathStalker v2 Pro
+alias klavye='razer-cli -e reactive,4 brightness,25 -c FFFFFF'
 # ==========================================================
 # DİĞER ARAÇLAR (MISCELLANEOUS)
 # ==========================================================
@@ -87,3 +89,9 @@ alias fontsearch='$HOME/.config/scripts/fontsearch'
 alias fontupdate='fc-cache -f -v'
 alias mimetipbul='file --mime-type -b'
 alias balık='asciiquarium'
+# ==========================================================
+# AI araclar
+# ==========================================================
+alias ollama-start='nohup ollama serve > ~/Documents/ollama.log 2>&1 &'
+alias ollama-stop='pkill -f "ollama serve"'
+alias ollama-status='pgrep -f "ollama serve" && echo "Çalışıyor" || echo "Durmuş"'

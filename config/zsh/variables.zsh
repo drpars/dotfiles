@@ -29,6 +29,8 @@ if [[ ":$PATH:" != *":$HOME/.config/scripts:"* ]]; then
   export PATH="$PATH:$HOME/.config/scripts"
 fi
 
+export PATH=~/.npm-global/bin:$PATH
+
 # XDG_DATA_DIRS Güncellemesi (Flatpak Entegrasyonu)
 # Flatpak kısayollarının ve simgelerinin masaüstü ortamında görünür olmasını sağlar.
 FLATPAK_USER_SHARE="${XDG_DATA_HOME}/flatpak/exports/share"
