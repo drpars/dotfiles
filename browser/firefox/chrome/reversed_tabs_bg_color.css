@@ -6,7 +6,7 @@
   @media (prefers-color-scheme: dark) {
     :root {
       /* Tab colors - Tokyo Night */
-      --firefoxcss-tab-bg-color: var(--tokyo-night-bg) !important;
+      --firefoxcss-tab-bg-color: #2a3044 !important;
       --firefoxcss-tab-active-bg-color: color-mix(in srgb, #7aa2f7 40%, transparent) !important;
 
       --firefoxcss-normal-tabs-box-shadow: none !important;
@@ -22,7 +22,7 @@
       .tabbrowser-tab:hover
       > .tab-stack
       > .tab-background:not([selected="true"]) {
-      background-color: color-mix(in srgb, #7aa2f7 25%, var(--tokyo-night-bg-light)) !important;
+      background-color: color-mix(in srgb, #7aa2f7 25%, #24283b) !important;
       box-shadow: 0 0 6px rgba(122, 162, 247, 0.2) !important;
       transition: background-color 150ms ease, box-shadow 150ms ease !important;
     }
