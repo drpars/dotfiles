@@ -26,7 +26,7 @@ hl.bind(M .. " + J",               hl.dsp.layout("togglesplit"))
 
 -- ── Uygulama Başlatıcılar ──────────────────────────
 hl.bind(M .. " + R",                    hl.dsp.exec_cmd(_G.menu))
-hl.bind(A .. " + " .. C .. " + V",   hl.dsp.exec_cmd("cliphist list | rofi -dmenu -theme " .. _G.rofiDir .. "/window.rasi | cliphist decode | wl-copy"))
+hl.bind(A .. " + " .. C .. " + V",      hl.dsp.exec_cmd("cliphist list | rofi -dmenu -theme " .. _G.rofiDir .. "/window.rasi | cliphist decode | wl-copy"))
 hl.bind(A .. " + A",                    hl.dsp.exec_cmd('zsh -i -c "alias | rofi -dmenu -replace -theme ' .. _G.rofiDir .. '/window.rasi 2> /dev/null"'))
 hl.bind(A .. " + TAB",                  hl.dsp.exec_cmd(_G.scriptsDir .. "/windowswitch"))
 

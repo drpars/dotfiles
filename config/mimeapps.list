@@ -1,6 +1,7 @@
 [Added Associations]
 application/json=nvim.desktop;
 application/pdf=org.pwmt.zathura.desktop;
+application/vnd.ms-excel.sheet.macroEnabled.12=onlyoffice-desktopeditors.desktop;
 application/x-extension-htm=firefox.desktop;zen.desktop;
 application/x-extension-html=firefox.desktop;zen.desktop;
 application/x-extension-shtml=firefox.desktop;zen.desktop;
@@ -10,6 +11,7 @@ application/x-shellscript=nvim.desktop;
 application/xhtml+xml=firefox.desktop;zen.desktop;
 image/jpeg=imv-dir-2.desktop;
 image/png=imv-dir-2.desktop;imv-dir-3.desktop;
+image/svg+xml=imv-2.desktop;
 image/vnd.microsoft.icon=imv-dir-5.desktop;swappy-2.desktop;imv-dir-4.desktop;
 text/html=firefox.desktop;zen.desktop;
 text/plain=nvim.desktop;
@@ -20,6 +22,7 @@ x-scheme-handler/https=firefox.desktop;zen.desktop;
 [Default Applications]
 application/json=nvim.desktop;
 application/pdf=org.pwmt.zathura.desktop;
+application/vnd.ms-excel.sheet.macroEnabled.12=onlyoffice-desktopeditors.desktop;
 application/x-extension-htm=firefox.desktop
 application/x-extension-html=firefox.desktop
 application/x-extension-shtml=firefox.desktop
@@ -29,6 +32,7 @@ application/x-shellscript=nvim.desktop;
 application/xhtml+xml=firefox.desktop
 image/jpeg=imv-dir-2.desktop;
 image/png=imv-dir-2.desktop;
+image/svg+xml=imv-2.desktop;
 image/vnd.microsoft.icon=imv-dir-5.desktop;
 text/html=firefox.desktop
 text/plain=nvim.desktop;
