@@ -157,7 +157,7 @@
   "custom/power_btn": {
     "format": "",
     "return-type": "",
-    "on-click": "wlogout",
+    "on-click": "~/.config/scripts/powermenu",
     "tooltip": true,
     "tooltip-format": "<span size='10pt' font='Ubuntu Nerd Font'>Kapat</span>"
   },

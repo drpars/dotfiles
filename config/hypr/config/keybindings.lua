@@ -20,6 +20,9 @@ hl.bind(M .. " + F",               hl.dsp.window.fullscreen({ action = "toggle" 
 -- ── Kilit Ekranı ───────────────────────────────────
 hl.bind(M .. " + SHIFT + L",       hl.dsp.exec_cmd("pidof hyprlock || hyprlock"))
 
+-- ── Güç Menüsü ─────────────────────────────────────
+hl.bind(M .. " + X",               hl.dsp.exec_cmd(_G.scriptsDir .. "/powermenu"))
+
 -- ── Layout ─────────────────────────────────────────
 hl.bind(M .. " + P",               hl.dsp.window.pseudo())
 hl.bind(M .. " + J",               hl.dsp.layout("togglesplit"))

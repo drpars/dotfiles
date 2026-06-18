@@ -1,0 +1,28 @@
+#!/bin/bash
+# rofi güç menüsü (wlogout yerine). Kompakt dikey liste, Tokyo Night.
+THEME="$HOME/.config/rofi/powermenu.rasi"
+
+lock="<span size='120%'>󰌾</span>  Kilitle"
+suspend="<span size='120%'>󰤄</span>  Askıya al"
+hibernate="<span size='120%'>󰜗</span>  Hazırda beklet"
+logout="<span size='120%'>󰍃</span>  Oturumu kapat"
+reboot="<span size='120%'>󰜉</span>  Yeniden başlat"
+shutdown="<span size='120%'>󰐥</span>  Kapat"
+
+chosen=$(printf '%s\n' "$lock" "$suspend" "$hibernate" "$logout" "$reboot" "$shutdown" \
+    | rofi -dmenu -i -markup-rows -p "Güç" -theme "$THEME")
+
+# Yıkıcı eylemler için onay (Evet/Hayır dikey)
+confirm() {
+    [ "$(printf 'Evet\nHayır' | rofi -dmenu -i -p "$1" \
+        -theme "$THEME" -theme-str 'listview { lines: 2; }')" = "Evet" ]
+}
+
+case "$chosen" in
+    "$lock")      pidof hyprlock || hyprlock ;;
+    "$suspend")   systemctl suspend ;;
+    "$hibernate") confirm "Hazırda bekletilsin mi?" && systemctl hibernate ;;
+    "$logout")    confirm "Oturum kapatılsın mı?"   && hyprctl dispatch exit ;;
+    "$reboot")    confirm "Yeniden başlatılsın mı?" && systemctl reboot ;;
+    "$shutdown")  confirm "Kapatılsın mı?"          && systemctl poweroff ;;
+esac

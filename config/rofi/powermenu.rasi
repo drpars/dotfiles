@@ -1,0 +1,68 @@
+/*******************************************************************************
+ * ROFI Power Menu — Tokyonight (Night) · Lavanta vurgulu · kompakt dikey liste
+ *******************************************************************************/
+
+* {
+    tn-bg:      #1a1b26;
+    tn-bg-alt:  #24283b;
+    tn-fg:      #c0caf5;
+    tn-fg-alt:  #565f89;
+    tn-accent:  #b4befe;
+    tn-urgent:  #f7768e;
+
+    border:  0;
+    margin:  0;
+    padding: 0;
+    spacing: 0;
+
+    background-color: @tn-bg;
+    text-color:       @tn-fg;
+}
+
+configuration {
+    font:       "Ubuntu Nerd Font 11";
+    show-icons: false;
+}
+
+window {
+    transparency:     "real";
+    location:         center;
+    width:            14em;
+    border:           1px;
+    border-radius:    8px;
+    border-color:     @tn-accent;
+    background-color: @tn-bg;
+}
+
+mainbox {
+    padding:          10px;
+    children:         [ listview ];
+    background-color: transparent;
+}
+
+listview {
+    background-color: transparent;
+    columns:          1;
+    lines:            6;
+    spacing:          4px;
+    scrollbar:        false;
+}
+
+element {
+    background-color: transparent;
+    text-color:       @tn-fg;
+    orientation:      horizontal;
+    border-radius:    6px;
+    padding:          12px 14px;
+}
+
+element selected.normal {
+    background-color: @tn-accent;
+    text-color:       @tn-bg;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    vertical-align:   0.5;
+}
