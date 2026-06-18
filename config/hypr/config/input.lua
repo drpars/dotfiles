@@ -12,6 +12,10 @@ hl.config({
 		numlock_by_default = true,
 		follow_mouse = 1,
 
+		-- Uyarlamalı (adaptive) fare ivmesini kapat: 1:1, hareket hızından
+		-- bağımsız sabit oran (Windows hissine yakın, daha kontrollü).
+		accel_profile = "flat",
+
 		touchpad = {
 			natural_scroll = false,
 			clickfinger_behavior = true,
