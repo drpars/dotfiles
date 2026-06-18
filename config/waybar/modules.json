@@ -168,6 +168,43 @@
     "show-passive-items": true
   },
 
+  "group/peripherals": {
+    "orientation": "inherit",
+    "drawer": {
+      "transition-duration": 500,
+      "children-class": "not-power",
+      "transition-left-to-right": false
+    },
+    "modules": ["custom/peripherals", "custom/keyboard-battery", "custom/mouse-battery"]
+  },
+
+  "custom/peripherals": {
+    "exec": "~/.config/scripts/peripheral-battery.py summary",
+    "return-type": "json",
+    "interval": 60,
+    "format": "{}",
+    "tooltip": true,
+    "signal": 9
+  },
+
+  "custom/keyboard-battery": {
+    "exec": "~/.config/scripts/peripheral-battery.py kbd",
+    "return-type": "json",
+    "interval": 60,
+    "format": "{}",
+    "tooltip": true,
+    "signal": 9
+  },
+
+  "custom/mouse-battery": {
+    "exec": "~/.config/scripts/peripheral-battery.py mouse",
+    "return-type": "json",
+    "interval": 60,
+    "format": "{}",
+    "tooltip": true,
+    "signal": 9
+  },
+
   "custom/power_profile": {
     "exec": "~/.config/scripts/powerprofileasus",
     "return-type": "json",
@@ -188,13 +225,6 @@
       "balanced": "",
       "power-saver": ""
     }
-  },
-
-  "custom/battery-status": {
-    "exec": "~/.config/scripts/battery-status.py",
-    "format": "{}",
-    "return-type": "json",
-    "tooltip": true
   },
 
   "custom/language": {

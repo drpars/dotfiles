@@ -34,10 +34,10 @@
     "wireplumber",
     // "wireplumber#source",
     // "pulseaudio#microphone",
-    "battery",
     "backlight",
+    "battery",
+    "group/peripherals",
     "custom/weather",
-    // "custom/battery-status",
     "custom/language",
     "idle_inhibitor"
     // "custom/hypridle"

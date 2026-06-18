@@ -24,9 +24,8 @@ hl.on("hyprland.start", function()
     -- RGB ve cihazlar
     hl.exec_cmd("openrgb --server")
     hl.exec_cmd("sleep 1 && openrgb -p pars-white")
-    hl.exec_cmd("hyprpm reload")
-    hl.exec_cmd("sleep 5 && openrazer-daemon -r")
-    hl.exec_cmd("sleep 7 && cd ~/.razer/RazerBatteryTray && uv run razer-battery-tray 'DeathStalker' &")
+    -- hl.exec_cmd("hyprpm reload")
+    hl.exec_cmd("sleep 5 && ~/.config/scripts/razer start &")
     -- hl.exec_cmd("polychromatic-tray-applet")
     -- hl.exec_cmd("sleep 7 && razer-cli -e reactive,4 brightness,25 -c FFFFFF")
 

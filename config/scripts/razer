@@ -1,0 +1,28 @@
+#!/bin/bash
+# Manage the openrazer daemon. The keyboard battery is now shown by the waybar
+# peripheral-battery module, which queries this daemon -- so we only keep the
+# daemon alive, no tray app.   Usage: razer start|stop
+#
+# A lock serializes concurrent invocations (hypridle fires several handlers at
+# once when waking from deep idle / suspend).
+exec 9>/tmp/razer.lock
+
+case "$1" in
+  start)
+    # Non-blocking: if another (re)start is already underway, bail.
+    flock -n 9 || exit 0
+    pkill openrazer-daemon 2>/dev/null
+    sleep 1
+    # 9>&- closes the lock fd so the backgrounded daemon doesn't keep it held.
+    openrazer-daemon -r 9>&- &
+    ;;
+  stop)
+    # Blocking: wait for any in-progress start to finish, then kill cleanly.
+    flock 9
+    pkill openrazer-daemon 2>/dev/null
+    ;;
+  *)
+    echo "usage: razer start|stop" >&2
+    exit 1
+    ;;
+esac

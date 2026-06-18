@@ -5,7 +5,7 @@
 }
 
 window#waybar {
-  color: #ffffff;
+  color: #c0caf5;
   background: transparent;
 }
 
@@ -13,9 +13,9 @@ window#waybar.hidden {
   background: transparent;
 }
 
-Tooltip Styling
+/* Tooltip Styling */
 tooltip {
-  background: #1e1e2e;
+  background: #1a1b26;
   opacity: 1;
   border: none;
   border-radius: 10px;
@@ -23,7 +23,7 @@ tooltip {
 }
 
 tooltip label {
-  color: #cdd6f4;
+  color: #c0caf5;
   text-shadow: none;
 }
 
@@ -43,7 +43,9 @@ tooltip label {
 #custom-power_profile,
 #power-profiles-daemon,
 #bluetooth,
-#custom-battery-status,
+#custom-peripherals,
+#custom-keyboard-battery,
+#custom-mouse-battery,
 #custom-language,
 #network,
 #custom-temp,
@@ -56,7 +58,7 @@ tooltip label {
 #custom-weather,
 #custom-hypridle,
 #idle_inhibitor {
-  background: #1e1e2e;
+  background: #1a1b26;
   opacity: 0.8;
   margin-top: 8px;
 }
@@ -67,11 +69,11 @@ tooltip label {
   margin-left: 10px;
   padding: 0 10px 0 20px;
   border-radius: 10px 0 0 10px;
-  color: #ffffff;
+  color: #c0caf5;
 }
 
 #workspaces {
-  background: #1e1e2e;
+  background: #1a1b26;
   margin: 8px 10px 0 0;
   opacity: 0.8;
   border-radius: 0 10px 10px 0;
@@ -83,15 +85,15 @@ tooltip label {
   margin: 4px 3px;
   border-radius: 15px;
   border: none;
-  color: #1e1e2e;
-  background-color: #ffffff;
+  color: #1a1b26;
+  background-color: #c0caf5;
   transition: all 0.3s ease-in-out;
   opacity: 0.4;
 }
 
 #workspaces button.active {
-  color: #1e1e2e;
-  background: #ffffff;
+  color: #1a1b26;
+  background: #c0caf5;
   border-radius: 15px;
   min-width: 40px;
   transition: all 0.3s ease-in-out;
@@ -99,8 +101,8 @@ tooltip label {
 }
 
 #workspaces button:hover {
-  color: #1e1e2e;
-  background: #ffffff;
+  color: #1a1b26;
+  background: #c0caf5;
   border-radius: 15px;
   opacity: 0.7;
 }
@@ -223,11 +225,11 @@ tooltip label {
 }
 
 #bluetooth.off {
-  color: #6c6c74;
+  color: #565f89;
 }
 
 #bluetooth.connected {
-  color: #ffffff;
+  color: #c0caf5;
 }
 
 #network {
@@ -237,11 +239,11 @@ tooltip label {
 }
 
 #network.linked {
-  color: #ffffff;
+  color: #c0caf5;
 }
 
 #network.disconnected {
-  color: #6c6c74;
+  color: #565f89;
 }
 
 #wireplumber {
@@ -249,9 +251,14 @@ tooltip label {
   padding: 0 10px 0 20px;
 }
 
-#pulseaudio,
-#battery {
+#pulseaudio {
   padding: 0 10px;
+}
+
+#battery {
+  border-radius: 10px;
+  padding: 0 20px;
+  margin-right: 10px;
 }
 
 #pulseaudio.microphone {
@@ -287,48 +294,51 @@ tooltip label {
 /* Animations */
 @keyframes blink-update {
   to {
-    background-color: dodgerblue;
+    background-color: #7aa2f7;
   }
 }
 
 @keyframes blink-battery {
   to {
-    background-color: red;
+    background-color: #f7768e;
   }
 }
 
-/* Mouse ve Klavye Batarya Durumu */
-#custom-battery-status {
+/* Mouse ve Klavye Batarya Durumu (Tokyo Night tonları) */
+#custom-peripherals {
   margin-right: 10px;
   border-radius: 10px;
   padding: 0 20px;
-  background: #1e1e2e;
-  opacity: 0.8;
 }
 
-#custom-battery-status.high {
-  color: #a6e3a1;
+#custom-keyboard-battery,
+#custom-mouse-battery {
+  padding: 0 12px;
 }
 
-#custom-battery-status.medium-high {
-  color: #cba6f7;
+#custom-peripherals.charging,
+#custom-keyboard-battery.charging,
+#custom-mouse-battery.charging {
+  color: #9ece6a;
 }
 
-#custom-battery-status.medium {
-  color: #f9e2af;
+#custom-peripherals.low,
+#custom-keyboard-battery.low,
+#custom-mouse-battery.low {
+  color: #e0af68;
 }
 
-#custom-battery-status.low {
-  color: #f38ba8;
-}
-
-#custom-battery-status.critical {
-  color: #f38ba8;
+#custom-peripherals.critical,
+#custom-keyboard-battery.critical,
+#custom-mouse-battery.critical {
+  color: #f7768e;
   animation: blink-battery 1s infinite;
 }
 
-#custom-battery-status.na {
-  color: #6c7086;
+#custom-peripherals.unknown,
+#custom-keyboard-battery.unknown,
+#custom-mouse-battery.unknown {
+  color: #565f89;
 }
 
 /* Klavye Dili */
@@ -341,9 +351,9 @@ tooltip label {
 }
 
 #custom-language.us {
-  color: #7AA2F7;
+  color: #7aa2f7;
 }
 
 #custom-language.tr {
-  color: #F7768E;
+  color: #f7768e;
 }
