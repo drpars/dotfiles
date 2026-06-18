@@ -36,6 +36,8 @@ zinit load zdharma-continuum/history-search-multi-word
 zinit light zsh-users/zsh-history-substring-search
 # Alias hatırlatıcı: tam komutu yazınca "bunun alias'ı var" der
 zinit wait lucid for MichaelAquilina/zsh-you-should-use
+# forgit: fzf ile etkileşimli git (ga, glo, gd, gco, gss…)
+zinit wait lucid for wfxr/forgit
 
 # Add in snippets
 zinit snippet OMZP::sudo
