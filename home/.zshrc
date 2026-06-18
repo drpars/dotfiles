@@ -15,6 +15,9 @@ source "$HOME/.config/zsh/colors.zsh"
 source "$HOME/.config/zsh/variables.zsh"
 
 # Add plugins
+# globdots compinit'ten ÖNCE ayarlanmalı (compinit, turbo bloğunda zicompinit ile koşuyor)
+_comp_options+=(globdots)
+
 # Completion
 zinit wait lucid for \
  atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
@@ -49,9 +52,7 @@ setopt sharehistory
 setopt hist_ignore_space
 setopt hist_ignore_all_dups
 setopt hist_save_no_dups
-setopt hist_ignore_dups
 setopt hist_find_no_dups
-setopt menu_complete
 
 # Bindkey
 bindkey '^?'      backward-delete-char          # bs         delete one char backward
@@ -91,11 +92,8 @@ zstyle :plugin:history-search-multi-word reset-prompt-protect 1
 eval "$(fzf --zsh)"
 eval "$(zoxide init --cmd cd zsh)"
 
-# Replay compdefs (to be done after compinit). -q – quiet.
-autoload -Uz compinit && compinit
-_comp_options+=(globdots)
-zinit cdreplay -q
+# compinit ve compdef replay, turbo bloğundaki zicompinit/zicdreplay ile yapılıyor.
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
-. "$HOME/.local/share/../bin/env"
+. "$HOME/.local/bin/env"
