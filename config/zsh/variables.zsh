@@ -47,3 +47,10 @@ export GTK2_RC_FILES="$XDG_CONFIG_HOME/gtk-2.0/gtkrc"
 export TERMINAL=kitty
 export BROWSER=firefox
 # export LIBVIRT_DEFAULT_URI="qemu:///system"
+
+# --- 4. ZLE (Satır Düzenleyici) Görünümü ---
+
+# Yapıştırılan metin varsayılan olarak ters-video/vurgulu gösterilir ve imlecin
+# yeri belirsizleşir. 'paste:none' yalnızca bu vurguyu kapatır; bölge seçimi,
+# arama vb. diğer vurgular varsayılan kalır.
+zle_highlight=(paste:none)
