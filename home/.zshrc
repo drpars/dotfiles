@@ -18,6 +18,9 @@ source "$HOME/.config/zsh/variables.zsh"
 # globdots compinit'ten ÖNCE ayarlanmalı (compinit, turbo bloğunda zicompinit ile koşuyor)
 _comp_options+=(globdots)
 
+# autosuggestions: öneriler hem geçmişten hem completion'dan gelsin (plugin'den önce ayarla)
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
 # Completion
 zinit wait lucid for \
  atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
@@ -31,11 +34,15 @@ zinit light Aloxaf/fzf-tab
 # History
 zinit load zdharma-continuum/history-search-multi-word
 zinit light zsh-users/zsh-history-substring-search
+# Alias hatırlatıcı: tam komutu yazınca "bunun alias'ı var" der
+zinit wait lucid for MichaelAquilina/zsh-you-should-use
 
 # Add in snippets
 zinit snippet OMZP::sudo
 zinit snippet OMZP::colored-man-pages
 zinit snippet OMZP::command-not-found
+# Evrensel arşiv açma: extract <dosya>  (tar/zip/rar/7z…)
+zinit snippet OMZP::extract
 
 # Add in spaceship
 zinit light spaceship-prompt/spaceship-prompt
@@ -86,6 +93,9 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 zstyle ':fzf-tab:*' fzf-flags --color=fg:1,fg+:2 --bind=tab:accept
 # To make fzf-tab follow FZF_DEFAULT_OPTS.
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
+# genel önizleme: dizinleri eza, dosyaları bat ile göster
+zstyle ':fzf-tab:complete:*:*' fzf-preview \
+  '[ -d "$realpath" ] && eza -1 --color=always --icons "$realpath" || bat --color=always --style=numbers --line-range=:200 "$realpath" 2>/dev/null'
 zstyle :plugin:history-search-multi-word reset-prompt-protect 1
 
 # Shell integrations
