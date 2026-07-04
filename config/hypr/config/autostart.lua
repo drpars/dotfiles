@@ -7,6 +7,8 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd --all")
     hl.exec_cmd("systemctl --user import-environment DISPLAY WAYLAND_DISPLAY")
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
+    -- root olarak yükselen GUI uygulamalarının (rpi-imager vb.) Xwayland'e erişebilmesi icin
+    hl.exec_cmd("sleep 2 && xhost +si:localuser:root")
 
     -- Duvar kağıdı
     hl.exec_cmd("awww-daemon")
