@@ -1,12 +1,12 @@
 * {
   font-family: Ubuntu Nerd Font;
-  font-size: 12px;
   min-height: 24px;
 }
 
 window#waybar {
   color: #c0caf5;
   background: transparent;
+  font-size: 12px;
 }
 
 window#waybar.hidden {
@@ -66,6 +66,7 @@ tooltip label {
 /* Left Modules */
 #custom-launch_rofi {
   font-size: 20px;
+  min-height: 32px;
   margin-left: 10px;
   padding: 0 10px 0 20px;
   border-radius: 10px 0 0 10px;
@@ -304,16 +305,24 @@ tooltip label {
   }
 }
 
-/* Mouse ve Klavye Batarya Durumu (Tokyo Night tonları) */
+/* Mouse ve Klavye Batarya Durumu (Tokyo Night tonları)
+   Drawer sola açılır → fiziksel sıra: [mouse | keyboard]  (boşluk)  [trigger]
+   group/hardware ile aynı: trigger ayrı yuvarlak, çocuklar bağlı bir hap. */
 #custom-peripherals {
-  margin-right: 10px;
-  border-radius: 10px;
   padding: 0 20px;
+  border-radius: 10px;
+  margin-right: 10px;
 }
 
-#custom-keyboard-battery,
+#custom-keyboard-battery {
+  border-radius: 10px 0 0 10px;
+  padding: 0 10px 0 20px;
+} 
+
 #custom-mouse-battery {
-  padding: 0 12px;
+  border-radius: 0 10px 10px 0;
+  padding: 0 20px 0 10px;
+  margin-right: 10px;
 }
 
 #custom-peripherals.charging,
@@ -331,8 +340,14 @@ tooltip label {
 #custom-peripherals.critical,
 #custom-keyboard-battery.critical,
 #custom-mouse-battery.critical {
-  color: #f7768e;
-  animation: blink-battery 1s infinite;
+  /* color: #f7768e; */
+  /* animation: blink-battery 1s infinite; */
+  animation-name: blink-update;
+  animation-duration: 3s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+
 }
 
 #custom-peripherals.unknown,
