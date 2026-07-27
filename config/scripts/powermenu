@@ -22,7 +22,7 @@ case "$chosen" in
     "$lock")      pidof hyprlock || hyprlock ;;
     "$suspend")   systemctl suspend ;;
     "$hibernate") confirm "Hazırda bekletilsin mi?" && systemctl hibernate ;;
-    "$logout")    confirm "Oturum kapatılsın mı?"   && hyprctl dispatch exit ;;
+    "$logout")    confirm "Oturum kapatılsın mı?"   && hyprctl dispatch 'hl.dsp.exit()' ;;
     "$reboot")    confirm "Yeniden başlatılsın mı?" && systemctl reboot ;;
     "$shutdown")  confirm "Kapatılsın mı?"          && systemctl poweroff ;;
 esac

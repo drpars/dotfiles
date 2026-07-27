@@ -25,7 +25,7 @@ hl.on("hyprland.start", function()
 
     -- RGB ve cihazlar
     hl.exec_cmd("openrgb --server")
-    hl.exec_cmd("sleep 1 && openrgb -p pars-white")
+    hl.exec_cmd("sleep 3 && openrgb -p pars-white")
     -- hl.exec_cmd("hyprpm reload")
     hl.exec_cmd("sleep 5 && ~/.config/scripts/razer start &")
     -- hl.exec_cmd("polychromatic-tray-applet")
