@@ -1,11 +1,9 @@
-#!/bin/zsh
-
 # Set the directory we want to store zinit and plugins
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 
 # Download Zinit, if it's not there yet
-[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
-[ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+[ ! -d "$ZINIT_HOME" ] && mkdir -p "$(dirname "$ZINIT_HOME")"
+[ ! -d "$ZINIT_HOME/.git" ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 
 # Source/Load
 source "${ZINIT_HOME}/zinit.zsh"
@@ -22,17 +20,20 @@ _comp_options+=(globdots)
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 # Completion
+# SIRA ÖNEMLİ (fzf-tab README): compinit → fzf-tab → widget saran eklentiler
+# (zsh-autosuggestions, fast-syntax-highlighting).
+# fzf-tab '^I'yi en son bağlayan olmalı. Turbo sayesinde prompt'tan sonra yüklenir,
+# yani aşağıdaki 'eval "$(fzf --zsh)"' satırından sonra — onun binding'ini sarmalar.
 zinit wait lucid for \
  atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
-    zdharma-continuum/fast-syntax-highlighting \
+    Aloxaf/fzf-tab \
  blockf \
     zsh-users/zsh-completions \
  atload"!_zsh_autosuggest_start" \
-    zsh-users/zsh-autosuggestions
-# Completion selection
-zinit light Aloxaf/fzf-tab
+    zsh-users/zsh-autosuggestions \
+    zdharma-continuum/fast-syntax-highlighting
 # History
-zinit load zdharma-continuum/history-search-multi-word
+zinit light zdharma-continuum/history-search-multi-word
 zinit light zsh-users/zsh-history-substring-search
 # Alias hatırlatıcı: tam komutu yazınca "bunun alias'ı var" der
 zinit wait lucid for MichaelAquilina/zsh-you-should-use
@@ -50,10 +51,11 @@ zinit snippet OMZP::extract
 zinit light spaceship-prompt/spaceship-prompt
 
 # History
-HISTSIZE=10000
+HISTSIZE=50000
 HISTFILE=~/.config/zsh/.zsh_history
-SAVEHIST=$HISTSIZE
-HISTDUP=erase
+SAVEHIST=50000
+# Not: HISTDUP zsh'de tanımlı bir değişken değildir (man zshparam'da yok) — kaldırıldı.
+# Tekrar temizliği aşağıdaki hist_ignore_all_dups / hist_save_no_dups ile yapılıyor.
 
 # Setopt
 setopt appendhistory
@@ -62,6 +64,8 @@ setopt hist_ignore_space
 setopt hist_ignore_all_dups
 setopt hist_save_no_dups
 setopt hist_find_no_dups
+setopt hist_reduce_blanks   # komuttaki gereksiz boşlukları kırparak kaydet
+setopt extended_history     # geçmişe zaman damgası + süre ekle
 
 # Bindkey
 bindkey '^?'      backward-delete-char          # bs         delete one char backward
@@ -106,6 +110,14 @@ eval "$(zoxide init --cmd cd zsh)"
 
 # compinit ve compdef replay, turbo bloğundaki zicompinit/zicdreplay ile yapılıyor.
 autoload -Uz _zinit
-(( ${+_comps} )) && _comps[zinit]=_zinit
+# _comps burada henüz tanımlı değil (compinit turbo bloğunda, prompt'tan sonra koşuyor),
+# bu yüzden '&&' 1 döndürüp prompt'ta ✘1 bırakıyordu; 'if' her durumda 0 döner.
+if (( ${+_comps} )); then
+  _comps[zinit]=_zinit
+fi
 
-[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+# uv'nin resmi kurulum betigi ekler; pacman ile kurulan makinelerde bu dosya yok.
+# 'if' kullaniliyor cunku '&&' kosul saglanmayinca 1 dondurup prompt'ta ✘1 birakiyor.
+if [ -f "$HOME/.local/bin/env" ]; then
+  . "$HOME/.local/bin/env"
+fi
