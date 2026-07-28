@@ -7,7 +7,7 @@ on-button-left=dismiss
 on-button-middle=none
 on-button-right=dismiss-all
 on-touch=dismiss
-on-notify=exec mpv /usr/share/sounds/freedesktop/stereo/message.oga
+on-notify=exec timeout 10 mpv --no-config --no-terminal /usr/share/sounds/freedesktop/stereo/message.oga
 
 # STYLE OPTIONS
 font=Ubuntu Nerd Font Light 12
