@@ -4,7 +4,8 @@
 
 hl.config({
 	input = {
-		kb_layout = "us,tr",
+		-- Fiziksel klavye makineye göre değişiyor (bkz. config/hosts/).
+		kb_layout = host.kb_layout,
 		kb_options = "grp:alt_shift_toggle",
 		kb_variant = "",
 		kb_model = "",

@@ -83,8 +83,9 @@ _G.host = {
         bitdepth = 10,
         cm       = "wide", -- wide|hdr
     },
-    nvidia_env  = true, -- her şeyi nvidia-drm'e zorla (hibrit olmayan makine)
-    rgb_devices = true, -- OpenRGB / Razer cihazları bu makinede var
+    nvidia_env  = true,     -- her şeyi nvidia-drm'e zorla (hibrit olmayan makine)
+    rgb_devices = true,     -- OpenRGB / Razer cihazları bu makinede var
+    kb_layout   = "us,tr",  -- fiziksel klavyenin dizilimi; ilki öncelikli
 }
 
 -- Renkler (hex formatında)

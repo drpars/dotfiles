@@ -27,3 +27,7 @@ host.nvidia_env = false
 -- masaüstünde. openrgb ikilisi burada da kurulu, yani yetenek testi yine
 -- ayırt etmezdi — eksik olan cihazların kendisi.
 host.rgb_devices = false
+
+-- Dizüstünün tuş takımı Türkçe basılı; masaüstünde US klavye var. Fiziksel
+-- bir olgu, yazılımdan sorulamaz.
+host.kb_layout = "tr,us"
