@@ -3,3 +3,10 @@
 	email = m.izzetsaglam@gmail.com
 [init]
 	defaultBranch = main
+
+# Makineye ozel ayarlar (imzalama anahtari vb.) burada degil,
+# ~/.gitconfig.local icinde durur; o dosya depoya girmez.
+# Dosya yoksa git bu satiri sessizce yok sayar, yani bu .gitconfig
+# her makinede guvenle paylasilabilir.
+[include]
+	path = ~/.gitconfig.local

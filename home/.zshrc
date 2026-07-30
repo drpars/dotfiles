@@ -121,3 +121,14 @@ fi
 if [ -f "$HOME/.local/bin/env" ]; then
   . "$HOME/.local/bin/env"
 fi
+
+# ssh-agent soketi. ~/.ssh/config'teki IdentityAgent yalnizca `ssh` komutunu
+# etkiler; `ssh-add` ve git commit imzalamasi (ssh-keygen -Y sign) ssh config'i
+# OKUMAZ, yalnizca SSH_AUTH_SOCK'a bakar. ~/.config/environment.d ise yalnizca
+# systemd'nin baslattigi sureclere uygulanir; oturum SDDM ile acildigi icin
+# Hyprland ve altindaki terminaller o ortami gormez. Bu yuzden burada.
+# Zaten tanimliysa (or. agent yonlendirmeli bir SSH oturumu) dokunulmuyor.
+# 'if' kullaniliyor cunku '&&' kosul saglanmayinca 1 dondurup prompt'ta ✘1 birakiyor.
+if [ -z "$SSH_AUTH_SOCK" ] && [ -S "$XDG_RUNTIME_DIR/ssh-agent.socket" ]; then
+  export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+fi

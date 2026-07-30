@@ -97,12 +97,12 @@ hl.bind("XF86AudioPrev",         hl.dsp.exec_cmd("playerctl previous"),         
 
 -- ── ROG G15 Strix'e Özel Bağlamalar ─────────────────
 -- hl.bind("xf86Launch1",             hl.dsp.exec_cmd("rog-control-center"))
--- hl.bind("xf86KbdBrightnessDown",   hl.dsp.exec_cmd(scriptsDir .. "/waybar/brightnesskbd down"))
--- hl.bind("xf86KbdBrightnessUp",     hl.dsp.exec_cmd(scriptsDir .. "/waybar/brightnesskbd up"))
+-- hl.bind("xf86KbdBrightnessDown",   hl.dsp.exec_cmd(scriptsDir .. "/brightnessasuskbd down"))
+-- hl.bind("xf86KbdBrightnessUp",     hl.dsp.exec_cmd(scriptsDir .. "/brightnessasuskbd up"))
 -- hl.bind("xf86Launch3",             hl.dsp.exec_cmd("asusctl led-mode -n"))
--- hl.bind("xf86Launch4",             hl.dsp.exec_cmd(scriptsDir .. "/waybar/powerprofile next"))
--- hl.bind("xf86MonBrightnessDown",   hl.dsp.exec_cmd(scriptsDir .. "/waybar/brightness down"))
--- hl.bind("xf86MonBrightnessUp",     hl.dsp.exec_cmd(scriptsDir .. "/waybar/brightness up"))
+-- hl.bind("xf86Launch4",             hl.dsp.exec_cmd(scriptsDir .. "/powerprofileasus next"))
+-- hl.bind("xf86MonBrightnessDown",   hl.dsp.exec_cmd(scriptsDir .. "/brightness down"))
+-- hl.bind("xf86MonBrightnessUp",     hl.dsp.exec_cmd(scriptsDir .. "/brightness up"))
 
 -- ── Özel ───────────────────────────────────────────
 hl.bind("WIN + F1",                    hl.dsp.exec_cmd(_G.scriptsDir .. "/gamemode"))
