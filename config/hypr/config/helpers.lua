@@ -15,7 +15,6 @@ _G.launcher    = "rofi -replace -show drun -theme ~/.config/rofi/applications.ra
 
 -- Dizinler
 _G.scriptsDir = os.getenv("HOME") .. "/.config/scripts"
-_G.wallpaper  = os.getenv("HOME") .. "/.config/hypr/images/wallpaper_symlink"
 _G.rofiDir    = os.getenv("HOME") .. "/.config/rofi"
 
 -- =======================================================

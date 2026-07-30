@@ -18,4 +18,4 @@ swaylock \
   --separator-color 00000000 \
   --fade-in 0.2 \
   --font 'Ubuntu Nerd Font Propo' \
-  --image $HOME/.config/hypr/images/wallpaper_symlink
+  --image $HOME/.local/state/wallpaper

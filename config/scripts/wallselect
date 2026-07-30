@@ -5,8 +5,10 @@
 #-----------------------------------------------------------
 
 DIR=$(xdg-user-dir PICTURES)/Wallpaper
-SYMLINK_PATH="$HOME/.config/hypr/images/wallpaper_symlink"
-MONITOR_NAME="DP-1"
+SYMLINK_PATH="$HOME/.local/state/wallpaper"
+# Bos = tum monitorler. Burada "DP-1" yaziyordu; o masaustunun ciktisi ve
+# dizustunde hicbir seye uymuyordu.
+MONITOR_NAME=""
 FIT_MODE="fill"
 
 # awww için Geçiş Ayarları

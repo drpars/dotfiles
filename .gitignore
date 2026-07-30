@@ -9,9 +9,6 @@ home/.fonts/.uuid
 # etkinlestirme symlink'lerini buraya yaziyor. Makine durumu, depoya girmez.
 config/systemd/user/*.wants/
 
-# Hangi duvar kagidinin secili oldugu makine durumudur, yapilandirma degil.
-# wallselect bu symlink i her secimde yeniden yazar.
-config/hypr/images/wallpaper_symlink
 
 # GTK dosya yoneticisi yer imleri: kullanici durumu ve yerele bagli
 # (masaustunde ~/Projects, dizustunde ~/Projeler). GTK bu dosyada degisken
