@@ -1,29 +1,59 @@
 #!/bin/bash
+# Backlight control.
+#   brightness up|down|get [screen|kbd]      target defaults to screen
+#
+# Replaces the brightness / brightnessasuskbd pair. Both drove brightnessctl
+# through the same four functions and differed only in device, step size and
+# the label on the notification, so they are one script with an argument.
+#
+# Kept in bash on purpose: this runs on a key press, with key repeat, and a
+# python interpreter start would be felt on every step.
 
-get_info() {
-  brightnessctl -m | cut -d "," -f 4
-}
+KBD_LED="asus::kbd_backlight"
 
-get_current() {
-  current=$(get_info | sed 's/%//')
-}
+action=${1:-get}
+target=${2:-screen}
 
-notify_user() {
-  notify-send -e -h string:x-canonical-private-synchronous:info -h int:value:$current -u low "Ekran Parklalığı: $current%"
-}
-
-change_backlight() {
-  brightnessctl set "$1" && get_current && notify_user
-}
-
-case "$1" in
-"up")
-  change_backlight "10%+"
+case "$target" in
+screen)
+  dev=()
+  step=10
+  label="Ekran Parlaklığı"
   ;;
-"down")
-  change_backlight "10%-"
+kbd)
+  # Only ASUS laptops have this LED. Bail quietly elsewhere so the script is
+  # safe to run by hand on any machine; the keybinding is gated too.
+  [ -e "/sys/class/leds/$KBD_LED" ] || exit 0
+  dev=(-d "$KBD_LED")
+  step=33
+  label="Klavye Parlaklığı"
   ;;
 *)
-  get_info
+  echo "usage: brightness up|down|get [screen|kbd]" >&2
+  exit 1
+  ;;
+esac
+
+percent() {
+  brightnessctl "${dev[@]}" -m | cut -d, -f4 | tr -d '%'
+}
+
+notify() {
+  notify-send -e \
+    -h string:x-canonical-private-synchronous:info \
+    -h "int:value:$1" -u low "$label: $1%"
+}
+
+case "$action" in
+up | down)
+  [ "$action" = up ] && arg="${step}%+" || arg="${step}%-"
+  brightnessctl "${dev[@]}" set "$arg" >/dev/null && notify "$(percent)"
+  ;;
+get)
+  echo "$(percent)%"
+  ;;
+*)
+  echo "usage: brightness up|down|get [screen|kbd]" >&2
+  exit 1
   ;;
 esac

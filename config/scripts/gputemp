@@ -1,0 +1,69 @@
+#!/bin/bash
+# waybar custom/gputemp -- GPU temperature, whatever GPUs this machine has.
+#
+# Replaces the gpuasus / gpudesktop pair. Those hardcoded one machine each and
+# modules.json could only name one of them, so the laptop ran the desktop's
+# script and reported its dGPU only; gpuasus was never called, and would not
+# have worked anyway since it looked for the sensor at amdgpu-pci-0600 while
+# the real one is amdgpu-pci-0500. Nothing is hardcoded here: each source is
+# used if it answers.
+#
+# Survives the dGPU being handed to a VM. When the card is bound to vfio-pci
+# the nvidia driver releases it and /proc/driver/nvidia/gpus empties, so we can
+# tell without calling nvidia-smi at all -- which matters at waybar's one
+# second interval, where a stalling nvidia-smi would be felt.
+#
+# With no source at all the text is empty, which is how waybar hides a custom
+# module (same convention as peripheral-battery.py).
+
+nvidia_temp() {
+  compgen -G "/proc/driver/nvidia/gpus/*" >/dev/null 2>&1 || return 1
+  command -v nvidia-smi >/dev/null 2>&1 || return 1
+  local t
+  t=$(timeout 3 nvidia-smi --query-gpu=temperature.gpu \
+        --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
+  [[ $t =~ ^[0-9]+$ ]] || return 1
+  printf '%s' "$t"
+}
+
+amd_temp() {
+  command -v sensors >/dev/null 2>&1 || return 1
+  local chip t
+  # Chip name carries the PCI address, which differs per board -- discover it.
+  chip=$(sensors 2>/dev/null | grep -oE '^amdgpu-[a-z0-9-]+' | head -1)
+  [ -n "$chip" ] || return 1
+  t=$(sensors -A "$chip" 2>/dev/null | awk '
+        /^(edge|junction|Tdie|temp1)/ {
+          for (i = 2; i <= NF; i++)
+            if ($i ~ /^\+?[0-9]+\.?[0-9]*$/) { gsub(/\+/, "", $i); printf "%d", $i; exit }
+        }')
+  [[ $t =~ ^[0-9]+$ ]] || return 1
+  printf '%s' "$t"
+}
+
+nv=$(nvidia_temp) || nv=""
+amd=$(amd_temp) || amd=""
+
+parts=()
+hottest=""
+
+if [ -n "$nv" ]; then
+  parts+=("NVIDIA: ${nv}°C")
+  hottest=$nv
+fi
+
+if [ -n "$amd" ]; then
+  parts+=("AMD: ${amd}°C")
+  if [ -z "$hottest" ] || [ "$amd" -gt "$hottest" ]; then
+    hottest=$amd
+  fi
+fi
+
+if [ -z "$hottest" ]; then
+  printf '{"text":""}\n'
+  exit 0
+fi
+
+# Text is the hottest of them; the tooltip breaks it down when there are two.
+tooltip=$(IFS=$'\n'; printf '%s' "${parts[*]}")
+printf '{"text":"GPU %s°C","tooltip":"%s"}\n' "$hottest" "${tooltip//$'\n'/\\n}"

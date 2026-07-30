@@ -86,7 +86,7 @@
   },
 
   "custom/gputemp": {
-    "exec": "~/.config/scripts/gpudesktop",
+    "exec": "~/.config/scripts/gputemp",
     "return-type": "json",
     "format": "{}",
     "tooltip": true,

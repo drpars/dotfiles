@@ -108,8 +108,8 @@ end
 
 -- Klavye arka ışığı: asusctl'e değil, LED arayüzünün varlığına bağlı
 if exists("/sys/class/leds/asus::kbd_backlight") then
-    hl.bind("xf86KbdBrightnessDown", hl.dsp.exec_cmd(scriptsDir .. "/brightnessasuskbd down"))
-    hl.bind("xf86KbdBrightnessUp",   hl.dsp.exec_cmd(scriptsDir .. "/brightnessasuskbd up"))
+    hl.bind("xf86KbdBrightnessDown", hl.dsp.exec_cmd(scriptsDir .. "/brightness down kbd"))
+    hl.bind("xf86KbdBrightnessUp",   hl.dsp.exec_cmd(scriptsDir .. "/brightness up kbd"))
 end
 
 -- ── Ekran Parlaklığı ───────────────────────────────
