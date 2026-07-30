@@ -9,6 +9,12 @@ Reports the Razer keyboard (via the openrazer daemon) and the Logitech mouse
     peripheral-battery.py summary   -> combined trigger JSON (tooltip = both)
 
 Each call prints a single waybar JSON object: {text, tooltip, class, percentage}.
+
+When a device is not reachable -- no openrazer, no solaar, nothing paired --
+the object is printed with an empty text, which is waybar's way of hiding a
+custom module. That is what keeps the drawer out of the bar on machines
+without these peripherals, so the same config works everywhere and nothing
+has to be commented out per machine.
 """
 
 import json
@@ -81,8 +87,14 @@ def read_mouse():
     return MOUSE_CODENAME, level, charging
 
 
+# Waybar hides a custom module whose text is empty.
+HIDDEN = {"text": ""}
+
+
 def device_obj(glyph, name, level, charging):
-    pct = "?" if level is None else f"{level}%"
+    if level is None:
+        return HIDDEN
+    pct = f"{level}%"
     return {
         "text": f"{glyph} {pct}",
         "tooltip": f"{name or 'cihaz yok'}: {pct}"
@@ -109,6 +121,11 @@ def main():
     # tooltip listing both peripherals.
     k_name, k_lvl, k_chg = read_keyboard()
     m_name, m_lvl, m_chg = read_mouse()
+
+    # Hiçbiri okunamıyorsa bu makinede bu çevre birimleri yok: gizlen.
+    if k_lvl is None and m_lvl is None:
+        print(json.dumps(HIDDEN))
+        return
 
     lines = [
         f"{KBD_GLYPH}  {k_name or 'Klavye yok'}: "
