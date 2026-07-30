@@ -58,15 +58,11 @@ alias wifioff='iwctl device wlan0 set-property Powered off'
 alias bluetoothon='echo -e "power on" | bluetoothctl >/dev/null'
 alias bluetoothoff='echo -e "power off" | bluetoothctl >/dev/null'
 
-# GPU Yönetimi (ROG/ASUS)
-alias hybridgpu='supergfxctl -m Hybrid'
-alias muxgpu='supergfxctl -m AsusMuxDgpu'
-
 # ==========================================================
 # SANALLAŞTIRMA VE UYGULAMA (VM & APP)
 # ==========================================================
 # Windows 11 VM
-alias win11='$HOME/.config/scripts/win11'
+alias win11='$HOME/.config/scripts/others/win11'
 alias win11shutdown='virsh --connect=qemu:///system shutdown win11'
 
 # Waydroid (Android)

@@ -1,9 +1,14 @@
 #!/bin/bash
 
-if supergfxctl -g | grep "Hybrid" >/dev/null; then
-  echo "Ekran kartı dahili modda değil!"
-else
-  virsh --connect=qemu:///system start win11
-  sleep 13
-  looking-glass-client -F -S -f /dev/kvmfr0
+# supergfxctl kullanımdan kalkıyor ve her makinede kurulu değil. Kuruluysa
+# hibrit modda uyarıp çık; kurulu değilse kontrolü atla — korumasız hâlde de
+# davranış buydu (grep boş girdide eşleşmiyordu), tek farkı "command not
+# found" gürültüsüydü.
+if command -v supergfxctl >/dev/null 2>&1 && supergfxctl -g | grep -q "Hybrid"; then
+  echo "Ekran kartı dahili modda değil!" >&2
+  exit 1
 fi
+
+virsh --connect=qemu:///system start win11
+sleep 13
+looking-glass-client -F -S -f /dev/kvmfr0
