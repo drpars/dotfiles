@@ -64,6 +64,29 @@ function _G.has(cmd)
     return false
 end
 
+-- =======================================================
+-- MAKİNEYE ÖZGÜ OLGULAR
+-- =======================================================
+-- Yeteneğe sorulamayan şeyler burada. `config/hosts/<board_name>.lua` varsa
+-- bu tabloyu ezer (bkz. hyprland.lua).
+--
+-- DİKKAT: Aşağıdaki varsayılanlar şu an MASAÜSTÜNÜN değerleri, yani "host
+-- dosyası yoksa masaüstüdür" varsayımı. Geçici: masaüstünün board_name'i
+-- öğrenilip kendi host dosyası açılınca bunlar nötrleştirilecek
+-- (output = "", mode = "preferred", bayraklar false).
+_G.host = {
+    monitor = {
+        output   = "DP-1",
+        mode     = "2560x1440@120",
+        position = "0x0",
+        scale    = 1,
+        bitdepth = 10,
+        cm       = "wide", -- wide|hdr
+    },
+    nvidia_env  = true, -- her şeyi nvidia-drm'e zorla (hibrit olmayan makine)
+    rgb_devices = true, -- OpenRGB / Razer cihazları bu makinede var
+}
+
 -- Renkler (hex formatında)
 _G.colors = {
     lavender  = "rgb(b4befe)",

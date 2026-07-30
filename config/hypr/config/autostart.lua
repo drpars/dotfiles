@@ -23,13 +23,17 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
 
-    -- RGB ve cihazlar
-    hl.exec_cmd("openrgb --server")
-    hl.exec_cmd("sleep 3 && openrgb -p pars-white")
+    -- RGB ve cihazlar — cihazların bulunduğu makinede. openrgb ikilisi her
+    -- yerde kurulu olabildiği için yetenek testi ayırt etmiyor, olgu cihazın
+    -- kendisi; bu yüzden host tablosundan geliyor.
+    if host.rgb_devices then
+        hl.exec_cmd("openrgb --server")
+        hl.exec_cmd("sleep 3 && openrgb -p pars-white")
+        hl.exec_cmd("sleep 5 && ~/.config/scripts/razer start &")
+        -- hl.exec_cmd("polychromatic-tray-applet")
+        -- hl.exec_cmd("sleep 7 && razer-cli -e reactive,4 brightness,25 -c FFFFFF")
+    end
     -- hl.exec_cmd("hyprpm reload")
-    hl.exec_cmd("sleep 5 && ~/.config/scripts/razer start &")
-    -- hl.exec_cmd("polychromatic-tray-applet")
-    -- hl.exec_cmd("sleep 7 && razer-cli -e reactive,4 brightness,25 -c FFFFFF")
 
     -- GTK teması
     hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'Tokyonight-Dark'")

@@ -10,6 +10,14 @@
 -- Yardımcılar ve ortak değişkenler (önce yüklenmeli)
 require("config.helpers")
 
+-- Makineye özgü olgular: config/hosts/<board_name>.lua varsa host tablosunu
+-- ezer. Aşağıdaki modüllerden ÖNCE yüklenmeli. Dosya yoksa sessizce atlanır;
+-- varsa ve içinde hata varsa hata gizlenmez (bilerek pcall kullanılmıyor).
+local board = (dmi("board_name") or ""):gsub("[^%w%-_]", "_")
+if board ~= "" and exists(os.getenv("HOME") .. "/.config/hypr/config/hosts/" .. board .. ".lua") then
+    require("config.hosts." .. board)
+end
+
 -- Sistem ve donanım
 require("config.monitors")
 require("config.input")
