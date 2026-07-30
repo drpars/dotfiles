@@ -1,6 +1,6 @@
 #!/bin/bash
 # Claude Code status line
-# Gösterilenler: kullanıcı@host/dizin · model · effort · 5s limit · 7g limit
+# Gösterilenler: kullanıcı@host/dizin · model · effort · 5s limit · 7g limit · konu
 # Not: limit verisi API'den ilk prompt'tan sonra gelir. Bu yüzden gelen
 # değerleri önbelleğe yazıyoruz; prompt öncesi veri yokken önbellekten
 # okuyup "~" işaretiyle (son bilinen değer) gösteriyoruz.
@@ -69,6 +69,51 @@ elif [ -f "$CACHE" ]; then
   STALE="~"
 fi
 
+# --- Sohbet konusu ---
+# Statusline girdisinde hazır bir "konu" alanı yok, ama transcript'te var:
+# Claude Code oturum için kendisi bir başlık üretip "ai-title" satırı olarak
+# yazıyor (bir kez üretilir, konuşmanın tamamından türer — ilk mesaj "Merhaba..."
+# gibi anlamsızsa bile isabetli olur). Sıra:
+#   1) elle verilen başlık (custom-title)  2) CLI'ın ürettiği (ai-title)
+#   3) hiçbiri yoksa oturumun ilk kullanıcı prompt'u (eski oturumlar için).
+# Kısaltma jq içinde yapılır: jq UTF-8 kod noktasıyla sayar, bash ise
+# UTF-8 olmayan locale'de bayt sayar ve Türkçe karakteri ortadan böler.
+TOPIC_MAX=32
+TRANSCRIPT=$(echo "$input" | jq -r '.transcript_path // empty')
+TOPIC=""
+if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
+  # Üç yol da adayı @json ile tek satır olarak verir: prompt çok satırlıysa
+  # aşağıdaki "head -n1" yanlışlıkla ilk satırı değil, ilk mesajı alsın diye.
+  # grep ön filtresi: MB'larca transcript'i baştan sona jq'ya ayrıştırtmamak için.
+  # Boş dizgi adayları ayıklanır, yoksa bir sonraki yola düşmeyi engellerler.
+  TOPIC=$(grep -F '"type":"custom-title"' "$TRANSCRIPT" 2>/dev/null | tail -n1 \
+          | jq -r '.customTitle | select(type == "string" and length > 0) | @json' 2>/dev/null)
+  if [ -z "$TOPIC" ]; then
+    TOPIC=$(grep -F '"type":"ai-title"' "$TRANSCRIPT" 2>/dev/null | tail -n1 \
+            | jq -r '.aiTitle | select(type == "string" and length > 0) | @json' 2>/dev/null)
+  fi
+  if [ -z "$TOPIC" ]; then
+    # İlk kullanıcı mesajı dosyanın başındadır (sabit maliyet). tool_result'lar
+    # dizi içerik taşır, slash komutları <command-...> ile başlar; ikisi de atlanır.
+    # Akış kipinde (-s yok) kalıyoruz: canlı yazılan transcript'in son satırı
+    # yarım JSON olsa bile önceki geçerli satırlar yine de işlenir.
+    TOPIC=$(head -n 40 "$TRANSCRIPT" 2>/dev/null | jq -r '
+      select(.type == "user" and (.message.content | type == "string"))
+      | .message.content
+      | select(length > 0 and (startswith("<") or startswith("Caveat:") | not))
+      | @json' 2>/dev/null | head -n1)
+  fi
+fi
+if [ -n "$TOPIC" ]; then
+  # Girdi zaten JSON dizgi: jq onu doğrudan ayrıştırır. Boşlukları tek satıra
+  # indir, sonra kod noktasına göre kısalt.
+  TOPIC=$(printf '%s' "$TOPIC" | jq -r --argjson max "$TOPIC_MAX" '
+    gsub("\\s+"; " ") | ltrimstr(" ") | rtrimstr(" ")
+    | if length > $max then .[0:$max] + "…" else . end' 2>/dev/null)
+  # printf %b ile basıldığı için ters eğik çizgi kaçışlarını etkisizleştir.
+  TOPIC=${TOPIC//\\/\\\\}
+fi
+
 # --- Parçaları birleştir ---
 HOST=${HOSTNAME:-$(uname -n)}
 LINE="${DIM}[$(whoami)@${HOST%%.*} ${DIR}]${RESET}"
@@ -85,5 +130,7 @@ if [ -n "$D_PCT" ]; then
   LINE="${LINE} ${DIM}·${RESET} ${DIM}7g${RESET} ${C}${STALE}${D_PCT%%.*}%${RESET}"
   [ -n "$R" ] && LINE="${LINE} ${DIM}(${R})${RESET}"
 fi
+
+[ -n "$TOPIC" ] && LINE="${LINE} ${DIM}·${RESET} ${DIM}${TOPIC}${RESET}"
 
 printf '%b\n' "$LINE"

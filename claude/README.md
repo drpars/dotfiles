@@ -9,7 +9,7 @@ taşınabilir yapılandırma dosyaları bu repoda tutuluyor.
 | Dosya | Ne işe yarar |
 |---|---|
 | `settings.json` | Model, statusline tanımı, etkin plugin listesi, tema |
-| `statusline.sh` | Özel durum çubuğu betiği (kullanıcı, model, effort, limitler) |
+| `statusline.sh` | Özel durum çubuğu betiği (kullanıcı, model, effort, limitler, konu) |
 | `keybindings.json` | Özel klavye kısayolları |
 
 İleride eklenirse `CLAUDE.md`, `commands/`, `agents/` ve `skills/` de
@@ -54,3 +54,22 @@ değişiklikler repoya yansımaz.
    `settings.json` içindeki `enabledPlugins` hangilerinin etkin olduğunu tutar:
    `lua-lsp`, `typescript-lsp`, `pyright-lsp` (`claude-plugins-official`).
 3. Statusline betiği `jq` kullanır — kurulu olduğundan emin olun.
+
+## Statusline'daki "konu" alanı
+
+Satırın sonunda soluk renkte oturumun konusu görünür. Statusline'a gelen JSON'da
+böyle bir alan yok, ama transcript'te (`transcript_path`) var: Claude Code her
+oturum için kendisi bir başlık üretip `ai-title` satırı olarak yazıyor. Betik
+şu sırayı izler, ilk bulduğunu 32 karaktere kısaltarak gösterir:
+
+1. `custom-title` — oturuma elle verdiğiniz başlık,
+2. `ai-title` — CLI'ın ürettiği başlık (bir kez üretilir, konuşmanın tamamından
+   türer: ilk mesaj "Merhaba..." gibi anlamsız olsa da isabetli olur),
+3. oturumun ilk kullanıcı prompt'u — yukarıdakiler yoksa (eski oturumlar).
+
+3. yolda slash komutları ve tool sonuçları atlanır. Hiçbiri yoksa alan hiç
+görünmez. Uzunluğu değiştirmek için betikteki `TOPIC_MAX` değerini düzenleyin.
+
+`ai-title`'ın dili tutarsız olabilir (Türkçe konuşmada İngilizce başlık
+üretebiliyor); bu CLI'ın kendi kararı, `CLAUDE.md` ile değiştirilemez. Sabit bir
+isim istiyorsanız oturumu elle adlandırın — 1. yol her şeyi ezer.
