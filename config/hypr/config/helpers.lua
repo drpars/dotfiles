@@ -64,26 +64,94 @@ function _G.has(cmd)
     return false
 end
 
+-- KEY="value" biçimli bir dosyayı tabloya oku. Yorumlar ve bozuk satırlar
+-- düşer; `source` etmediğimiz için dosyaya sızmış bir komut çalışmaz.
+local function read_conf(path)
+    local t = {}
+    local fh = io.open(path, "r")
+    if not fh then return t end
+    for line in fh:lines() do
+        local k, v = line:match('^%s*([A-Z0-9_]+)%s*=%s*(.-)%s*$')
+        if k then t[k] = (v:gsub('^"(.*)"$', "%1")) end
+    end
+    fh:close()
+    return t
+end
+
 -- =======================================================
 -- MAKİNEYE ÖZGÜ OLGULAR
 -- =======================================================
--- Yeteneğe sorulamayan şeyler burada. `config/hosts/<board_name>.lua` varsa
--- bu tabloyu ezer (bkz. hyprland.lua).
+-- Kaynak: ~/.config/hosts/<board_id>.conf — **tek gerçek kaynak**. Aynı
+-- dosyayı kabuk betikleri de okuyor (scripts/hostfact), böylece bir olgu iki
+-- dilde iki kez yazılmıyor. Yoksa aşağıdaki nötr varsayılanlar geçerli:
+-- tanınmayan makinede Hyprland'in kendi varsayılanlarına düşülür, hiçbir
+-- donanım varsayılmaz.
 --
--- Buradaki değerler NÖTR: tanınmayan bir makinede Hyprland'in kendi
--- varsayılanlarına düşülür, hiçbir donanım varsayılmaz. Bilinen makineler
--- kendi host dosyalarında konuşur — config/hosts/ altına bak.
+-- board_id türetimi hostfact'teki ile aynı tutulmalı: dosya adı dostu olmayan
+-- karakterler _, ardışıklar toplanır, uçlar kırpılır. (MSI "MEG Z490 UNIFY
+-- (MS-7C71)" diyor → MEG_Z490_UNIFY_MS-7C71.)
+function _G.board_id()
+    local raw = dmi("board_name") or ""
+    return (raw:gsub("[^%w%-_]", "_"):gsub("_+", "_"):gsub("^_+", ""):gsub("_+$", ""))
+end
+
+local _hc = {}
+do
+    local id = board_id()
+    if id ~= "" then
+        _hc = read_conf(os.getenv("HOME") .. "/.config/hosts/" .. id .. ".conf")
+    end
+end
+
+local function _bool(key, default)
+    local v = _hc[key]
+    if v == nil then return default end
+    return v == "true"
+end
+local function _str(key, default)
+    return _hc[key] or default
+end
+-- Sayıya çevrilebiliyorsa sayı; değilse ("auto" gibi) olduğu gibi.
+local function _num(key, default)
+    local v = _hc[key]
+    if v == nil then return default end
+    return tonumber(v) or v
+end
+
 _G.host = {
     monitor = {
-        output   = "",
-        mode     = "preferred",
-        position = "auto",
-        scale    = "auto",
+        output   = _str("MONITOR_OUTPUT", ""),
+        mode     = _str("MONITOR_MODE", "preferred"),
+        position = _str("MONITOR_POSITION", "auto"),
+        scale    = _num("MONITOR_SCALE", "auto"),
+        bitdepth = _num("MONITOR_BITDEPTH", nil),
+        cm       = _str("MONITOR_CM", nil),
     },
-    nvidia_env  = false,    -- dGPU'ya zorlama; hibritte zaten yanlış olurdu
-    rgb_devices = false,    -- OpenRGB / Razer cihazı varsayma
-    kb_layout   = "us,tr",  -- fiziksel klavyenin dizilimi; ilki öncelikli
+    nvidia_env  = _bool("NVIDIA_ENV", false),   -- dGPU'ya zorlama
+    rgb_devices = _bool("RGB_DEVICES", false),  -- OpenRGB / Razer varsayma
+    kb_layout   = _str("KB_LAYOUT", "us,tr"),   -- ilki öncelikli
 }
+
+-- =======================================================
+-- XDG KULLANICI DİZİNLERİ
+-- =======================================================
+-- İki makine farklı yerelde kuruldu: masaüstünde ~/Pictures, dizüstünde
+-- ~/Resimler. Oturum SDDM'den geldiği için user-dirs.dirs hiçbir yerde
+-- ortama alınmıyor. Burada okunup environment.lua'da hl.env ile veriliyor;
+-- böylece swappy gibi araçlar save_dir=$XDG_PICTURES_DIR/... yazabiliyor ve
+-- aynı satır iki makinede de doğru oluyor.
+_G.xdg = {}
+do
+    local home = os.getenv("HOME") or ""
+    local fh = io.open(home .. "/.config/user-dirs.dirs", "r")
+    if fh then
+        for line in fh:lines() do
+            local k, v = line:match('^%s*(XDG_[A-Z]+_DIR)%s*=%s*"(.-)"')
+            if k then _G.xdg[k] = (v:gsub("%$HOME", home)) end
+        end
+        fh:close()
+    end
+end
 
 -- Renkler (hex formatında)
 _G.colors = {

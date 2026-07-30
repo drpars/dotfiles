@@ -11,6 +11,14 @@ hl.env("GDK_BACKEND", "wayland,x11,*")
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("SDL_VIDEODRIVER", "wayland")
 
+-- XDG kullanıcı dizinleri (~/.config/user-dirs.dirs'ten, bkz. helpers.lua).
+-- Oturum SDDM'den geldiği için bunlar hiçbir yerde ortama girmiyordu; burada
+-- verilince swappy gibi araçlar `save_dir=$XDG_PICTURES_DIR/...` yazabiliyor
+-- ve aynı satır hem ~/Resimler hem ~/Pictures olan makinede doğru oluyor.
+for key, value in pairs(xdg) do
+    hl.env(key, value)
+end
+
 -- XDG
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_TYPE", "wayland")

@@ -1,0 +1,51 @@
+#!/bin/bash
+# Read one machine fact for this host.
+#   Usage: hostfact <KEY>            -> prints the value, empty if unset
+#          hostfact --file           -> prints the config path being used
+#          hostfact --board          -> prints the derived board id
+#
+# Facts live in ~/.config/hosts/<board>.conf, keyed on the DMI board name.
+# That file is the single source of truth: Hyprland's Lua config reads the
+# very same file (see config/hypr/config/helpers.lua), so a fact never has to
+# be stated twice in two languages.
+#
+# An unknown machine simply has no file, and every key comes back empty --
+# callers should treat that as "assume nothing", the same way the Lua side
+# falls back to neutral defaults.
+
+set -u
+
+# Board names are not all filename-friendly: MSI reports
+# "MEG Z490 UNIFY (MS-7C71)". Collapse anything unsafe to _, squeeze runs and
+# trim the ends. Kept in sync with the same derivation in helpers.lua.
+board_id() {
+  local raw
+  raw=$(cat /sys/class/dmi/id/board_name 2>/dev/null) || return 0
+  raw=${raw//[^A-Za-z0-9_-]/_}
+  while [[ $raw == *__* ]]; do raw=${raw//__/_}; done
+  raw=${raw#_}
+  raw=${raw%_}
+  printf '%s' "$raw"
+}
+
+conf_path() {
+  local id
+  id=$(board_id)
+  [ -n "$id" ] || return 0
+  printf '%s/.config/hosts/%s.conf' "$HOME" "$id"
+}
+
+case "${1-}" in
+  --board) board_id; echo; exit 0 ;;
+  --file)  conf_path; echo; exit 0 ;;
+  "")      echo "usage: hostfact <KEY> | --file | --board" >&2; exit 1 ;;
+esac
+
+CONF=$(conf_path)
+[ -n "$CONF" ] && [ -f "$CONF" ] || exit 0
+
+# Only KEY="value" lines; ignore comments and anything malformed. Reading with
+# a grep+sed rather than `source` keeps a stray command in the file from being
+# executed.
+grep -m1 -E "^${1}=" "$CONF" 2>/dev/null \
+  | sed -e "s/^${1}=//" -e 's/^"//' -e 's/"$//'

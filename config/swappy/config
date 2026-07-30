@@ -1,2 +1,5 @@
 [Default]
-save_dir=$HOME/Pictures/ScreenShot/
+# $XDG_PICTURES_DIR oturuma Hyprland tarafindan veriliyor (bkz.
+# config/hypr/config/environment.lua). Boylece bu satir hem ~/Resimler hem
+# ~/Pictures kullanan makinede dogru; swappy env degiskenlerini genisletiyor.
+save_dir=$XDG_PICTURES_DIR/ScreenShot/

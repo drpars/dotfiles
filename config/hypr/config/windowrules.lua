@@ -14,13 +14,6 @@ hl.window_rule({
     fullscreen = true,
 })
 
--- Waypaper
-hl.window_rule({
-    match = { class = "waypaper" },
-    float = true,
-    size  = { 800, 600 },
-    move  = { 880, 52 },
-})
 
 -- Resim/video görüntüleyiciler
 hl.window_rule({

@@ -80,7 +80,6 @@ hl.bind(M .. " + SHIFT + X",           hl.dsp.exec_cmd("hyprpicker -a -n"))
 
 -- ── Duvar Kağıdı ───────────────────────────────────
 hl.bind(A .. " + W",                   hl.dsp.exec_cmd(_G.scriptsDir .. "/wallselect"))
-hl.bind(C .. " + W",                   hl.dsp.exec_cmd("waypaper"))
 
 -- ── Waybar ─────────────────────────────────────────
 hl.bind(M .. " + B",                   hl.dsp.exec_cmd("killall -SIGUSR1 waybar"))
