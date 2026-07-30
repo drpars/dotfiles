@@ -95,14 +95,28 @@ hl.bind("XF86AudioPlay",         hl.dsp.exec_cmd("playerctl play-pause"),       
 hl.bind("XF86AudioNext",         hl.dsp.exec_cmd("playerctl next"),                    { locked = true })
 hl.bind("XF86AudioPrev",         hl.dsp.exec_cmd("playerctl previous"),                { locked = true })
 
--- ── ROG G15 Strix'e Özel Bağlamalar ─────────────────
--- hl.bind("xf86Launch1",             hl.dsp.exec_cmd("rog-control-center"))
--- hl.bind("xf86KbdBrightnessDown",   hl.dsp.exec_cmd(scriptsDir .. "/brightnessasuskbd down"))
--- hl.bind("xf86KbdBrightnessUp",     hl.dsp.exec_cmd(scriptsDir .. "/brightnessasuskbd up"))
--- hl.bind("xf86Launch3",             hl.dsp.exec_cmd("asusctl led-mode -n"))
--- hl.bind("xf86Launch4",             hl.dsp.exec_cmd(scriptsDir .. "/powerprofileasus next"))
--- hl.bind("xf86MonBrightnessDown",   hl.dsp.exec_cmd(scriptsDir .. "/brightness down"))
--- hl.bind("xf86MonBrightnessUp",     hl.dsp.exec_cmd(scriptsDir .. "/brightness up"))
+-- ── ASUS / ROG Bağlamaları ─────────────────────────
+-- Marka değil yetenek sorulur (bkz. helpers.lua): araç kurulu değilse bağlama
+-- doğru donanımda bile ölü olurdu, tersine kurulduğu her yerde çalışır.
+if has("rog-control-center") then
+    hl.bind("xf86Launch1",         hl.dsp.exec_cmd("rog-control-center"))
+end
+
+if has("asusctl") then
+    hl.bind("xf86Launch3",         hl.dsp.exec_cmd("asusctl led-mode -n"))
+    hl.bind("xf86Launch4",         hl.dsp.exec_cmd(scriptsDir .. "/powerprofileasus next"))
+end
+
+-- Klavye arka ışığı: asusctl'e değil, LED arayüzünün varlığına bağlı
+if exists("/sys/class/leds/asus::kbd_backlight") then
+    hl.bind("xf86KbdBrightnessDown", hl.dsp.exec_cmd(scriptsDir .. "/brightnessasuskbd down"))
+    hl.bind("xf86KbdBrightnessUp",   hl.dsp.exec_cmd(scriptsDir .. "/brightnessasuskbd up"))
+end
+
+-- ── Ekran Parlaklığı ───────────────────────────────
+-- ROG'a özgü değil: bu tuşlar zaten yalnız dizüstü klavyelerinde var.
+hl.bind("xf86MonBrightnessDown",   hl.dsp.exec_cmd(scriptsDir .. "/brightness down"))
+hl.bind("xf86MonBrightnessUp",     hl.dsp.exec_cmd(scriptsDir .. "/brightness up"))
 
 -- ── Özel ───────────────────────────────────────────
 hl.bind("WIN + F1",                    hl.dsp.exec_cmd(_G.scriptsDir .. "/gamemode"))
