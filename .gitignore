@@ -1,7 +1,10 @@
 config/zsh/.zsh_history
 config/btop/btop.log
-config/hypr/conf/gpu-env.conf
 config/OpenRGB/logs/
 config/OpenRGB/sizes.ors
 config/mc/ini
 home/.fonts/.uuid
+
+# ~/.config/systemd bu depoya symlink oldugu icin `systemctl --user enable`
+# etkinlestirme symlink'lerini buraya yaziyor. Makine durumu, depoya girmez.
+config/systemd/user/*.wants/
