@@ -8,9 +8,15 @@
 -- türünden her şey helpers.lua'daki has()/exists() ile çözülür — bkz.
 -- keybindings.lua'daki ASUS bağlamaları.
 
--- Dahili panel. Masaüstündeki DP-1 kuralı burada geçerli değil.
+-- Dahili panel (BOE 0x0A07).
+--
+-- Konektör ADIYLA eşleşmiyoruz. Bu makinede iki kart var (card1 = iGPU,
+-- card2 = dGPU) ve ikisi de bir eDP konektörü sunuyor; panel oturuma göre
+-- eDP-1 ya da eDP-2 olarak numaralanabiliyor. 2026-07-30'da tam olarak bu
+-- oldu: oturum yeniden başlayınca eDP-1 kuralı eşleşmez hâle geldi.
+-- Açıklama EDID'den gelir, numaralamadan bağımsızdır.
 host.monitor = {
-    output   = "eDP-1",
+    output   = "desc:BOE 0x0A07",
     mode     = "2560x1440@165",
     position = "0x0",
     scale    = 1,

@@ -70,21 +70,18 @@ end
 -- Yeteneğe sorulamayan şeyler burada. `config/hosts/<board_name>.lua` varsa
 -- bu tabloyu ezer (bkz. hyprland.lua).
 --
--- DİKKAT: Aşağıdaki varsayılanlar şu an MASAÜSTÜNÜN değerleri, yani "host
--- dosyası yoksa masaüstüdür" varsayımı. Geçici: masaüstünün board_name'i
--- öğrenilip kendi host dosyası açılınca bunlar nötrleştirilecek
--- (output = "", mode = "preferred", bayraklar false).
+-- Buradaki değerler NÖTR: tanınmayan bir makinede Hyprland'in kendi
+-- varsayılanlarına düşülür, hiçbir donanım varsayılmaz. Bilinen makineler
+-- kendi host dosyalarında konuşur — config/hosts/ altına bak.
 _G.host = {
     monitor = {
-        output   = "DP-1",
-        mode     = "2560x1440@120",
-        position = "0x0",
-        scale    = 1,
-        bitdepth = 10,
-        cm       = "wide", -- wide|hdr
+        output   = "",
+        mode     = "preferred",
+        position = "auto",
+        scale    = "auto",
     },
-    nvidia_env  = true,     -- her şeyi nvidia-drm'e zorla (hibrit olmayan makine)
-    rgb_devices = true,     -- OpenRGB / Razer cihazları bu makinede var
+    nvidia_env  = false,    -- dGPU'ya zorlama; hibritte zaten yanlış olurdu
+    rgb_devices = false,    -- OpenRGB / Razer cihazı varsayma
     kb_layout   = "us,tr",  -- fiziksel klavyenin dizilimi; ilki öncelikli
 }
 
