@@ -1,0 +1,18 @@
+#!/bin/bash
+# Apply an OpenRGB profile, but only where OpenRGB is actually in use.
+#   Usage: rgbprofile <profile-name>        e.g. rgbprofile pars-off
+#
+# The openrgb binary is installed on every machine here, so its presence says
+# nothing about whether there are devices to drive. What does say so is the
+# server: autostart only launches `openrgb --server` on the machine whose host
+# file sets rgb_devices, so "no server" means "no RGB on this machine".
+#
+# Without this guard, hypridle fired `openrgb -p ...` on every idle transition
+# of the laptop, where it failed the connection, probed I2C/SMBus looking for
+# controllers, warned about i2c-dev, and gave up with "Profile failed to load".
+
+[ -n "$1" ] || { echo "usage: rgbprofile <profile-name>" >&2; exit 1; }
+
+pgrep -x openrgb >/dev/null 2>&1 || exit 0
+
+exec openrgb -p "$1"

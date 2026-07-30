@@ -5,6 +5,12 @@
 #
 # A lock serializes concurrent invocations (hypridle fires several handlers at
 # once when waking from deep idle / suspend).
+#
+# The daemon is only installed on the machine that owns the Razer peripherals,
+# so bail out quietly elsewhere rather than making hypridle run a no-op on
+# every idle transition.
+command -v openrazer-daemon >/dev/null 2>&1 || exit 0
+
 exec 9>/tmp/razer.lock
 
 case "$1" in

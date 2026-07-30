@@ -8,3 +8,7 @@ home/.fonts/.uuid
 # ~/.config/systemd bu depoya symlink oldugu icin `systemctl --user enable`
 # etkinlestirme symlink'lerini buraya yaziyor. Makine durumu, depoya girmez.
 config/systemd/user/*.wants/
+
+# Hangi duvar kagidinin secili oldugu makine durumudur, yapilandirma degil.
+# wallselect bu symlink i her secimde yeniden yazar.
+config/hypr/images/wallpaper_symlink
