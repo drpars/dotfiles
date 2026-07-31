@@ -27,43 +27,54 @@ nvidia_temp() {
 }
 
 amd_temp() {
-  command -v sensors >/dev/null 2>&1 || return 1
-  local chip t
-  # Chip name carries the PCI address, which differs per board -- discover it.
-  chip=$(sensors 2>/dev/null | grep -oE '^amdgpu-[a-z0-9-]+' | head -1)
-  [ -n "$chip" ] || return 1
-  t=$(sensors -A "$chip" 2>/dev/null | awk '
-        /^(edge|junction|Tdie|temp1)/ {
-          for (i = 2; i <= NF; i++)
-            if ($i ~ /^\+?[0-9]+\.?[0-9]*$/) { gsub(/\+/, "", $i); printf "%d", $i; exit }
-        }')
-  [[ $t =~ ^[0-9]+$ ]] || return 1
-  printf '%s' "$t"
+  local hwmon name t
+  # Straight from sysfs rather than parsing sensors(1): the hwmon number and the
+  # PCI address both differ per board, so we discover the amdgpu one by name.
+  # Value is in millidegrees.
+  for hwmon in /sys/class/drm/card*/device/hwmon/hwmon*; do
+    [ -r "$hwmon/name" ] || continue
+    read -r name <"$hwmon/name"
+    [ "$name" = amdgpu ] || continue
+    [ -r "$hwmon/temp1_input" ] || continue
+    read -r t <"$hwmon/temp1_input"
+    [[ $t =~ ^[0-9]+$ ]] || continue
+    printf '%s' "$((t / 1000))"
+    return 0
+  done
+  return 1
 }
 
 nv=$(nvidia_temp) || nv=""
 amd=$(amd_temp) || amd=""
 
-parts=()
-hottest=""
+short=()
+long=()
 
 if [ -n "$nv" ]; then
-  parts+=("NVIDIA: ${nv}°C")
-  hottest=$nv
+  short+=("NV ${nv}°C")
+  long+=("NVIDIA: ${nv}°C")
 fi
 
 if [ -n "$amd" ]; then
-  parts+=("AMD: ${amd}°C")
-  if [ -z "$hottest" ] || [ "$amd" -gt "$hottest" ]; then
-    hottest=$amd
-  fi
+  short+=("AMD ${amd}°C")
+  long+=("AMD: ${amd}°C")
 fi
 
-if [ -z "$hottest" ]; then
+if [ ${#short[@]} -eq 0 ]; then
   printf '{"text":""}\n'
   exit 0
 fi
 
-# Text is the hottest of them; the tooltip breaks it down when there are two.
-tooltip=$(IFS=$'\n'; printf '%s' "${parts[*]}")
-printf '{"text":"GPU %s°C","tooltip":"%s"}\n' "$hottest" "${tooltip//$'\n'/\\n}"
+# One GPU needs no vendor label; a hybrid machine has two temperatures that mean
+# different things, so both go on the bar rather than hiding one in the tooltip.
+if [ ${#short[@]} -eq 1 ]; then
+  text="GPU ${short[0]#* }"
+else
+  text="${short[*]}"
+fi
+
+tooltip=$(
+  IFS=$'\n'
+  printf '%s' "${long[*]}"
+)
+printf '{"text":"%s","tooltip":"%s"}\n' "$text" "${tooltip//$'\n'/\\n}"
