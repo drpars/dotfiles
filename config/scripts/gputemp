@@ -67,10 +67,24 @@ fi
 
 # One GPU needs no vendor label; a hybrid machine has two temperatures that mean
 # different things, so both go on the bar rather than hiding one in the tooltip.
+#
+# The separator is sized to match the bar. Waybar leaves 20px between the CPU
+# module and this one (10px padding each side), but a plain space is only 2px in
+# Ubuntu Nerd Font at the bar's 12px, so the two readings sat crammed against a
+# wide seam. U+2002 EN SPACE is exactly half an em -- 5px here -- so a bullet
+# between two of them lands centred in a 13px gap, close enough to the seam that
+# the eye no longer compares them.
 if [ ${#short[@]} -eq 1 ]; then
   text="GPU ${short[0]#* }"
 else
-  text="${short[*]}"
+  text=$(
+    IFS=$'\n'
+    printf '%s' "${short[*]}"
+  )
+  # Escapes, not literals: an EN SPACE in the source is indistinguishable
+  # from a plain one and the next editor to touch this line would silently
+  # "fix" it.
+  text=${text//$'\n'/$'\u2002\u2022\u2002'}
 fi
 
 tooltip=$(
