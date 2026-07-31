@@ -1,27 +1,45 @@
 #!/usr/bin/env sh
+# Game mode toggle -- strips the compositor down to what a game wants.
+#
+# Two things broke this, both silently.
+#
+# 1. hyprctl keyword no longer applies. The Lua config uses Hyprland's
+#    non-legacy parser, which answers "keyword can't work with non-legacy
+#    parsers. Use eval." -- and still exits 0, so nothing looked wrong.
+#    Runtime changes go through hl.config() over hyprctl eval instead.
+# 2. State detection compared against 1, but getoption prints "bool: true"
+#    where older Hyprland printed "int: 1". The comparison never matched, so
+#    every key press took the "turn it off" branch: a config reload and a
+#    notification saying game mode had been disabled, whether or not it had
+#    ever been enabled.
+#
+# State is still read from the compositor rather than a flag file: a reload or
+# a crash would desync a file, and animations:enabled is what game mode is.
 
-# Mevcut animasyon durumunu kontrol et
-HYPRGAMEMODE=$(hyprctl getoption animations:enabled | awk 'NR==1{print $2}')
+set_state=$(hyprctl getoption animations:enabled | awk 'NR==1{print $2}')
 
-if [ "$HYPRGAMEMODE" = 1 ] ; then
-    # OYUN MODU AÇILIYOR: Ayarları kapat/değiştir
-    hyprctl --batch "\
-        keyword animations:enabled 0;\
-        keyword decoration:shadow:enabled 0;\
-        keyword decoration:blur:enabled 0;\
-        keyword general:gaps_in 0;\
-        keyword general:gaps_out 0;\
-        keyword general:border_size 1;\
-        keyword decoration:rounding 0"
-        
-    # Bildirim gönder: Mod Açıldı
+case "$set_state" in
+1 | true)
+  # eval reports failure on stdout and with rc 7; say so rather than leaving a
+  # keypress that does nothing.
+  out=$(hyprctl eval 'hl.config({
+      animations = { enabled = false },
+      general = { gaps_in = 0, gaps_out = 0, border_size = 1 },
+      decoration = {
+          rounding = 0,
+          blur = { enabled = false },
+          shadow = { enabled = false },
+      },
+  })' 2>&1)
+  if [ "$out" = ok ]; then
     notify-send "Oyun Modu etkinleştirildi."
-    exit
-fi
-
-# OYUN MODU KAPATILIYOR: Ayarları yeniden yükle
-hyprctl reload
-
-# Bildirim gönder: Mod Kapatıldı
-notify-send "Oyun Modu devre dışı bırakıldı."
-
+  else
+    notify-send -u critical "Oyun Modu açılamadı" "$out"
+  fi
+  ;;
+*)
+  # Everything game mode touches is config, so a reload is the whole undo.
+  hyprctl reload >/dev/null
+  notify-send "Oyun Modu devre dışı bırakıldı."
+  ;;
+esac
