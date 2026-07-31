@@ -1,6 +1,88 @@
 #!/bin/bash
-# 'echo' kullanarak interaktif moddan listeyi zorla alıyoruz
-echo -e "devices\nquit" | bluetoothctl | grep "Device" | awk '{print $2}' | while read -r mac; do
-    echo "Bağlanılıyor: $mac"
-    bluetoothctl connect "$mac"
+# Reconnect paired Bluetooth devices. Bound to a middle click on waybar's
+# bluetooth module, so there is no terminal attached: every outcome has to be a
+# notification, and nothing may block forever.
+#
+# What the previous version got wrong:
+#   - it drove bluetoothctl through a fake interactive session
+#     (printf 'devices\nquit' | bluetoothctl) and parsed the transcript. Event
+#     lines are formatted "[CHG] Device <mac> ..." -- one field wider than the
+#     "Device <mac> <name>" listing -- so any event arriving mid-listing turned
+#     the second field into the literal word "Device". bluetoothctl takes the
+#     filter directly, no transcript to parse.
+#   - it walked *known* devices, not paired ones, so anything ever seen nearby
+#     was dialled as well.
+#   - nothing was bounded. A device that is off or out of range does not fail
+#     fast: an unavailable address was still being waited on after two minutes
+#     here. Several of those in a row is a click that hangs indefinitely.
+#   - it reported through echo, which goes nowhere when waybar starts it.
+
+LOCK=${XDG_RUNTIME_DIR:-/tmp}/bt-reconnect.lock
+CONNECT_TIMEOUT=15
+
+notify() {
+  notify-send -e -h string:x-canonical-private-synchronous:bt-reconnect "$@"
+}
+
+# A second middle click while the first run is still dialling would stack
+# another set of attempts on the same devices.
+exec 9>"$LOCK"
+if ! flock -n 9; then
+  notify "Bluetooth" "Yeniden bağlanma zaten sürüyor."
+  exit 0
+fi
+
+if [ "$(bluetoothctl show | awk '/Powered:/ {print $2; exit}')" != yes ]; then
+  notify -u critical "Bluetooth kapalı" "Önce adaptörü açın."
+  exit 1
+fi
+
+mapfile -t paired < <(bluetoothctl devices Paired)
+if [ ${#paired[@]} -eq 0 ]; then
+  notify "Bluetooth" "Eşleşmiş cihaz yok."
+  exit 0
+fi
+
+connected=$(bluetoothctl devices Connected)
+
+ok=() failed=() skipped=()
+for line in "${paired[@]}"; do
+  read -r _ mac name <<<"$line"
+  [ -n "$mac" ] || continue
+
+  case "$connected" in
+  *"$mac"*)
+    skipped+=("$name")
+    continue
+    ;;
+  esac
+
+  notify "Bluetooth" "Bağlanılıyor: ${name:-$mac}"
+  # rc is 0 even when bluetoothctl gives up, so the transcript decides.
+  if timeout "$CONNECT_TIMEOUT" bluetoothctl connect "$mac" 2>&1 |
+    grep -q "Connection successful"; then
+    ok+=("${name:-$mac}")
+  else
+    failed+=("${name:-$mac}")
+  fi
 done
+
+summary=""
+[ ${#ok[@]} -gt 0 ] && summary="Bağlandı: $(
+  IFS=", "
+  echo "${ok[*]}"
+)"
+[ ${#skipped[@]} -gt 0 ] && summary="${summary:+$summary\n}Zaten bağlı: $(
+  IFS=", "
+  echo "${skipped[*]}"
+)"
+[ ${#failed[@]} -gt 0 ] && summary="${summary:+$summary\n}Ulaşılamadı: $(
+  IFS=", "
+  echo "${failed[*]}"
+)"
+
+if [ ${#failed[@]} -gt 0 ] && [ ${#ok[@]} -eq 0 ]; then
+  notify -u normal "Bluetooth" "$(printf '%b' "$summary")"
+else
+  notify "Bluetooth" "$(printf '%b' "$summary")"
+fi
