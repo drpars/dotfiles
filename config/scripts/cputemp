@@ -48,7 +48,12 @@ for want in "Package id 0" Tdie Tctl; do
   done
 done
 
-# Unlabelled chips exist; take the first input rather than reporting nothing.
+# Unlabelled chips exist; fall back to an input rather than reporting nothing.
+# temp1 explicitly, because the glob sorts as text: temp10_input comes before
+# temp2_input, so "the first one" is not the first one.
+if [ -z "$sensor" ] && [ -r "$chip/temp1_input" ]; then
+  sensor=$chip/temp1_input
+fi
 if [ -z "$sensor" ]; then
   for input in "$chip"/temp*_input; do
     [ -r "$input" ] || continue
