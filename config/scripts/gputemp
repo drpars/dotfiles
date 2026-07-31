@@ -71,9 +71,11 @@ fi
 # The separator is sized to match the bar. Waybar leaves 20px between the CPU
 # module and this one (10px padding each side), but a plain space is only 2px in
 # Ubuntu Nerd Font at the bar's 12px, so the two readings sat crammed against a
-# wide seam. U+2002 EN SPACE is exactly half an em -- 5px here -- so a bullet
-# between two of them lands centred in a 13px gap, close enough to the seam that
-# the eye no longer compares them.
+# wide seam. Padding the bullet with a fixed-width space pair on each side --
+# EN (U+2002, half an em) plus THIN (U+2009) -- widens the gap to within a few
+# pixels of the seam, which is where it stops looking lopsided. Widths were
+# measured through Pango against the bar's actual font, not guessed; the sizes
+# only hold at 12px, so revisit them if the bar's font-size changes.
 if [ ${#short[@]} -eq 1 ]; then
   text="GPU ${short[0]#* }"
 else
@@ -84,7 +86,7 @@ else
   # Escapes, not literals: an EN SPACE in the source is indistinguishable
   # from a plain one and the next editor to touch this line would silently
   # "fix" it.
-  text=${text//$'\n'/$'\u2002\u2022\u2002'}
+  text=${text//$'\n'/$'\u2009\u2002\u2022\u2002\u2009'}
 fi
 
 tooltip=$(
