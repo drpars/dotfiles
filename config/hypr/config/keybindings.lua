@@ -73,7 +73,13 @@ hl.bind(M .. " + mouse:272",           hl.dsp.window.drag(),   { mouse = true })
 hl.bind(M .. " + mouse:273",           hl.dsp.window.resize(), { mouse = true })
 
 -- ── Ekran Görüntüsü ────────────────────────────────
-hl.bind("Print",                       hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'))
+-- Üç mod da swappy'ye giriyor: işaretle, sonra Ctrl+S ile kaydet veya Ctrl+C
+-- ile panoya kopyala. `--raw` diske bir şey yazmaz, kaydetme kararı swappy'de
+-- kalır. `-s` hyprshot'ın kendi bildirimini susturur (dosya kaydetmiyor ki).
+-- `-z` seçim boyunca ekranı dondurur; tam ekran modunda seçim olmadığı için yok.
+hl.bind("Print",                       hl.dsp.exec_cmd("hyprshot -m region -z --raw -s | swappy -f -"))
+hl.bind("SHIFT + Print",               hl.dsp.exec_cmd("hyprshot -m window -z --raw -s | swappy -f -"))
+hl.bind(C .. " + Print",               hl.dsp.exec_cmd("hyprshot -m output --raw -s | swappy -f -"))
 
 -- ── Renk Seçici ────────────────────────────────────
 hl.bind(M .. " + SHIFT + X",           hl.dsp.exec_cmd("hyprpicker -a -n"))
