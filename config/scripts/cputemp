@@ -1,0 +1,79 @@
+#!/bin/bash
+# waybar custom/cputemp -- CPU package temperature, whatever CPU is fitted.
+#
+# Replaces waybar's temperature module, which was pinned to
+# /sys/devices/platform/coretemp.0 -- an Intel-only path. Right on the desktop,
+# absent on this AMD laptop, where the sensor is k10temp, so the bar showed a
+# CPU reading that was not being taken from anything.
+#
+# The chip is located by name, not by path: hwmon numbers are handed out in
+# probe order and move between boots, so /sys/class/hwmon/hwmon5 is k10temp
+# today and something else tomorrow.
+#
+# Pure sysfs reads, no subprocesses -- this runs once a second.
+#
+# With no sensor at all the text is empty, which is how waybar hides a custom
+# module (same convention as gputemp and peripheral-battery.py).
+
+CRITICAL=70
+
+# Which chip: the CPU's own die sensor. A machine has one of these drivers.
+chip="" driver=""
+for want in coretemp k10temp zenpower; do
+  for hwmon in /sys/class/hwmon/hwmon*; do
+    [ -r "$hwmon/name" ] || continue
+    read -r name <"$hwmon/name"
+    [ "$name" = "$want" ] || continue
+    chip=$hwmon driver=$name
+    break 2
+  done
+done
+
+if [ -z "$chip" ]; then
+  printf '{"text":""}\n'
+  exit 0
+fi
+
+# Which input: coretemp calls the package sensor "Package id 0"; k10temp reports
+# Tdie where the chip exposes it and Tctl -- the same value with a control offset
+# -- elsewhere. This laptop only offers Tctl.
+sensor="" label=""
+for want in "Package id 0" Tdie Tctl; do
+  for input in "$chip"/temp*_input; do
+    [ -r "${input%_input}_label" ] || continue
+    read -r name <"${input%_input}_label"
+    [ "$name" = "$want" ] || continue
+    sensor=$input label=$name
+    break 2
+  done
+done
+
+# Unlabelled chips exist; take the first input rather than reporting nothing.
+if [ -z "$sensor" ]; then
+  for input in "$chip"/temp*_input; do
+    [ -r "$input" ] || continue
+    sensor=$input
+    break
+  done
+fi
+
+if [ -z "$sensor" ]; then
+  printf '{"text":""}\n'
+  exit 0
+fi
+
+read -r milli <"$sensor"
+if [[ ! $milli =~ ^-?[0-9]+$ ]]; then
+  printf '{"text":""}\n'
+  exit 0
+fi
+temp=$((milli / 1000))
+
+# The module this replaces declared critical-threshold 70 but no CSS ever
+# matched it. The class is emitted so a rule can be added without touching the
+# script; nothing renders differently until one is.
+class=""
+[ "$temp" -ge "$CRITICAL" ] && class=',"class":"critical"'
+
+printf '{"text":"CPU %s°C","tooltip":"%s%s: %s°C"%s}\n' \
+  "$temp" "$driver" "${label:+ $label}" "$temp" "$class"
