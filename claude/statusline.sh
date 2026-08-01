@@ -1,6 +1,6 @@
 #!/bin/bash
 # Claude Code status line
-# Gösterilenler: kullanıcı@host/dizin · model · effort · 5s limit · 7g limit · konu
+# Gösterilenler: kullanıcı@host/dizin · model · effort · 5s limit · 7g limit · proje
 # Not: limit verisi API'den ilk prompt'tan sonra gelir. Bu yüzden gelen
 # değerleri önbelleğe yazıyoruz; prompt öncesi veri yokken önbellekten
 # okuyup "~" işaretiyle (son bilinen değer) gösteriyoruz.
@@ -69,49 +69,48 @@ elif [ -f "$CACHE" ]; then
   STALE="~"
 fi
 
-# --- Sohbet konusu ---
-# Statusline girdisinde hazır bir "konu" alanı yok, ama transcript'te var:
-# Claude Code oturum için kendisi bir başlık üretip "ai-title" satırı olarak
-# yazıyor (bir kez üretilir, konuşmanın tamamından türer — ilk mesaj "Merhaba..."
-# gibi anlamsızsa bile isabetli olur). Sıra:
-#   1) elle verilen başlık (custom-title)  2) CLI'ın ürettiği (ai-title)
-#   3) hiçbiri yoksa oturumun ilk kullanıcı prompt'u (eski oturumlar için).
-# Kısaltma jq içinde yapılır: jq UTF-8 kod noktasıyla sayar, bash ise
-# UTF-8 olmayan locale'de bayt sayar ve Türkçe karakteri ortadan böler.
-TOPIC_MAX=32
+# --- Çalışılan proje (pars çalışma alanı) ---
+# Bir oturum tek bir pars alt klasörüne aittir, ama cwd genelde kökte kalır ve
+# statusline girdisinde "proje" diye bir alan yok. Sıra:
+#   1) cwd zaten bir alt klasörde ise o,
+#   2) menüde (AskUserQuestion) verilen SON cevap — oturum ortasında /menu ile
+#      proje değişirse de doğru kalsın diye sonuncusu,
+#   3) transcript'te EN ÇOK geçen pars/<klasör>/ yolu (menü kullanılmadıysa).
+# 2 her zaman 3'ü ezer, 3 de "en son" değil "en çok" bakar: başka bir klasörün
+# NOTLAR.md'sini okumak serbest, o yüzden son geçen yol seçili proje olmayabilir.
+# Ölçülen örnek: baştan sona archsetup olan bir oturumda (205 geçiş) en son
+# geçen yol dotfiles'tı (31 geçiş).
+PARS="$HOME/Belgeler/pars"
 TRANSCRIPT=$(echo "$input" | jq -r '.transcript_path // empty')
-TOPIC=""
-if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-  # Üç yol da adayı @json ile tek satır olarak verir: prompt çok satırlıysa
-  # aşağıdaki "head -n1" yanlışlıkla ilk satırı değil, ilk mesajı alsın diye.
-  # grep ön filtresi: MB'larca transcript'i baştan sona jq'ya ayrıştırtmamak için.
-  # Boş dizgi adayları ayıklanır, yoksa bir sonraki yola düşmeyi engellerler.
-  TOPIC=$(grep -F '"type":"custom-title"' "$TRANSCRIPT" 2>/dev/null | tail -n1 \
-          | jq -r '.customTitle | select(type == "string" and length > 0) | @json' 2>/dev/null)
-  if [ -z "$TOPIC" ]; then
-    TOPIC=$(grep -F '"type":"ai-title"' "$TRANSCRIPT" 2>/dev/null | tail -n1 \
-            | jq -r '.aiTitle | select(type == "string" and length > 0) | @json' 2>/dev/null)
+PROJ=""
+
+# Adaylar sırayla denenir; pars altında gerçekten dizin olan ilki kazanır.
+# Doğrulama şart: 2. yol menüdeki başka soruların cevaplarını da yakalar,
+# 3. yol ise pars/memory gibi dizin olmayan yolları.
+first_valid() {
+  local n
+  while read -r n; do
+    [ -n "$n" ] && [ -d "$PARS/$n" ] && { printf '%s\n' "$n"; return; }
+  done
+}
+
+CWD=$(echo "$input" | jq -r '.workspace.current_dir // .cwd')
+case "$CWD" in
+  "$PARS"/*) PROJ=$(printf '%s\n' "${CWD#"$PARS"/}" | cut -d/ -f1 | first_valid) ;;
+esac
+
+if [ -z "$PROJ" ] && [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
+  # İki sinyal de tek grep'te toplanır: dosya bir kez okunur (7 MB'lık
+  # transcript'te ~40 ms), gerisi bellekte. Menü cevabı transcript'in başında
+  # olduğu için "sondan tara, ilk isabette dur" numarası zaten işe yaramıyordu.
+  # Menü cevabı, tool_result metninde  ...\"=\"<cevap>\"  biçiminde geçer.
+  SIG=$(grep -oaE '\\"=\\"[a-z0-9][a-z0-9-]*|pars/[a-z0-9][a-z0-9-]*/' "$TRANSCRIPT" 2>/dev/null)
+  # tac: birden çok menü cevabı varsa (oturum ortasında /menu) sonuncusu geçerli.
+  PROJ=$(printf '%s\n' "$SIG" | grep '^\\' | sed 's/.*"//' | tac | first_valid)
+  if [ -z "$PROJ" ]; then
+    PROJ=$(printf '%s\n' "$SIG" | grep '^pars/' | sed 's|^pars/||; s|/$||' \
+           | sort | uniq -c | sort -rn | sed 's/^ *[0-9]* *//' | first_valid)
   fi
-  if [ -z "$TOPIC" ]; then
-    # İlk kullanıcı mesajı dosyanın başındadır (sabit maliyet). tool_result'lar
-    # dizi içerik taşır, slash komutları <command-...> ile başlar; ikisi de atlanır.
-    # Akış kipinde (-s yok) kalıyoruz: canlı yazılan transcript'in son satırı
-    # yarım JSON olsa bile önceki geçerli satırlar yine de işlenir.
-    TOPIC=$(head -n 40 "$TRANSCRIPT" 2>/dev/null | jq -r '
-      select(.type == "user" and (.message.content | type == "string"))
-      | .message.content
-      | select(length > 0 and (startswith("<") or startswith("Caveat:") | not))
-      | @json' 2>/dev/null | head -n1)
-  fi
-fi
-if [ -n "$TOPIC" ]; then
-  # Girdi zaten JSON dizgi: jq onu doğrudan ayrıştırır. Boşlukları tek satıra
-  # indir, sonra kod noktasına göre kısalt.
-  TOPIC=$(printf '%s' "$TOPIC" | jq -r --argjson max "$TOPIC_MAX" '
-    gsub("\\s+"; " ") | ltrimstr(" ") | rtrimstr(" ")
-    | if length > $max then .[0:$max] + "…" else . end' 2>/dev/null)
-  # printf %b ile basıldığı için ters eğik çizgi kaçışlarını etkisizleştir.
-  TOPIC=${TOPIC//\\/\\\\}
 fi
 
 # --- Parçaları birleştir ---
@@ -131,6 +130,6 @@ if [ -n "$D_PCT" ]; then
   [ -n "$R" ] && LINE="${LINE} ${DIM}(${R})${RESET}"
 fi
 
-[ -n "$TOPIC" ] && LINE="${LINE} ${DIM}·${RESET} ${DIM}${TOPIC}${RESET}"
+[ -n "$PROJ" ] && LINE="${LINE} ${DIM}·${RESET} ${DIM}${PROJ}${RESET}"
 
 printf '%b\n' "$LINE"
