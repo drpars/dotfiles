@@ -10,6 +10,12 @@ home/.fonts/.uuid
 config/systemd/user/*.wants/
 
 
+# ~/.local/share/applications bu depoya symlink oldugu icin
+# update-desktop-database ciktisini buraya yaziyor. Uretilen onbellek,
+# depoya girmez.
+local/share/applications/mimeinfo.cache
+
+
 # GTK dosya yoneticisi yer imleri: kullanici durumu ve yerele bagli
 # (masaustunde ~/Projects, dizustunde ~/Projeler). GTK bu dosyada degisken
 # genisletmiyor, o yuzden versiyonlanmiyor.
