@@ -1,6 +1,7 @@
 #!/bin/bash
 # Claude Code status line
-# Gösterilenler: kullanıcı@host/dizin · model · effort · 5s limit · 7g limit · proje
+# Gösterilenler: kullanıcı@host/dizin · model · effort · 5s limit · 7g limit
+#                · bağlam · proje
 # Not: limit verisi API'den ilk prompt'tan sonra gelir. Bu yüzden gelen
 # değerleri önbelleğe yazıyoruz; prompt öncesi veri yokken önbellekten
 # okuyup "~" işaretiyle (son bilinen değer) gösteriyoruz.
@@ -22,6 +23,14 @@ DIR=$(basename "$(echo "$input" | jq -r '.workspace.current_dir // .cwd')")
 MODEL=$(echo "$input" | jq -r '.model.display_name // "?"')
 EFFORT=$(echo "$input" | jq -r '.effort.level // empty')
 
+# Oturumun o anki bağlam büyüklüğü. Girdide hazır: total_input_tokens =
+# input + cache_creation + cache_read, yani son çağrının okuduğu bağlamın tamamı.
+# Kardeşi .context_window.used_percentage BİLEREK kullanılmıyor: o, modelin
+# penceresine bölüyor (opus[1m] -> 1e6), yani "taşmak üzere miyim"i ölçer.
+# Buradaki soru o değil; her çağrı bağlamın tamamını yeniden okuduğu için
+# maliyeti belirleyen şey mutlak boy.
+CTX=$(echo "$input" | jq -r '.context_window.total_input_tokens // empty')
+
 # --- Limitlere göre renk seçimi ---
 pick_color() {
   local pct=${1%%.*}   # ondalığı at
@@ -29,6 +38,28 @@ pick_color() {
   elif [ "$pct" -ge 90 ];    then printf '%b' "$RED"
   elif [ "$pct" -ge 70 ];    then printf '%b' "$YELLOW"
   else                            printf '%b' "$GREEN"
+  fi
+}
+
+# Bağlam boyu -> renk. Eşik ölçütü "bu oturum 100 çağrı daha sürerse ne yakar":
+# çevrim %1 ≈ 0.87M token, yani 150k'da ~%17, 300k'da ~%34 (5 saatlik pencere).
+# Ölçülen kaçak oturumlar 500k+'a çıkmıştı. Eşiğin altında soluk kalır — satır
+# sakin dursun, göze yalnızca kapanma vakti geldiğinde girsin.
+pick_ctx_color() {
+  local t=$1
+  if   [ "$t" -ge 300000 ]; then printf '%b' "$RED"
+  elif [ "$t" -ge 150000 ]; then printf '%b' "$YELLOW"
+  else                           printf '%b' "$DIM"
+  fi
+}
+
+# 64316 -> "64k", 1043000 -> "1.0M"
+fmt_tokens() {
+  local t=$1
+  if [ "$t" -ge 1000000 ]; then
+    printf '%d.%dM' $(( t / 1000000 )) $(( (t % 1000000) / 100000 ))
+  else
+    printf '%dk' $(( (t + 500) / 1000 ))
   fi
 }
 
@@ -128,6 +159,12 @@ if [ -n "$D_PCT" ]; then
   C=$(pick_color "$D_PCT"); R=$(fmt_reset "$D_AT")
   LINE="${LINE} ${DIM}·${RESET} ${DIM}7g${RESET} ${C}${STALE}${D_PCT%%.*}%${RESET}"
   [ -n "$R" ] && LINE="${LINE} ${DIM}(${R})${RESET}"
+fi
+
+# Oturumun ilk çağrısından önce alan 0 gelir; o zaman gösterecek bir şey yok.
+if [ -n "$CTX" ] && [ "$CTX" -gt 0 ] 2>/dev/null; then
+  C=$(pick_ctx_color "$CTX")
+  LINE="${LINE} ${DIM}·${RESET} ${DIM}ctx${RESET} ${C}$(fmt_tokens "$CTX")${RESET}"
 fi
 
 [ -n "$PROJ" ] && LINE="${LINE} ${DIM}·${RESET} ${DIM}${PROJ}${RESET}"
