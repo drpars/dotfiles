@@ -40,8 +40,12 @@ alias jpgtopng='mogrify -format png'
 alias install='yay -S --needed'
 alias remove='sudo pacman -R'
 # Güncelleme
-alias update='yay --noconfirm'
-alias full-update='yay --devel'
+# update: yalnizca resmi Arch depolari (core/extra/multilib). AUR'a dokunmaz.
+# yay uzerinden degil pacman'la: yay-bin'in kendisi bir AUR paketi, bozuldugu
+# gun de `update` calisabilmeli.
+alias update='sudo pacman -Syu'
+# full-update fonksiyondur -> functions.zsh (alias burada TANIMLANMAZ; alias
+# ayni adli fonksiyonu golgeler).
 # Temizlik
 alias cleancache='sudo pacman -Sc'
 alias cleanorphan='sudo pacman -Rns $(pacman -Qqtd)'
