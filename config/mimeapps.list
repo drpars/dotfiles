@@ -1,42 +1,91 @@
+# mimeapps.list — iki makinede de aynı dosya kullanılır.
+#
+# [Default Applications] noktalı virgülle ayrılmış bir LİSTE kabul eder ve
+# var olmayan .desktop girdisi atlanır. Makine başına dallanma gerekmez:
+# tercih edilen uygulama başa, her yerde bulunan yedeği arkaya yazılır.
+#
+# Terminal uygulamaları için "kitty <komut>" saran kendi girdilerimiz
+# kullanılır (nvim-terminal, yazi-terminal). Dağıtımın nvim.desktop ve
+# yazi.desktop dosyaları Terminal=true; glib bu durumda xdg-terminal-exec /
+# gnome-terminal / konsole arıyor, üçü de kurulu değil — girdi sessizce
+# hiçbir şey yapmıyor.
+
 [Added Associations]
-application/json=nvim.desktop;
-application/pdf=org.pwmt.zathura.desktop;
-application/vnd.ms-excel.sheet.macroEnabled.12=onlyoffice-desktopeditors.desktop;
-application/x-extension-htm=firefox.desktop;zen.desktop;
-application/x-extension-html=firefox.desktop;zen.desktop;
-application/x-extension-shtml=firefox.desktop;zen.desktop;
-application/x-extension-xht=firefox.desktop;zen.desktop;
-application/x-extension-xhtml=firefox.desktop;zen.desktop;
-application/x-shellscript=nvim.desktop;
-application/xhtml+xml=firefox.desktop;zen.desktop;
-image/jpeg=imv-dir-2.desktop;
-image/png=imv-dir-2.desktop;imv-dir-3.desktop;
-image/svg+xml=imv-2.desktop;
-image/vnd.microsoft.icon=imv-dir-5.desktop;swappy-2.desktop;imv-dir-4.desktop;
-text/html=firefox.desktop;zen.desktop;
-text/plain=nvim.desktop;
-x-scheme-handler/chrome=firefox.desktop;zen.desktop;
-x-scheme-handler/http=firefox.desktop;zen.desktop;
-x-scheme-handler/https=firefox.desktop;zen.desktop;
+# Yalnızca uygulamanın kendi MimeType= alanında İLAN ETMEDİĞİ eşleşmeler.
+# İlan edilenler (imv → image/*, firefox → text/html, zathura → pdf) burada
+# tekrarlanmaz.
+application/json=nvim-terminal.desktop;firefox.desktop;
+image/vnd.microsoft.icon=imv.desktop;firefox.desktop;
+inode/directory=yazi-terminal.desktop;
 
 [Default Applications]
-application/json=nvim.desktop;
-application/pdf=org.pwmt.zathura.desktop;
-application/vnd.ms-excel.sheet.macroEnabled.12=onlyoffice-desktopeditors.desktop;
-application/x-extension-htm=firefox.desktop
-application/x-extension-html=firefox.desktop
-application/x-extension-shtml=firefox.desktop
-application/x-extension-xht=firefox.desktop
-application/x-extension-xhtml=firefox.desktop
-application/x-shellscript=nvim.desktop;
-application/xhtml+xml=firefox.desktop
-image/jpeg=imv-dir-2.desktop;
-image/png=imv-dir-2.desktop;
-image/svg+xml=imv-2.desktop;
-image/vnd.microsoft.icon=imv-dir-5.desktop;
-text/html=firefox.desktop
-text/plain=nvim.desktop;
-x-scheme-handler/chrome=firefox.desktop
-x-scheme-handler/claude-cli=claude-code-url-handler.desktop
-x-scheme-handler/http=firefox.desktop
-x-scheme-handler/https=firefox.desktop
+# Belgeler — zathura'nın PDF'i açan girdisi org.pwmt.zathura.desktop DEĞİL;
+# o dosyanın MimeType= alanı yok. Biçimleri ilan eden eklenti girdisidir.
+application/pdf=org.pwmt.zathura-pdf-mupdf.desktop;firefox.desktop;
+application/epub+zip=org.pwmt.zathura-pdf-mupdf.desktop;
+application/oxps=org.pwmt.zathura-pdf-mupdf.desktop;
+application/x-fictionbook=org.pwmt.zathura-pdf-mupdf.desktop;
+application/x-mobipocket-ebook=org.pwmt.zathura-pdf-mupdf.desktop;
+image/vnd.djvu=org.pwmt.zathura-djvu.desktop;
+application/postscript=org.pwmt.zathura-ps.desktop;
+
+# Görseller — imv, yoksa firefox.
+image/jpeg=imv.desktop;firefox.desktop;
+image/png=imv.desktop;firefox.desktop;
+image/gif=imv.desktop;firefox.desktop;
+image/webp=imv.desktop;firefox.desktop;
+image/avif=imv.desktop;firefox.desktop;
+image/svg+xml=imv.desktop;firefox.desktop;
+image/bmp=imv.desktop;
+image/tiff=imv.desktop;
+image/heif=imv.desktop;
+image/jxl=imv.desktop;
+image/vnd.microsoft.icon=imv.desktop;firefox.desktop;
+
+# Metin ve kod — kitty içinde neovim.
+text/plain=nvim-terminal.desktop;
+text/markdown=nvim-terminal.desktop;
+application/json=nvim-terminal.desktop;firefox.desktop;
+application/x-shellscript=nvim-terminal.desktop;
+application/xml=nvim-terminal.desktop;firefox.desktop;
+
+# Web
+text/html=firefox.desktop;
+application/xhtml+xml=firefox.desktop;
+application/x-extension-htm=firefox.desktop;
+application/x-extension-html=firefox.desktop;
+application/x-extension-shtml=firefox.desktop;
+application/x-extension-xht=firefox.desktop;
+application/x-extension-xhtml=firefox.desktop;
+x-scheme-handler/http=firefox.desktop;
+x-scheme-handler/https=firefox.desktop;
+x-scheme-handler/chrome=firefox.desktop;
+x-scheme-handler/mailto=firefox.desktop;
+
+# Ses ve video
+audio/mpeg=mpv.desktop;
+audio/flac=mpv.desktop;
+audio/x-wav=mpv.desktop;
+audio/ogg=mpv.desktop;
+audio/mp4=mpv.desktop;
+video/mp4=mpv.desktop;
+video/x-matroska=mpv.desktop;
+video/webm=mpv.desktop;
+video/x-msvideo=mpv.desktop;
+video/quicktime=mpv.desktop;
+
+# Arşiv
+application/zip=org.kde.ark.desktop;
+application/x-tar=org.kde.ark.desktop;
+application/gzip=org.kde.ark.desktop;
+application/x-7z-compressed=org.kde.ark.desktop;
+application/vnd.rar=org.kde.ark.desktop;
+application/x-xz=org.kde.ark.desktop;
+application/zstd=org.kde.ark.desktop;
+
+# Klasör — kitty içinde yazi, yoksa dolphin.
+inode/directory=yazi-terminal.desktop;org.kde.dolphin.desktop;
+
+# Claude Code derin bağlantısı (girdi ~/.local/share/applications içinde,
+# depoda değil — Claude Code üretiyor ve mutlak yol içeriyor).
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop;

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Yazi (Kitty Terminali)
+Comment=Klasörleri Kitty terminali içinde Yazi ile açar
+Icon=yazi
+Exec=kitty yazi %f
+Terminal=false
+Type=Application
+MimeType=inode/directory;
+Categories=System;FileManager;FileTools;
+Keywords=dosya;yonetici;cli;
+NoDisplay=true
