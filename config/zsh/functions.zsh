@@ -8,6 +8,76 @@ function y() {
 	rm -f -- "$tmp"
 }
 
+# ~/.ssh altindaki tum ozel anahtarlari agent'a yukler.
+#
+# Neden fonksiyon: duz `ssh-add ~/.ssh/*` her cagrida ZATEN YUKLU anahtarlarin
+# passphrase'ini de yeniden sorar. Burada once agent'taki parmak izleri
+# okunuyor, eslesenler atlaniyor -- tekrar cagirmak bedava, yalnizca eksik
+# olan sorulur.
+#
+# Anahtar listesi makineye gomulmuyor: .pub'i olan her ozel anahtar aday.
+# Boylece anahtar adlari makineden makineye degisse de calisir ve yeni anahtar
+# eklendiginde burasi guncellenmez.
+#
+# Ne zaman gerekir: agent bosaldiginda (kullanici oturumu yenilenince oluyor)
+# git commit imzalari ve uzak baglantilar passphrase istemeye baslar.
+function sshkeys() {
+	local h ok warn dim r
+	if [[ -t 1 ]]; then
+		h=$'%B%F{#7aa2f7}'
+		ok=$'%B%F{#9ece6a}'
+		warn=$'%B%F{#e0af68}'
+		dim=$'%F{#565f89}'
+		r=$'%b%f'
+	fi
+
+	# ssh-add -l: 0 = anahtar var, 1 = agent bos, 2 = agent'a ulasilamiyor.
+	# Ucuncusu bambaska bir ariza, "bos" ile karistirilmamali.
+	local listing
+	listing=$(ssh-add -l 2>/dev/null)
+	if (( $? == 2 )); then
+		print -P "${warn}ssh-agent'a ulasilamiyor${r} ${dim}(SSH_AUTH_SOCK bos ya da olu soket)${r}"
+		return 2
+	fi
+
+	local -a loaded
+	loaded=(${(f)"$(print -r -- $listing | awk '{print $2}')"})
+
+	local -a added failed
+	local -i skipped=0
+	local pub key fp
+	# (N): eslesme yoksa desen literal olarak kalmasin.
+	for pub in ~/.ssh/*.pub(N); do
+		key=${pub%.pub}
+		[[ -f $key ]] || continue
+
+		fp=$(ssh-keygen -lf "$pub" 2>/dev/null | awk '{print $2}')
+		if [[ -n $fp ]] && (( ${loaded[(I)$fp]} )); then
+			(( skipped++ ))
+			continue
+		fi
+
+		if ssh-add "$key"; then
+			added+=(${key:t})
+		else
+			failed+=(${key:t})
+		fi
+	done
+
+	(( $#added )) && print -P "${ok}==> Eklendi:${r} ${(j:, :)added}"
+	(( skipped )) && print -P "${dim}    Zaten yuklu: ${skipped} anahtar${r}"
+
+	if (( $#failed )); then
+		print -P "${warn}==> Eklenemedi:${r} ${(j:, :)failed}"
+		return 1
+	fi
+	if (( $#added == 0 && skipped == 0 )); then
+		print -P "${warn}~/.ssh altinda .pub'i olan ozel anahtar bulunamadi${r}"
+		return 1
+	fi
+	return 0
+}
+
 # Tam guncelleme: resmi depolar + AUR + VCS paketlerinin yeniden derlenmesi.
 # `update` (sudo pacman -Syu) AUR'a dokunmadigi icin kismi yukseltme penceresi
 # aciliyor; bir kutuphanenin soname'i degisince AUR paketleri yeniden derlenene
