@@ -92,6 +92,11 @@ alias balık='asciiquarium'
 # ==========================================================
 # AI araclar
 # ==========================================================
+# Claude Code'a parolasiz sudo ver/al: argumansiz cagri toggle, `csudo status`
+# durumu soyler. Pencere oturum kapaninca ya da yeniden baslatinca kendiliginden
+# kapanir. Ilk kullanimdan once makinede bir kez: `claude-sudo setup`.
+alias csudo='claude-sudo'
+
 alias ollama-start='nohup ollama serve > ~/Documents/ollama.log 2>&1 &'
 alias ollama-stop='pkill -f "ollama serve"'
 alias ollama-status='pgrep -f "ollama serve" && echo "Çalışıyor" || echo "Durmuş"'

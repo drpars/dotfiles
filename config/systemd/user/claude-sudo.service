@@ -1,0 +1,22 @@
+[Unit]
+# Revokes the temporary passwordless-sudo grant when the session ends.
+#
+# The unit holds no state and does no work while running; it exists purely for
+# its ExecStop. Without lingering, the user manager stops every unit at the
+# last logout, so stopping is the logout signal we cannot get any other way.
+#
+# Deliberately has no [Install] section: it is never enabled, only started by
+# `claude-sudo on`. An enabled unit would leave an activation symlink inside
+# the dotfiles repo (config/systemd/user/*.wants/ is gitignored for exactly
+# that reason) and would run at every login, including logins where no grant
+# was ever asked for.
+Description=Revoke the temporary passwordless-sudo grant at logout
+Documentation=file:%h/.config/scripts/claude-sudo
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+# Leading '-' : a failed revoke must not leave the unit in a failed state that
+# blocks logout. The tmpfs the grant lives on is the backstop.
+ExecStop=-%h/.config/scripts/claude-sudo __revoke

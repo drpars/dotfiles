@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+# Toggle passwordless sudo for this user, bounded by the session.
+#
+# Why it exists: an agent (Claude Code) that runs a privileged command hits an
+# interactive password prompt it cannot answer, and the command hangs or fails.
+# Typing the password into the agent is not an option either. So the privilege
+# is granted for a window, out of band, and revoked when the window closes.
+#
+# Where the grant lives is the whole design. The rule is a sudoers drop-in in
+# /run/sudoers.d, not /etc/sudoers.d. /run is a tmpfs, so the rule cannot
+# outlive the boot -- not through a crash, not through a hard reset, not
+# through this script failing to clean up. Expiry is a property of the
+# filesystem rather than of a cleanup step that might never run.
+#
+# Logout is the second bound, and that one does need a hook: the systemd *user*
+# unit claude-sudo.service, whose ExecStop revokes the grant. Without lingering
+# the user manager stops at the last logout, so logging out revokes. If that
+# hook ever fails, the tmpfs still caps the exposure at one boot.
+#
+# Scope, stated plainly: the rule names the *user*. sudoers matches on who runs
+# a command, never on what spawned it, so there is no way to hand this to
+# Claude alone -- while the grant is on, anything running as this user reaches
+# root without a prompt. That is precisely why this is a toggle and not a line
+# in /etc/sudoers.
+#
+# One-time root setup teaches sudo to read /run/sudoers.d at all, via a nested
+# include (see cmd_setup). Everything after that is unprivileged bookkeeping
+# plus one sudo call.
+#
+#   claude-sudo             toggle
+#   claude-sudo on|off      explicit
+#   claude-sudo status      report state; exit 0 when on, 1 when off
+#   claude-sudo setup       one-time, needs root: install the include hook
+#   claude-sudo remove      undo setup
+#
+# __revoke is an internal entry point for the unit's ExecStop: it drops the
+# file and nothing else, so stopping the unit cannot recurse back into it.
+
+set -euo pipefail
+
+RUN_DIR=/run/sudoers.d
+RUN_FILE="$RUN_DIR/claude-sudo"
+HOOK_FILE=/etc/sudoers.d/99-claude-sudo
+UNIT=claude-sudo.service
+WHO=$(id -un)
+
+TMP=
+cleanup() { [ -n "$TMP" ] && rm -f "$TMP"; return 0; }
+trap cleanup EXIT
+
+die() { printf 'claude-sudo: %s\n' "$*" >&2; exit 1; }
+
+# A sudoers file that does not parse breaks sudo for everyone, and the drop-in
+# sits in a directory only root can repair. Nothing is ever installed without
+# visudo agreeing to it first.
+stage() {
+    TMP=$(mktemp)
+    cat >"$TMP"
+    chmod 0440 "$TMP"
+    visudo -cqf "$TMP" || die "üretilen sudoers parçası geçersiz, kurulmadı"
+}
+
+is_on() { [ -e "$RUN_FILE" ]; }
+
+# Whether the include hook is in place cannot be read directly: /etc/sudoers.d
+# is root-only. Ask sudo instead of the filesystem -- if a NOPASSWD rule is
+# live, `sudo -n` succeeds without a cached credential.
+grant_is_live() { sudo -n true 2>/dev/null; }
+
+cmd_setup() {
+    printf 'Bir kerelik kurulum: sudo, /run/sudoers.d dizinini de okuyacak.\n'
+    printf 'Parola sorulacak.\n\n'
+
+    stage <<EOF
+# Installed by claude-sudo. Nested include so the actual grant can live on
+# tmpfs and expire with the boot; this file only points at that directory and
+# holds no privilege of its own.
+@includedir $RUN_DIR
+EOF
+
+    sudo install -d -m 0755 -o root -g root "$RUN_DIR"
+    sudo install -m 0440 -o root -g root "$TMP" "$HOOK_FILE"
+
+    # The staged file parsed on its own; re-check the whole tree, because a
+    # bad interaction with an existing rule would only show up here. Roll back
+    # rather than leave sudo in a state that needs a rescue shell.
+    if ! sudo visudo -c >/dev/null; then
+        sudo -n rm -f "$HOOK_FILE"
+        die "sudoers doğrulaması başarısız, kurulum geri alındı"
+    fi
+
+    printf 'Kuruldu: %s\n' "$HOOK_FILE"
+    printf 'Artık "claude-sudo" ile açıp kapatabilirsiniz.\n'
+}
+
+cmd_remove() {
+    revoke
+    sudo rm -f "$HOOK_FILE"
+    printf 'Kaldırıldı: %s\n' "$HOOK_FILE"
+}
+
+cmd_on() {
+    if is_on; then
+        cmd_status
+        return 0
+    fi
+
+    stage <<EOF
+# Written by claude-sudo for $WHO on $(date '+%Y-%m-%d %H:%M:%S').
+# On tmpfs by design: this grant cannot survive a reboot. Revoked at logout by
+# claude-sudo.service, or right now with \`claude-sudo off\`.
+$WHO ALL=(ALL:ALL) NOPASSWD: ALL
+EOF
+
+    sudo install -d -m 0755 -o root -g root "$RUN_DIR"
+    sudo install -m 0440 -o root -g root "$TMP" "$RUN_FILE"
+
+    # Prove the rule took effect instead of assuming it did. The install above
+    # just cached a credential, which would make any check pass; drop it first
+    # so the only thing that can answer is the new rule.
+    sudo -k
+    if ! grant_is_live; then
+        sudo rm -f "$RUN_FILE"
+        die "kural yazıldı ama etkili olmadı — önce \`claude-sudo setup\` çalıştırın"
+    fi
+
+    # Best effort: the unit is what revokes at logout. Losing it costs the
+    # logout bound, not the reboot bound, so it is a warning and not an error.
+    systemctl --user start "$UNIT" 2>/dev/null ||
+        printf 'claude-sudo: uyarı — %s başlatılamadı, oturum kapanışında iptal olmayacak\n' "$UNIT" >&2
+
+    cmd_status
+}
+
+cmd_off() {
+    # Stopping the unit runs its ExecStop, which revokes. Do it anyway
+    # afterwards: the unit may never have started.
+    systemctl --user stop "$UNIT" 2>/dev/null || true
+    revoke || die "kural dosyası kaldırılamadı: $RUN_FILE"
+    cmd_status || true
+}
+
+revoke() {
+    is_on || return 0
+    # While the grant is on sudo needs no password, so -n is the normal path.
+    # It also keeps a stale grant from hanging on a prompt where there is no
+    # terminal to answer it -- ExecStop has none.
+    if sudo -n rm -f "$RUN_FILE" 2>/dev/null; then
+        return 0
+    fi
+    if [ -t 0 ]; then
+        sudo rm -f "$RUN_FILE"
+        return 0
+    fi
+    return 1
+}
+
+cmd_status() {
+    if is_on; then
+        printf 'claude-sudo: AÇIK — %s parolasız sudo kullanabiliyor.\n' "$WHO"
+        printf '  Bitiş: oturum kapanışı, yeniden başlatma, ya da "claude-sudo off".\n'
+        grant_is_live || printf '  Uyarı: kural dosyası var ama sudo uygulamıyor ("claude-sudo setup" gerekebilir).\n' >&2
+        systemctl --user is-active --quiet "$UNIT" ||
+            printf '  Uyarı: %s çalışmıyor — oturum kapanışında iptal olmayacak.\n' "$UNIT" >&2
+        return 0
+    fi
+    printf 'claude-sudo: KAPALI\n'
+    return 1
+}
+
+case "${1-}" in
+    "")       if is_on; then cmd_off; else cmd_on; fi ;;
+    on)       cmd_on ;;
+    off)      cmd_off ;;
+    status)   cmd_status ;;
+    setup)    cmd_setup ;;
+    remove)   cmd_remove ;;
+    __revoke) revoke ;;
+    *)        die "kullanım: claude-sudo [on|off|status|setup|remove]" ;;
+esac
