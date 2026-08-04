@@ -1,0 +1,34 @@
+#!/bin/bash
+# win -- Windows 11 misafirini baslat ve masaustunu ac (Looking Glass).
+#
+# Tek giris noktasi: hem `win` alias'i (config/zsh/alias.zsh) hem menudeki
+# win11.desktop bunu cagirir, boylece davranis tek yerde tanimli kalir.
+# Eski config/scripts/others/win11'in yerini aldi; oradaki supergfxctl
+# kontrolu dustu (paket kullanimdan kalkti, bu makinede kurulu degil).
+set -u
+
+DOMAIN=win11
+VIRSH=(virsh --connect=qemu:///system)
+
+state=$("${VIRSH[@]}" domstate "$DOMAIN" 2>/dev/null) || {
+  echo "win: libvirt'e ulasilamadi (qemu:///system)" >&2
+  exit 1
+}
+
+if [ "$state" != "running" ]; then
+  "${VIRSH[@]}" start "$DOMAIN" || exit 1
+  # Misafir onyuklerken LG konak uygulamasi henuz karsi tarafta degil. 13 sn
+  # eski betikten devralindi, yeniden olculmedi -- calisan bir degeri sirf
+  # sadelesme ugruna riske atmamak icin duruyor. Misafir zaten acikken
+  # beklenmez, pencere aninda gelir.
+  echo "win: misafir onyukleniyor..."
+  sleep 13
+fi
+
+# -f: paylasilan bellek olarak kvmfr karakter cihazi. Bu yapimda (B7) zaten
+# varsayilan, ama surumler arasinda degisen bir varsayilana guvenilmiyor;
+# istemci yanlis hedefe bakinca "The host application seems to not be running"
+# satirinda bekler, yani misafir kapaliymis gibi gorunur.
+# -F borderless tam ekran, -S ekran koruyucuyu engeller (ikisi de eski betikten).
+# setsid -f: istemci terminalden koparilir, kabuk hemen geri doner.
+setsid -f looking-glass-client -F -S -f /dev/kvmfr0 >/dev/null 2>&1

@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Windows 11
+Comment=Misafiri baslat ve masaustunu ac (Looking Glass)
+Comment[tr]=Misafiri baslat ve masaustunu ac (Looking Glass)
+# Sabit ev dizini yolu gomulmedi: Exec'i isleyen taraf ~ genisletmiyor, o yuzden
+# kabuk uzerinden cagriliyor. Tirnak bicimi spec'in kendi kurali -- tilde
+# ayrilmis karakter, cift tirnak icinde durmali (desktop-file-validate ile
+# dogrulandi). Ayni betigi `win` alias'i da calistirir.
+Exec=sh -c "exec ~/.config/scripts/win"
+# LG kurulu olmayan makinede girdi kendiliginden gizlenir.
+TryExec=looking-glass-client
+Icon=looking-glass
+Terminal=false
+StartupNotify=false
+StartupWMClass=looking-glass-client
+Categories=System;Emulator;
+Keywords=windows;vm;kvm;looking glass;
