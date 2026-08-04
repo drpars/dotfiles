@@ -15,6 +15,13 @@ config/systemd/user/*.wants/
 # depoya girmez.
 local/share/applications/mimeinfo.cache
 
+# Ayni dizine dusen ikinci uretilmis dosya. XDG'nin ARTIK KULLANILMAYAN
+# mimeapps konumu; GUI "birlikte ac" diyaloglari bos bir dosya olarak
+# birakiyor. Gecerli olan config/mimeapps.list ve o versiyonlaniyor -- desen
+# bu yuzden dizin yoluyla yazildi, ciplak "mimeapps.list" ile degil: oyle
+# yazilsaydi gercek dosyayi da yok sayardi.
+local/share/applications/mimeapps.list
+
 
 # GTK dosya yoneticisi yer imleri: kullanici durumu ve yerele bagli
 # (masaustunde ~/Projects, dizustunde ~/Projeler). GTK bu dosyada degisken
