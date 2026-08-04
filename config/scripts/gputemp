@@ -8,16 +8,53 @@
 # the real one is amdgpu-pci-0500. Nothing is hardcoded here: each source is
 # used if it answers.
 #
-# Survives the dGPU being handed to a VM. When the card is bound to vfio-pci
-# the nvidia driver releases it and /proc/driver/nvidia/gpus empties, so we can
-# tell without calling nvidia-smi at all -- which matters at waybar's one
-# second interval, where a stalling nvidia-smi would be felt.
+# Survives the dGPU being handed to a VM, and stays out of the way while the
+# handover runs. Two gates, because the card leaves in two steps: once it is
+# bound to vfio-pci the nvidia driver has released it and
+# /proc/driver/nvidia/gpus is empty, but during the transfer itself the card is
+# still on nvidia and only driver_override says otherwise. Both are read from
+# the filesystem, so neither costs an nvidia-smi -- which matters at waybar's
+# one second interval.
 #
 # With no source at all the text is empty, which is how waybar hides a custom
 # module (same convention as peripheral-battery.py).
 
+# True while the dGPU is being handed over. The libvirt hook writes
+# driver_override before it unloads the module (50-vfio-handover, prepare/begin:
+# set_override, then unload_nvidia), so an override on the card means "this one
+# is leaving" even though /proc still lists it. That window is why the module
+# has to stay quiet: every nvidia-smi opens /dev/nvidia0, and any call born
+# during modprobe -r holds the card and fails the transfer.
+#
+# The PCI address is not written down anywhere -- the directories under
+# /proc/driver/nvidia/gpus are named after it, and driver_override is readable
+# as the user.
+handover_pending() {
+  local gpu addr override
+  for gpu in /proc/driver/nvidia/gpus/*/; do
+    addr=${gpu%/}
+    addr=${addr##*/}
+    [ -r "/sys/bus/pci/devices/$addr/driver_override" ] || continue
+    # An unset override is the literal string "(null)", not an empty file, so a
+    # plain -n test would be true forever and silence the module for good.
+    #
+    # read's exit status is not the test: it reports the delimiter, not the
+    # value, and returns non-zero on a last line with no newline while still
+    # assigning it. The value is what decides, so it is cleared first and read
+    # for its side effect.
+    override=
+    read -r override <"/sys/bus/pci/devices/$addr/driver_override"
+    case $override in
+      '' | '(null)') continue ;;
+      *) return 0 ;;
+    esac
+  done
+  return 1
+}
+
 nvidia_temp() {
   compgen -G "/proc/driver/nvidia/gpus/*" >/dev/null 2>&1 || return 1
+  handover_pending && return 1
   command -v nvidia-smi >/dev/null 2>&1 || return 1
   local t
   t=$(timeout 3 nvidia-smi --query-gpu=temperature.gpu \
