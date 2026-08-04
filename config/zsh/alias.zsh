@@ -68,6 +68,12 @@ alias bluetoothoff='echo -e "power off" | bluetoothctl >/dev/null'
 # Windows 11 VM
 alias win11='$HOME/.config/scripts/others/win11'
 alias win11shutdown='virsh --connect=qemu:///system shutdown win11'
+# Misafirin masaustunu ac (Looking Glass). `-f /dev/kvmfr0` ZORUNLU: bayraksiz
+# cagirinca istemci /dev/shm/looking-glass'a bakar, bu kurulumda paylasilan
+# bellek kvmfr karakter cihazinda. Yanlis cagrinin belirtisi yaniltici --
+# "The host application seems to not be running" satirinda donar, yani misafir
+# kapali gibi gorunur. Istemci misafir kapaninca kendiliginden cikar.
+alias win11view='looking-glass-client -f /dev/kvmfr0'
 
 # Waydroid (Android)
 alias apkinstall='waydroid app install'
