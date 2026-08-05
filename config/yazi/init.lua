@@ -22,3 +22,15 @@ require("recycle-bin"):setup({
 	-- Optional: Override automatic trash directory discovery
 	-- trash_dir = "~/.local/share/Trash/",  -- Uncomment to use specific directory
 })
+
+-- plugins:mime-ext
+-- Uzanti veritabanindan MIME turu; fetcher tanimi yazi.toml'da.
+require("mime-ext.local"):setup({
+	-- Veritabaninda olmayan uzanti/ad file(1)'e duser. Kapatilirsa uzantisiz
+	-- dosyalar yanlis turle acilir -- opener kurallari MIME'a bakiyor.
+	fallback_file1 = true,
+})
+
+-- uhs-robert/sshfs
+-- Uzak sunucuyu ~/.ssh/config'ten okuyup FUSE ile baglar (tus: F).
+require("sshfs"):setup()

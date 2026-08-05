@@ -34,7 +34,9 @@ keymap = [
 
 	# Navigation
 	{ on = "h", run = "leave", desc = "Back to the parent directory" },
-	{ on = "l", run = "enter", desc = "Enter the child directory" },
+	# smart-enter: dizinse gir, dosyaysa ac. <Right> duz `enter` kaliyor --
+	# eklenti bozulursa gezinmenin calisan bir yolu kalir.
+	{ on = "l", run = "plugin smart-enter", desc = "Enter the child directory, or open the file" },
 
 	{ on = "<Left>",  run = "leave", desc = "Back to the parent directory" },
 	{ on = "<Right>", run = "enter", desc = "Enter the child directory" },
@@ -167,6 +169,9 @@ keymap = [
 
   # Mount
   { on = "M", run = "plugin mount", desc = "Mount/Unmount filesystems" },
+  # SSHFS -- eklentinin onerdigi "M s" kullanilamadi: "M" tam bir baglama
+  # oldugu icin onu onek yapan bir akort tanimlanamiyor. Serbest tek tus: F.
+  { on = "F", run = "plugin sshfs -- menu", desc = "SSHFS: uzak sunucu bagla/coz" },
   # Open shell here
   { on = "!", run = 'shell "zsh" --block', desc = "Open shell here (Blocking)" },
   # Toggle pane

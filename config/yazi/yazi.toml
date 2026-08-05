@@ -256,3 +256,26 @@ id    = "git" # Remove if Yazi > v26.1.22
 url   = "*/"
 run   = "git"
 group = "git"
+
+# mime-ext: MIME turunu file(1) yerine uzanti veritabanindan bulur (hiz).
+# `id` alani BILEREK yok -- README "Yazi > v26.1.22 ise kaldir" diyor, bu
+# makinede 26.5.6 kurulu. Dogruluk odununu init.lua kapatiyor:
+# fallback_file1 = true, yani veritabaninda olmayan uzanti file(1)'e duser.
+[[plugin.prepend_fetchers]]
+url   = "local://*"
+run   = "mime-ext.local"
+prio  = "high"
+group = "mime"
+
+[[plugin.prepend_fetchers]]
+url   = "remote://*"
+run   = "mime-ext.remote"
+prio  = "high"
+group = "mime"
+
+# piper: kabuk komutunu onizleyiciye cevirir. Markdown burada glow ile
+# render ediliyor; ayni mekanizma ileride csv/tar icin de kullanilabilir.
+# $w = onizleme genisligi, $1 = dosya yolu (piper'in kendi degiskenleri).
+[[plugin.prepend_previewers]]
+url = "*.{md,markdown}"
+run = 'piper -- CLICOLOR_FORCE=1 glow -w=$w -s=dark "$1"'
