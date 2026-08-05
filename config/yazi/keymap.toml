@@ -101,6 +101,17 @@ keymap = [
 	{ on = [ "c", "f" ], run = "copy filename",         desc = "Copy the filename" },
 	{ on = [ "c", "n" ], run = "copy name_without_ext", desc = "Copy the filename without extension" },
 
+	# Archive (compress.yazi) -- cikarma zaten gomulu: `l`/<Enter> arsivi acar.
+	# Bu grup yalnizca OLUSTURMA tarafi. `c` zaten onek oldugu icin (yukarida
+	# kopyalama) `c a` catismasiz. Uzanti dosya adindan seciliyor: ad bos
+	# birakilirsa .zip, "ad.7z" yazilirsa 7z, "ad.tar.zst" yazilirsa tar.zst.
+	# Arka uclar kurulu: zip, 7z, tar, gzip, xz, bzip2, zstd, lz4. `.rar` ve
+	# `.lha` OLUSTURULAMAZ (ikilileri yok; unrar yalnizca acar).
+	{ on = [ "c", "a", "a" ], run = "plugin compress",     desc = "Archive selected files" },
+	{ on = [ "c", "a", "p" ], run = "plugin compress -p",  desc = "Archive selected files (password)" },
+	{ on = [ "c", "a", "h" ], run = "plugin compress -ph", desc = "Archive selected files (password + encrypted header)" },
+	{ on = [ "c", "a", "l" ], run = "plugin compress -l",  desc = "Archive selected files (compression level)" },
+
 	# Filter
 	{ on = "f", run = "filter --smart", desc = "Filter files" },
 
