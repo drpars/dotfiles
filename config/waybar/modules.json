@@ -12,7 +12,11 @@
     "format": "{}",
     "tooltip": true,
     "interval": 3600,
-    "on-click": "~/.config/scripts/weather Çankırı"
+    // Tıklama betiği doğrudan çağırırsa çıktı hiçbir yere gitmez (modül kendi
+    // exec'ini okur) — yalnızca boşuna bir wttr.in isteği olurdu. Doğrusu
+    // modüle sinyal göndermek.
+    "signal": 10,
+    "on-click": "pkill -SIGRTMIN+10 waybar"
   },
 
   "hyprland/workspaces": {
@@ -230,6 +234,10 @@
     "format": "{}",
     "return-type": "json",
     "tooltip": true,
+    // signal olmadan on-click'teki pkill hiçbir şeye yaramıyordu: waybar
+    // SIGRTMIN+N'i yalnızca "signal": N yazan modüle iletiyor. interval yine
+    // gerekli — Alt+Shift (kb_options grp:alt_shift_toggle) buradan geçmiyor.
+    "signal": 8,
     "on-click": "hyprctl switchxkblayout $(hyprctl devices -j | jq -r '.keyboards[] | select(.main == true) | .name' | head -1) next && pkill -SIGRTMIN+8 waybar"
   },
 
@@ -275,12 +283,26 @@
     "format-charging": "󰂄",
     "format-plugged": "",
     "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+    "format-time": "{H} sa {M} dk",
     "tooltip": true,
-    "tooltip-format": "{capacity}%"
+    // Durum anahtarı /sys/class/power_supply/BAT0/status'un küçük harflisi,
+    // boşluklar tire olur: "Not charging" → not-charging. Seçim sırası
+    // tooltip-format-<durum>-<state> > -<durum> > -<state> > tooltip-format.
+    // {time} güç okuması 0 iken boş döner (fişe yeni takılan an) — o yüzden
+    // her satır kendi başına da anlamlı.
+    "tooltip-format": "{capacity}%",
+    "tooltip-format-charging": "Şarj oluyor — {capacity}%\n{power:.1f} W · dolmasına {time}",
+    "tooltip-format-discharging": "Pil — {capacity}%\n{power:.1f} W · bitmesine {time}",
+    "tooltip-format-not-charging": "Prize takılı — {capacity}%\nŞarj etmiyor (şarj sınırı)",
+    "tooltip-format-plugged": "Prize takılı — {capacity}%",
+    "tooltip-format-full": "Pil dolu — {capacity}%"
   },
 
   "backlight": {
-    "device": "intel_backlight",
+    // "device" bilerek yazılmıyor: aygıt adı makineye göre değişiyor (bu
+    // dizüstünde amdgpu_bl2, sabit değil) ve waybar ad tutmazsa zaten en büyük
+    // "backlight" alt sistemi aygıtını kendisi seçiyor. Yanlış ad sessizce
+    // otomatik seçime düşer, yani yazmak yalnızca yanıltır.
     "format": "{icon}",
     "format-icons": ["󰃞", "󰃟", "󰃠"],
     "on-click": "$HOME/.config/scripts/brightness up",

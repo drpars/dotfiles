@@ -1,7 +1,10 @@
 {
   "layer": "top",
   "position": "top",
-  "mod": "dock",
+  // "mode" YAZILMIYOR: hazır "dock" kipi layer'ı bottom'a çekiyor ve
+  // yukarıdaki "layer": "top" satırını ezerdi. Kip verilmediğinde waybar
+  // "default" kipini kullanır, o kip de zaten buradaki genel ayarlardan
+  // doldurulur — istenen davranış bu.
   "exclusive": true,
   "passthrough": false,
   "gtk-layer-shell": true,
