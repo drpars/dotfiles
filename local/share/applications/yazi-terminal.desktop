@@ -3,6 +3,9 @@ Name=Yazi (Kitty Terminali)
 Comment=Klasörleri Kitty terminali içinde Yazi ile açar
 Icon=yazi
 Exec=kitty yazi %f
+# yazi yoksa girdi hic yuklenmez ve inode/directory zincirindeki yedek
+# (org.kde.dolphin.desktop) devralir. Bkz. nvim-terminal.desktop.
+TryExec=yazi
 Terminal=false
 Type=Application
 MimeType=inode/directory;

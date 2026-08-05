@@ -2,6 +2,10 @@
 Name=Darkly Settings 6
 Comment=Darkly Theme Configuration Utility (Qt6/KDE)
 Exec=/usr/bin/darkly-settings6
+# Darkly kurulu olmayan makinede girdi menuden kendiliginden kalkar. Paketin
+# kendi darklystyleconfig.desktop'i NoDisplay=true ve kcmshell6 istiyor;
+# gorunur menu girdisi bu.
+TryExec=darkly-settings6
 Icon=org.xfce.settings.manager
 Terminal=false
 Type=Application

@@ -43,7 +43,11 @@ configuration {
     drun-display-format: "{name}";
 
     filebrowser {
-        directory:         "/home/drpars";
+        /* `directory:` bilerek yazilmadi. rofi bu degeri OLDUGU GIBI kullanir
+           (modes/filebrowser.c, rofi_expand_path yalnizca girdi yolunda
+           cagriliyor), yani "~" genislemez ve mutlak yol yazmak makineye
+           baglar. Deger yoksa rofi once son dizin onbellegini, o da yoksa
+           g_get_home_dir()'i kullanir -- istedigimiz davranis zaten bu. */
         directories-first: true;
         sorting-method:    "name";
         show-hidden:       true;

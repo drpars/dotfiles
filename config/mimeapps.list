@@ -86,6 +86,7 @@ application/zstd=org.kde.ark.desktop;
 # Klasör — kitty içinde yazi, yoksa dolphin.
 inode/directory=yazi-terminal.desktop;org.kde.dolphin.desktop;
 
-# Claude Code derin bağlantısı (girdi ~/.local/share/applications içinde,
-# depoda değil — Claude Code üretiyor ve mutlak yol içeriyor).
+# Claude Code derin bağlantısı. Girdiyi Claude Code üretti ama artık depoda
+# izleniyor (local/share/applications/) ve mutlak yolu kabuk üzerinden ~ ile
+# yazıldı; CLI dosyayı yeniden yazarsa oradaki Exec satırı kontrol edilir.
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop;

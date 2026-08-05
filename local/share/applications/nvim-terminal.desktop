@@ -3,6 +3,11 @@ Name=Neovim (Kitty Terminali)
 Comment=Metin dosyalarını Kitty terminali içinde Neovim ile açar
 Icon=nvim
 Exec=kitty nvim %f
+# nvim yoksa GLib bu girdiyi HIC yuklemez; "birlikte ac" listesinde ve
+# mimeapps zincirinde yok sayilir, sira sonraki adaya gecer. TryExec=kitty
+# degil: kitty oturumun terminali, her makinede var sayiliyor -- eksik olabilen
+# arac nvim.
+TryExec=nvim
 Terminal=false
 Type=Application
 MimeType=text/plain;application/x-shellscript;application/x-perl;application/x-python;
