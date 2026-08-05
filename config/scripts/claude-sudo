@@ -27,14 +27,24 @@
 # include (see cmd_setup). Everything after that is unprivileged bookkeeping
 # plus one sudo call.
 #
+# The third bound is the agent's own lifetime: the `claude` shell wrapper (see
+# config/zsh/functions.zsh) registers a holder while it runs and releases it on
+# exit, and the last release closes the window. Holders are counted rather than
+# assumed to be one, so a second claude in another terminal does not have root
+# pulled out from under it when the first one quits.
+#
 #   claude-sudo             toggle
 #   claude-sudo on|off      explicit
 #   claude-sudo status      report state; exit 0 when on, 1 when off
 #   claude-sudo setup       one-time, needs root: install the include hook
 #   claude-sudo remove      undo setup
 #
-# __revoke is an internal entry point for the unit's ExecStop: it drops the
-# file and nothing else, so stopping the unit cannot recurse back into it.
+# Internal entry points, all prefixed __ because only the unit and the shell
+# wrapper call them:
+#   __revoke          for the unit's ExecStop: drops the file and nothing else,
+#                     so stopping the unit cannot recurse back into it
+#   __hold <pid>      register a holder
+#   __release <pid>   drop a holder; revoke if it was the last one
 
 set -euo pipefail
 
@@ -43,6 +53,11 @@ RUN_FILE="$RUN_DIR/claude-sudo"
 HOOK_FILE=/etc/sudoers.d/99-claude-sudo
 UNIT=claude-sudo.service
 WHO=$(id -un)
+
+# One marker file per shell running claude under the wrapper. On the user's
+# runtime tmpfs, so it is cleared by the same reboot that clears the grant --
+# a leftover marker can never outlive the thing it is counting.
+HOLD_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/claude-sudo"
 
 TMP=
 cleanup() { [ -n "$TMP" ] && rm -f "$TMP"; return 0; }
@@ -155,10 +170,76 @@ revoke() {
     return 1
 }
 
+# A marker is named "<pid>.<starttime>". The pid alone is not an identity:
+# pids get reused, and a marker left behind by a shell that died without
+# releasing would then look alive forever and hold the window open. The start
+# time pins the marker to one specific process.
+holder_key() {
+    local stat rest
+    stat=$(cat "/proc/${1-}/stat" 2>/dev/null) || return 1
+    # Count fields from after the closing paren: field 2 is the command name
+    # and may itself contain spaces and parentheses. starttime is field 22,
+    # which is field 20 of what is left.
+    rest=${stat##*') '}
+    printf '%s.%s\n' "$1" "$(printf '%s' "$rest" | cut -d' ' -f20)"
+}
+
+holder_alive() {
+    [ "$(holder_key "${1%%.*}" 2>/dev/null)" = "$1" ]
+}
+
+# Is any *other* claude still running? Dead markers are pruned on the way
+# through: a shell killed with SIGKILL never runs its release, and a marker
+# nobody prunes would keep the window open until logout -- exactly the state
+# this wrapper exists to prevent.
+holders_remain() {
+    local f found=1
+    [ -d "$HOLD_DIR" ] || return 1
+    for f in "$HOLD_DIR"/*; do
+        [ -e "$f" ] || continue
+        if holder_alive "${f##*/}"; then
+            found=0
+        else
+            rm -f "$f"
+        fi
+    done
+    return "$found"
+}
+
+cmd_hold() {
+    local key
+    key=$(holder_key "${1-}") || die "tutamak için geçerli bir pid gerekli: '${1-}'"
+    mkdir -p "$HOLD_DIR"
+    chmod 0700 "$HOLD_DIR"
+    : >"$HOLD_DIR/$key"
+}
+
+# Reports on stderr, not stdout: this runs as the wrapped command exits, and
+# the caller's stdout may be going somewhere that is not a terminal.
+cmd_release() {
+    local key
+    if key=$(holder_key "${1-}" 2>/dev/null); then
+        rm -f "$HOLD_DIR/$key"
+    fi
+
+    is_on || return 0
+
+    if holders_remain; then
+        printf 'claude-sudo: AÇIK kalıyor — başka bir claude oturumu sürüyor.\n' >&2
+        return 0
+    fi
+
+    systemctl --user stop "$UNIT" 2>/dev/null || true
+    revoke || die "kural dosyası kaldırılamadı: $RUN_FILE"
+    printf 'claude-sudo: KAPALI — pencere claude ile birlikte kapandı.\n' >&2
+}
+
 cmd_status() {
     if is_on; then
         printf 'claude-sudo: AÇIK — %s parolasız sudo kullanabiliyor.\n' "$WHO"
         printf '  Bitiş: oturum kapanışı, yeniden başlatma, ya da "claude-sudo off".\n'
+        holders_remain &&
+            printf '  Ayrıca: sarmalayıcıyla başlatılmış claude çıkınca da kapanır.\n'
         grant_is_live || printf '  Uyarı: kural dosyası var ama sudo uygulamıyor ("claude-sudo setup" gerekebilir).\n' >&2
         systemctl --user is-active --quiet "$UNIT" ||
             printf '  Uyarı: %s çalışmıyor — oturum kapanışında iptal olmayacak.\n' "$UNIT" >&2
@@ -175,6 +256,8 @@ case "${1-}" in
     status)   cmd_status ;;
     setup)    cmd_setup ;;
     remove)   cmd_remove ;;
-    __revoke) revoke ;;
+    __revoke)  revoke ;;
+    __hold)    cmd_hold "${2-}" ;;
+    __release) cmd_release "${2-}" ;;
     *)        die "kullanım: claude-sudo [on|off|status|setup|remove]" ;;
 esac

@@ -133,3 +133,43 @@ function full-update() {
 	fi
 	print -P "${ok}==> Bitti${r} ${dim}(${sure})${r}"
 }
+
+# claude sarmalayicisi: parolasiz sudo penceresini claude'un omruyle sinirlar.
+#
+# Pencereyi ACMAZ, yalnizca kapatir. Acmak elle bir karar olarak kalmali:
+# pencere acikken bu kullanici adina calisan her sey parolasiz root'a ulasiyor,
+# oysa claude oturumlarinin cogu sudo'ya hic dokunmuyor. Acilis `csudo on`.
+#
+# Neden gerekli: kapatmayi bugun oturumun kendisi yapiyor. Unutursa ya da
+# cakilirsa yetki bir sonraki logout'a kadar acik kaliyor -- tmpfs ve
+# claude-sudo.service duruyor ama aradaki saatleri kapatan bir sey yoktu.
+#
+# Neden fonksiyon, PATH'e konan `claude` adli bir betik degil: sarmalayicinin
+# isi yalnizca etkilesimli kabuktan baslatilan claude ile. PATH'teki bir ad her
+# cagriyi yakalar (masaustu girdisi, betik, npx) ve gercek ikiliyi hangi
+# sirayla buldugu makineye gore degisir.
+#
+# Trap'ler bu makinede olculdu (zsh 5.9, 2026-08-05):
+#   - Yalniz EXIT yetmiyor: SIGINT ve SIGTERM'de HIC calismiyor (SIGHUP'ta
+#     calisiyor). Terminali kapatmak disindaki her sonlanma kacardi.
+#   - Sinyal yakalaninca zsh trap'ten sonra fonksiyona devam ediyor, yani EXIT
+#     de ayrica calisiyor. Bayrak bu yuzden var.
+#   - Bayrak GLOBAL olmali: EXIT trap'i fonksiyonun yerelleri yikildiktan sonra
+#     kosuyor, `local` bir bayrak orada BOS gorunuyor ve koruma sessizce ise
+#     yaramiyor. Bir `typeset -g` ile bes ayri sonlanma tek release veriyor.
+#   - Trap'ler cikis kodunu bozmuyor; claude'un rc'si oldugu gibi donuyor.
+function claude() {
+	typeset -g _CLAUDE_SUDO_RELEASED=0
+	trap '
+		if (( ! _CLAUDE_SUDO_RELEASED )); then
+			_CLAUDE_SUDO_RELEASED=1
+			claude-sudo __release $$
+		fi
+	' EXIT INT HUP TERM
+
+	# Tutamak, pencere kapaliyken de kaydediliyor: pencere cogu zaman claude
+	# calisirken aciliyor (`! csudo on`), baslangicta degil.
+	claude-sudo __hold $$
+
+	command claude "$@"
+}
