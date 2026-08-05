@@ -20,6 +20,16 @@ hl.config({
 		touchpad = {
 			natural_scroll = false,
 			clickfinger_behavior = true,
+
+			-- Karar (2026-08-05, kullanıcı): kapalı kalıyor.
+			-- libinput varsayılanı true — yazarken ve hemen ardından touchpad'in
+			-- HAREKETİ bastırılır, fiziksel tıklama geçmeye devam eder. Bu satır
+			-- bir teşhis turunda kondu (semptom: tıklama kaydediliyor, imleç
+			-- oynamıyor, klavyeden sonra belirginleşiyor) ama **teşhisi tutmadı**:
+			-- kapalıyken de gecikme sürdü, sonra kendiliğinden geçti. Yani burada
+			-- duruyor olması gecikmeyi çözdüğü için değil, tercih edildiği için.
+			-- Bedeli: yazarken avuç/parmak sürtmesi imleci oynatabilir.
+			disable_while_typing = false,
 		},
 	},
 })
@@ -44,4 +54,26 @@ hl.gesture({
 	fingers = 3,
 	direction = "horizontal",
 	action = "workspace",
+})
+
+-- Üç parmak aşağı → aktif pencereyi kapat.
+--
+-- `close` **aktif** pencereyi kapatır, cursor'un altındakini değil (wiki:
+-- "Closes the active window"). İkisi burada çakışıyor çünkü yukarıda
+-- `follow_mouse = 1` var; follow_mouse değişirse bu hareket de hedef değiştirir.
+--
+-- `scale` SÜS DEĞİL, çalışması için gerekli. Eşik delta cinsinden ve bu panel
+-- 126x74 mm — dikey yol yatayın %59'u. Çarpansız `down` hiç kapatmıyordu;
+-- yatay kaydırmanın aynı anda çalışıyor olması da bunun mesafe sorunu olduğunu
+-- gösteriyor, yön ya da eylem sorunu değil (ikisi de bildirim sondasıyla ayrı
+-- ayrı elendi → NOTLAR). Kazara kapanma olursa düşürülecek düğme budur.
+--
+-- Modifier yok: kullanıcı kararı, asıl istenen çıplak hareketti. Bedeli
+-- kabul edildi — yanlışlıkla yapılan hareket aktif pencereyi kapatır ve `close`
+-- geri alınamaz. Geri istenirse tek satır: `mods = "ALT"`.
+hl.gesture({
+	fingers = 3,
+	direction = "down",
+	scale = 3.0,
+	action = "close",
 })
