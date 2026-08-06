@@ -10,10 +10,13 @@ Comment=Prime Video (Chrome uygulama kipi)
 Exec=sh -c "exec google-chrome-stable --app=https://www.primevideo.com/region/eu/storefront --user-data-dir=\\$HOME/.local/share/webapps/primevideo"
 StartupWMClass=chrome-www.primevideo.com__region_eu_storefront-Default
 # Prime Video'nun kendi ikonu KURULU HICBIR TEMADA YOK (arandi: Qogir ailesi,
-# Adwaita, breeze, hicolor). Genel ama dogru ikon: video-player. Gercek logo
-# istenirse depoya dosya konmasi YETMEZ: Icon= mutlak yol almamali, yani
-# ~/.local/share/icons/hicolor bir symlink olarak kurulmali -- bu yeni bir
-# dotfiles bolumu ve onu yerlestiren archsetup'tir. Karar verilmedi.
+# Adwaita, breeze, hicolor). Genel ama dogru ikon: video-player.
+#
+# Gercek logo istenirse tesisat ZATEN KURULU: ~/.local/share/icons depoya
+# symlink (local/share/icons/, archsetup'in "local" bolumu). Dosya
+# local/share/icons/hicolor/<boyut>/apps/ altina konur ve Icon= ADI yazar --
+# mutlak yol yazilmaz. Boyut hicolor'in ilan ettiklerinden biri olmali
+# (16..128, 192, 256, 512); ornegin 152x152 ILAN EDILMEMIS, once olceklenir.
 Icon=video-player
 Terminal=false
 Categories=AudioVideo;Video;
