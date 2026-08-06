@@ -62,3 +62,12 @@ hl.window_rule({
     match     = { class = "chrome-web.whatsapp.com__-Default" },
     workspace = "special:whatsapp silent",
 })
+
+-- Kalici kabuk: ciplak kitty, kendi sinifiyla.
+-- Sinif kitty'nin varsayilani OLAMAZ: "kitty" yazilsaydi bu kural SUPER+RETURN
+-- ile acilan her terminali de special alana suruklerdi. Sinif betikte degil
+-- baglilikta veriliyor (`--class=scratch-term`); ikisi birlikte degisir.
+hl.window_rule({
+    match     = { class = "scratch-term" },
+    workspace = "special:terminal silent",
+})

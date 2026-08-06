@@ -90,9 +90,19 @@ hl.bind(M .. " + W", hl.dsp.exec_cmd(
     "google-chrome-stable --app=https://web.whatsapp.com/ " ..
     "--user-data-dir=" .. home .. "/.local/share/webapps/whatsapp"))
 
+-- Kalici kabuk. SUPER+RETURN'un yerini ALMAZ: o her cagirilista yeni bir kitty
+-- acar ve bulundugu calisma alanina birakir; bu tek ve ayni kabugu her yerden
+-- ayni tusla one getirir. Komut verilmiyor -- ciplak kitty, kabuk ayakta kalsin.
+-- `--class` SART: varsayilan sinifla (kitty) kural HER kitty penceresini
+-- yutardi, SUPER+RETURN dahil.
+hl.bind(M .. " + T", hl.dsp.exec_cmd(
+    _G.scriptsDir .. "/scratchtoggle terminal scratch-term " ..
+    _G.terminal .. " --class=scratch-term"))
+
 -- Herhangi bir pencereyi scratchpad'e gonder (dagitimin ornegindeki desen).
 hl.bind(M .. " + SHIFT + N", hl.dsp.window.move({ workspace = "special:notlar" }))
 hl.bind(M .. " + SHIFT + W", hl.dsp.window.move({ workspace = "special:whatsapp" }))
+hl.bind(M .. " + SHIFT + T", hl.dsp.window.move({ workspace = "special:terminal" }))
 
 -- ── Fare ───────────────────────────────────────────
 hl.bind(M .. " + mouse:272",           hl.dsp.window.drag(),   { mouse = true })
