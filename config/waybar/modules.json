@@ -271,14 +271,20 @@
 
   "battery": {
     "interval": 1,
-    // Adaptör adı yazılmazsa readdir sırasında "online" ya da "status" içeren
-    // son power_supply girdisi seçiliyor — bu makinede BAT0 — ve BAT0'da
-    // "online" olmadığı için "Not charging" → "Plugged" yükseltmesi hiç
-    // çalışmıyordu. ADP0'da "status" dosyası yok, yalnız "online"; waybar boş
-    // status'ü "Discharging değil" saydığı için online=1 iken durum her
-    // hâlükârda Plugged olur ve "not-charging" ulaşılamaz kalır (satırı yedek
-    // olarak duruyor). Masaüstünde modül zaten pil yokluğundan gizli.
-    "adapter": "ADP0",
+    // BOŞ BIRAKILDI, unutulmadı — "Plugged" yükseltmesi bilerek kapalı.
+    // battery.cpp:580'deki yükseltme yalnız adapter_ doluyken çalışıyor ve
+    // "Discharging"i de kapsıyor; ADP0'da "status" dosyası olmadığı için
+    // online=1 iken durum KOŞULSUZ Plugged oluyordu. Sonuç: "fişte ve sınırda"
+    // ile "fişte ama gerçekten boşalıyor" tek duruma çöküyor, bar ikisini
+    // ayıramıyordu. Adaptör boşken ham BAT0 durumu geçiyor ve ikisi ayrışıyor:
+    // not-charging (sınırda) ↔ discharging (gerçekten düşüyor).
+    // Boş dize adı hiçbir dizine eşleşmediği için adapter_ boş kalıyor
+    // (battery.cpp:158); anahtarı hiç yazmamak AYNI ŞEY DEĞİL — o zaman
+    // readdir sırasındaki son girdi seçiliyor. adapter_'ın başka iki
+    // kullanıcısı bizi etkilemiyor: "full-at-plugged" yazılmadı ve
+    // getAdapterStatus yalnız durum "Unknown" iken çağrılıyor (BAT0 okunuyor).
+    // Masaüstünde modül zaten pil yokluğundan gizli.
+    "adapter": "",
     "states": {
       "good": 70,
       "warning": 30,
@@ -289,10 +295,12 @@
     "full-at": 100,
     "format-full": "{icon} Full",
     "format-charging": "󰂄",
-    // Seviye ikonu korunuyor: fisteyken de agir yukte pil bosalabiliyor ve
-    // waybar o durumu da Plugged'e yukselttigi icin yalniz fis glifi dususu
-    // gizlerdi.
-    "format-plugged": "{icon} ",
+    // Fişte ve şarj sınırında: yalnız fiş, seviye ikonu yok. Seviye ikonunu
+    // buradan düşürmek ancak yükseltme kapatıldığı için güvenli — fişteyken
+    // ağır yükte pil gerçekten boşalırsa durum artık "discharging" olur ve
+    // seviye ikonu görünür. Yükseltme açıkken o düşüş bu satırın altında
+    // gizlenirdi, o yüzden ikon zorunluydu. İkisi birlikte değişir.
+    "format-not-charging": "",
     "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
     "format-time": "{H} sa {M} dk",
     "tooltip": true,
@@ -304,8 +312,9 @@
     "tooltip-format": "{capacity}%",
     "tooltip-format-charging": "Şarj oluyor — {capacity}%\n{power:.1f} W · dolmasına {time}",
     "tooltip-format-discharging": "Pil — {capacity}%\n{power:.1f} W · bitmesine {time}",
+    // "plugged" satırı yok: yükseltme kapalı olduğu için o durum ulaşılamaz.
+    // Ölü ayar bırakmak yanıltıyor — okuyan onu yürürlükte sanıyor.
     "tooltip-format-not-charging": "Prize takılı — {capacity}%\nŞarj etmiyor (şarj sınırı)",
-    "tooltip-format-plugged": "Prize takılı — {capacity}%\nŞarj etmiyor (şarj sınırı)",
     "tooltip-format-full": "Pil dolu — {capacity}%"
   },
 
