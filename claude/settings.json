@@ -1,4 +1,12 @@
 {
+  "permissions": {
+    "deny": [
+      "Bash(git commit -m:*)",
+      "Bash(git commit --message:*)",
+      "Bash(git commit --amend -m:*)",
+      "Bash(git commit --amend --message:*)"
+    ]
+  },
   "model": "opus[1m]",
   "statusLine": {
     "type": "command",
