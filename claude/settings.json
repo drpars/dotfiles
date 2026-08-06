@@ -9,5 +9,6 @@
     "typescript-lsp@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true
   },
-  "theme": "auto"
+  "theme": "auto",
+  "disableDeepLinkRegistration": "disable"
 }
