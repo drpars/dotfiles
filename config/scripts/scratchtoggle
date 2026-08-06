@@ -1,0 +1,46 @@
+#!/bin/bash
+# scratchtoggle -- adlandirilmis special workspace'i ac/kapa, pencere yoksa
+# uygulamayi da baslat.
+#
+# Hyprland'in gomulu dispatcher'i (hl.dsp.workspace.toggle_special) yalnizca
+# GOSTERIP GIZLER, baslatmaz -- sozlesmede (hl.meta.lua) alan adindan baska
+# argüman almiyor. Ilk basista pencere henuz yoksa bos bir special workspace
+# acilir ve hicbir sey olmamis gibi gorunur. Kapatilan eksik bu.
+#
+# Isbolumu: bu betik yalnizca "o sinifta bir pencere var mi" sorusunu cevaplar
+# ve gerekiyorsa komutu calistirir. Pencereyi special workspace'e KOYAN sey
+# betik degil, windowrules.lua'daki sinif kuralidir -- boylece uygulama nereden
+# baslatilirsa baslatilsin (bu betik, rofi, .desktop) ayni yere duser.
+#
+# Sira onemli: once exec, sonra toggle. Alan gosterildikten sonra pencere
+# icine map edildigi icin arada bos alan gorunmez.
+#
+# NEDEN `hyprctl eval`, `hyprctl dispatch` DEGIL: Lua ayristiricisinda klasik
+# `hyprctl dispatch exec <komut>` bicimi CALISMIYOR -- hyprctl argumani Lua
+# olarak yorumluyor ve "')' expected near ..." ile dusuyor. (`hyprctl keyword`
+# ayni ailede ama o rc=0 ile sessizce dusuyordu; dispatch rc=7 veriyor, yani
+# bu hata en azindan gorulebilir.) Karsiligi `hl.dispatch(<Dispatcher>)`, ve
+# kabuktan ona ulasmanin yolu `hyprctl eval`. Sozlesme:
+# /usr/share/hypr/stubs/hl.meta.lua -- hl.dispatch:828, hl.exec_cmd:830.
+#
+# Kullanim: scratchtoggle <alan-adi> <sinif> <komut...>
+set -u
+
+if [ "$#" -lt 3 ]; then
+  echo "kullanim: scratchtoggle <alan-adi> <sinif> <komut...>" >&2
+  exit 1
+fi
+
+ws=$1
+cls=$2
+shift 2
+
+# `hyprctl clients` duz ciktisinda her pencere icin bir "<tab>class: <ad>"
+# satiri var. Tam satir eslesmesi araniyor: ciplak `grep "class: $cls"` olsaydi
+# "webapp-whatsapp" ararken "webapp-whatsapp-test" de eslesir, uygulama ikinci
+# kez hic baslatilmazdi.
+if ! hyprctl clients | grep -qE "^[[:space:]]*class: ${cls}$"; then
+  hyprctl eval "hl.exec_cmd(\"$*\")" >/dev/null || exit 1
+fi
+
+hyprctl eval "hl.dispatch(hl.dsp.workspace.toggle_special(\"$ws\"))" >/dev/null

@@ -68,6 +68,28 @@ hl.bind(M .. " + tab",                 hl.dsp.focus({ workspace = "m+1" }))
 hl.bind(M .. " + mouse_down",          hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(M .. " + mouse_up",            hl.dsp.focus({ workspace = "e-1" }))
 
+-- ── Scratchpad'ler ─────────────────────────────────
+-- Gomulu toggle_special yalnizca gosterip gizler, BASLATMAZ; eksigi kapatan
+-- sarmalayici config/scripts/scratchtoggle. Pencereyi alana koyan sey ise
+-- windowrules.lua'daki sinif kurali (oradaki "Scratchpad'ler" bolumu).
+local home = os.getenv("HOME")
+
+-- Anlik notlar. Tek dosya; `nvim +` imleci dosyanin sonuna atar -- nvim
+-- yapilandirmasina dokunmadan calisir, o yuzden nvim deposunda karsiligi yok.
+hl.bind(M .. " + N", hl.dsp.exec_cmd(
+    _G.scriptsDir .. "/scratchtoggle notlar scratch-notes " ..
+    _G.terminal .. " --class=scratch-notes nvim + " .. home .. "/notlar.md"))
+
+-- WhatsApp Web. Sinif olculdu, uydurulmadi -- gerekce windowrules.lua'da.
+hl.bind(M .. " + W", hl.dsp.exec_cmd(
+    _G.scriptsDir .. "/scratchtoggle whatsapp chrome-web.whatsapp.com__-Default " ..
+    "google-chrome-stable --app=https://web.whatsapp.com/ " ..
+    "--user-data-dir=" .. home .. "/.local/share/webapps/whatsapp"))
+
+-- Herhangi bir pencereyi scratchpad'e gonder (dagitimin ornegindeki desen).
+hl.bind(M .. " + SHIFT + N", hl.dsp.window.move({ workspace = "special:notlar" }))
+hl.bind(M .. " + SHIFT + W", hl.dsp.window.move({ workspace = "special:whatsapp" }))
+
 -- ── Fare ───────────────────────────────────────────
 hl.bind(M .. " + mouse:272",           hl.dsp.window.drag(),   { mouse = true })
 hl.bind(M .. " + mouse:273",           hl.dsp.window.resize(), { mouse = true })

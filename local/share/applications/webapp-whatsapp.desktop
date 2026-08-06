@@ -1,0 +1,23 @@
+[Desktop Entry]
+Type=Application
+Name=WhatsApp
+Comment=WhatsApp Web (Chrome uygulama kipi)
+# Elle yazildi -- webapp-manager uretmedi. Aracin urettigi girdi
+# --user-data-dir'e SABIT /home/drpars yolu yaziyor (depoya girmemesi gereken
+# bicim) ve Exec'i kurulu olmayan chromium'a bagliyordu; bu makinede kurulu
+# Chromium ailesi tarayici google-chrome-stable.
+#
+# ~ genisletilmez (olculdu, README'deki tabloya bak), o yuzden sh uzerinden
+# $HOME. $ isareti CIFT ters bolu ile kacilir: tek ters bolu (\$HOME)
+# desktop-file-validate'ten gecer ama GLib gecersiz kacis sayip girdiyi HIC
+# yuklemez.
+Exec=sh -c "exec google-chrome-stable --app=https://web.whatsapp.com/ --user-data-dir=\\$HOME/.local/share/webapps/whatsapp"
+# --class BILEREK YOK: Chrome Wayland'de bu bayragi yok sayiyor (olculdu
+# 2026-08-06). Verilen ada ragmen app_id'yi --app URL'i + profil adindan
+# turetiyor -> chrome-web.whatsapp.com__-Default. Pencere kurali ve asagidaki
+# StartupWMClass o turetilmis ada bakar; --class yazmak calisiyormus izlenimi
+# verirdi.
+StartupWMClass=chrome-web.whatsapp.com__-Default
+Icon=google-chrome
+Terminal=false
+Categories=Network;InstantMessaging;

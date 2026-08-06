@@ -41,3 +41,24 @@ hl.window_rule({
     center = true,
     size   = { 850, 700 },
 })
+
+-- ── Scratchpad'ler ─────────────────────────────────
+-- Pencereyi special workspace'e koyan yer BURASI, baslatan betik degil
+-- (config/scripts/scratchtoggle). Boylece uygulama nereden baslatilirsa
+-- baslatilsin -- kisayol, rofi, .desktop -- ayni alana duser.
+
+-- Anlik notlar: kitty + nvim, tek dosya (~/notlar.md).
+hl.window_rule({
+    match     = { class = "scratch-notes" },
+    workspace = "special:notlar silent",
+})
+
+-- WhatsApp Web.
+-- Sinif UYDURULAMAZ, olculur: Chrome Wayland'de --class bayragini yok sayiyor
+-- ve app_id'yi --app URL'i + profil adindan turetiyor (olculdu 2026-08-06).
+-- Ayni sinif webapp-whatsapp.desktop'taki StartupWMClass'ta da yaziyor; URL
+-- degisirse ikisi birden degisir.
+hl.window_rule({
+    match     = { class = "chrome-web.whatsapp.com__-Default" },
+    workspace = "special:whatsapp silent",
+})
