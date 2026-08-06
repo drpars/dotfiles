@@ -1,0 +1,25 @@
+#!/bin/bash
+# notlar -- SUPER+N scratchpad'inin actigi not defteri (kitty icinde nvim).
+#
+# NEDEN BETIK: nvim ayarlari bagliliga dogrudan yazilamiyor. Zincir
+# keybindings.lua -> scratchtoggle -> hl.exec_cmd, ve scratchtoggle komutu
+# `hl.exec_cmd("$*")` ile calistiriyor; `$*` argumanlari duz bir stringe
+# yapistirdigi icin tirnaklar KAYBOLUYOR. Olculdu: Hyprland'in exec katmani
+# tirnagi dogru tasiyor (betige `-c` ve degeri ayri, butun argumanlar olarak
+# geliyor), duzlestiren sey `$*`. O string ikinci kez kabuga gidince nvim
+# `wrap`, `linebreak`, `breakindent` sozcuklerini DOSYA ADI sanar ve uc bos
+# buffer acar. Tirnaklar burada, betigin icinde kaldigi icin zincire hic
+# girmiyorlar -- bagliliga tek kelime gidiyor.
+#
+# NEDEN NVIM DEPOSUNDA DEGIL: `wrap` orada bilerek kapali
+# (lua/drpars/core/options.lua) ve nvim ayri bir depo/proje. Buradaki
+# `setlocal` yalnizca bu pencereyi baglar, o karari ezmez. Tum markdown
+# dosyalarinda kaydirma istenirse dogru adres nvim deposudur (DEVIR.md).
+#
+# `+`      imleci dosyanin sonuna atar (eski bagliliktan devralindi).
+# wrap     uzun satir alt satirdan devam eder, yatay kaydirma biter.
+# linebreak tek basina wrap kelimeyi ORTASINDAN kirar; bu onu engeller.
+# breakindent devam satiri liste girintisini korur (markdown notta gorunur).
+set -u
+
+exec nvim + -c 'setlocal wrap linebreak breakindent' "$HOME/notlar.md"

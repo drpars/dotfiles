@@ -78,11 +78,13 @@ hl.bind(M .. " + mouse_up",            hl.dsp.focus({ workspace = "e-1" }))
 -- windowrules.lua'daki sinif kurali (oradaki "Scratchpad'ler" bolumu).
 local home = os.getenv("HOME")
 
--- Anlik notlar. Tek dosya; `nvim +` imleci dosyanin sonuna atar -- nvim
--- yapilandirmasina dokunmadan calisir, o yuzden nvim deposunda karsiligi yok.
+-- Anlik notlar. Nvim cagrisi burada DEGIL, config/scripts/notlar icinde:
+-- scratchtoggle komutu `hl.exec_cmd("$*")` ile calistirdigi icin tirnakli bir
+-- argüman (`-c 'setlocal wrap ...'`) buradan gecerken duzlesir ve nvim
+-- sozcukleri dosya adi sanar. Gerekce ve olcum betigin basinda.
 hl.bind(M .. " + N", hl.dsp.exec_cmd(
     _G.scriptsDir .. "/scratchtoggle notlar scratch-notes " ..
-    _G.terminal .. " --class=scratch-notes nvim + " .. home .. "/notlar.md"))
+    _G.terminal .. " --class=scratch-notes " .. _G.scriptsDir .. "/notlar"))
 
 -- WhatsApp Web. Sinif olculdu, uydurulmadi -- gerekce windowrules.lua'da.
 hl.bind(M .. " + W", hl.dsp.exec_cmd(
