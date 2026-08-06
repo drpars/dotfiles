@@ -1,4 +1,23 @@
-/* buraya sembolik link gerekli olabilir /usr/share/icons/default/index.theme */
+# Cursor fallback: only consulted by a libXcursor client that does NOT see
+# XCURSOR_THEME. Under Hyprland every child gets XCURSOR_THEME from
+# config/hypr/config/theme.lua, so this file rarely gets its turn -- keep it
+# anyway, it is the only cover for clients started outside that environment.
+#
+# Do NOT symlink this to /usr/share/icons/default/index.theme: that file says
+# Inherits=Adwaita, i.e. the opposite of what we want here.
+#
+# The override does work. libXcursor's built-in search path (strings
+# /usr/lib/libXcursor.so.1) is
+#   ~/.local/share/icons:~/.icons:/usr/share/icons:/usr/share/pixmaps
+# so this directory is looked at first. Measured by hashing the pixels of
+# XcursorLibraryLoadImage("left_ptr", theme, 24): with the built-in path
+# "default" and "Mocu-White-Right" hash alike, with XCURSOR_PATH=/usr/share/icons
+# "default" falls back to Adwaita. A mere "did it load" check proves nothing --
+# libXcursor returns an image for a nonexistent theme name too.
+#
+# Comment syntax matters: '/* ... */' parses fine for libXcursor's line scanner
+# but makes GLib reject the whole file ("not a key-value pair, group, or
+# comment"). Keep comments '#'.
 [Icon Theme]
 Name=Default
 Comment=Default Cursor Theme
