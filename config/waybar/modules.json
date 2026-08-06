@@ -294,12 +294,16 @@
     "format-alt": "{time} {icon}",
     "full-at": 100,
     "format-full": "{icon} Full",
-    "format-charging": "󰂄",
-    // Fişte ve şarj sınırında: yalnız fiş, seviye ikonu yok. Seviye ikonunu
-    // buradan düşürmek ancak yükseltme kapatıldığı için güvenli — fişteyken
-    // ağır yükte pil gerçekten boşalırsa durum artık "discharging" olur ve
-    // seviye ikonu görünür. Yükseltme açıkken o düşüş bu satırın altında
-    // gizlenirdi, o yüzden ikon zorunluydu. İkisi birlikte değişir.
+    // Fişteki iki durum da AYNI glifi gösteriyor (şimşek değil, fiş): barın
+    // söylediği tek şey "fişte". Şarj oluyor mu yoksa sınırda mı — bu ayrımı
+    // artık yalnızca tooltip taşıyor (aşağıda -charging ↔ -not-charging).
+    // Kasıtlı; glifle de ayrılsın istenirse -charging'e şimşek geri yazılır.
+    // Seviye ikonunu bu iki satırdan düşürmek ancak Plugged yükseltmesi kapalı
+    // olduğu için güvenli — fişteyken ağır yükte pil gerçekten boşalırsa durum
+    // "discharging" olur ve seviye ikonu görünür. Yükseltme açıkken o düşüş bu
+    // satırların altında gizlenirdi, o yüzden ikon zorunluydu. Üçü birlikte
+    // değişir: adapter, bu iki format, ve seviye ikonunun anlamı.
+    "format-charging": "",
     "format-not-charging": "",
     "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
     "format-time": "{H} sa {M} dk",
