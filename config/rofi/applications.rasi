@@ -33,7 +33,7 @@ configuration {
 
     modi:            "drun,run,filebrowser,window";
     show-icons:      true;
-    icon-theme:      "Qogir-dark";
+    icon-theme:      "Qogir-Dark";
 
     /* İkonlar ve Format */
     display-drun:        " ";

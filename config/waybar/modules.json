@@ -271,6 +271,14 @@
 
   "battery": {
     "interval": 1,
+    // Adaptör adı yazılmazsa readdir sırasında "online" ya da "status" içeren
+    // son power_supply girdisi seçiliyor — bu makinede BAT0 — ve BAT0'da
+    // "online" olmadığı için "Not charging" → "Plugged" yükseltmesi hiç
+    // çalışmıyordu. ADP0'da "status" dosyası yok, yalnız "online"; waybar boş
+    // status'ü "Discharging değil" saydığı için online=1 iken durum her
+    // hâlükârda Plugged olur ve "not-charging" ulaşılamaz kalır (satırı yedek
+    // olarak duruyor). Masaüstünde modül zaten pil yokluğundan gizli.
+    "adapter": "ADP0",
     "states": {
       "good": 70,
       "warning": 30,
@@ -281,7 +289,10 @@
     "full-at": 100,
     "format-full": "{icon} Full",
     "format-charging": "󰂄",
-    "format-plugged": "",
+    // Seviye ikonu korunuyor: fisteyken de agir yukte pil bosalabiliyor ve
+    // waybar o durumu da Plugged'e yukselttigi icin yalniz fis glifi dususu
+    // gizlerdi.
+    "format-plugged": "{icon} ",
     "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
     "format-time": "{H} sa {M} dk",
     "tooltip": true,
@@ -294,7 +305,7 @@
     "tooltip-format-charging": "Şarj oluyor — {capacity}%\n{power:.1f} W · dolmasına {time}",
     "tooltip-format-discharging": "Pil — {capacity}%\n{power:.1f} W · bitmesine {time}",
     "tooltip-format-not-charging": "Prize takılı — {capacity}%\nŞarj etmiyor (şarj sınırı)",
-    "tooltip-format-plugged": "Prize takılı — {capacity}%",
+    "tooltip-format-plugged": "Prize takılı — {capacity}%\nŞarj etmiyor (şarj sınırı)",
     "tooltip-format-full": "Pil dolu — {capacity}%"
   },
 
