@@ -8,6 +8,8 @@ Comment=Turkcell TV+ (Chrome uygulama kipi)
 # Bu girdi de special workspace'e baglanmaz (bkz. webapp-primevideo.desktop).
 Exec=sh -c "exec google-chrome-stable --app=https://tvplus.com.tr/ --user-data-dir=\\$HOME/.local/share/webapps/tvplus"
 StartupWMClass=chrome-tvplus.com.tr__-Default
-Icon=google-chrome
+# TV+'in kendi ikonu da hicbir kurulu temada yok (bkz.
+# webapp-primevideo.desktop). Ayni genel ikon kullaniliyor.
+Icon=video-player
 Terminal=false
 Categories=AudioVideo;Video;

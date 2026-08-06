@@ -18,6 +18,9 @@ Exec=sh -c "exec google-chrome-stable --app=https://web.whatsapp.com/ --user-dat
 # StartupWMClass o turetilmis ada bakar; --class yazmak calisiyormus izlenimi
 # verirdi.
 StartupWMClass=chrome-web.whatsapp.com__-Default
-Icon=google-chrome
+# Tema ikonu, depoda dosya yok: Qogir-Dark bu adi kendi cozuyor (olculdu ->
+# /usr/share/icons/Qogir-Dark/scalable/apps/web-whatsapp.svg). Mutlak yol
+# yazilmadigi icin tema degisince ikon da degisir, kirilmaz.
+Icon=web-whatsapp
 Terminal=false
 Categories=Network;InstantMessaging;
