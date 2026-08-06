@@ -10,5 +10,6 @@
     "pyright-lsp@claude-plugins-official": true
   },
   "theme": "auto",
-  "disableDeepLinkRegistration": "disable"
+  "disableDeepLinkRegistration": "disable",
+  "enableWorkflows": true
 }
