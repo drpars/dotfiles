@@ -1,0 +1,22 @@
+/*******************************************************************************
+ * Tokyonight (Night) — tum rofi temalarinin ortak paleti.
+ *
+ * Buradaki degerler alti temanin hepsinde birebir tekrarlaniyordu; bir rengi
+ * degistirmek alti dosyayi duzenlemek demekti. `@import` yolu, IMPORT EDEN
+ * dosyanin dizinine gore cozulur -- bu dosya onlarla ayni dizinde durdugu
+ * surece cikplak ad yeter.
+ *
+ * Yalnizca RENK tanimlari buraya girer. `border`/`margin`/`padding`/`spacing`
+ * sifirlamalari her temanin kendi `*` blogunda kalir: onlar palet degil duzen,
+ * ve temalar arasinda ayni degildir.
+ *******************************************************************************/
+
+* {
+    tn-bg:      #1a1b26;    /* Ana arka plan */
+    tn-bg-alt:  #24283b;    /* Alternatif arka plan (inputbar vb.) */
+    tn-fg:      #c0caf5;    /* Ana metin */
+    tn-fg-dim:  #a9b1d6;    /* Soluk metin -- liste ogesinin normal durumu */
+    tn-fg-alt:  #565f89;    /* Pasif metin (placeholder) */
+    tn-accent:  #b4befe;    /* Vurgu: lavanta */
+    tn-urgent:  #f7768e;    /* Uyari */
+}

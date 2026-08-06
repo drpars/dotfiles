@@ -4,20 +4,23 @@
  *******************************************************************************/
 
 configuration {
-    modi:                    "drun";
+    /* `modi:` bilerek yok. wallselect rofi'yi `-dmenu` ile cagiriyor; mod
+       bayraktan geliyor ve buradaki deger hicbir zaman okunmuyordu. */
     show-icons:              true;
     drun-display-format:     "{name}";
-    font:                    "JetBrainsMono NF Bold 11";
+    font:                    "Ubuntu Nerd Font 11";
+
+    /* Dokunulmadan 10 sn gecerse kapanir -- diger temalarla ayni deger. */
+    timeout {
+        delay:  10;
+        action: "kb-cancel";
+    }
 }
 
-//----- Global Properties (Lavanta Colors) -----//
+/* Renk paleti ortak dosyada: colors.rasi */
+@import "colors.rasi"
 
 * {
-    main-bg:             #1a1b26ff;
-    main-fg:             #cdd6f4ff;
-    main-br:             #b4befeff;
-    select-bg:           #b4befeff;
-    select-fg:           #11111bff;
     separatorcolor:      transparent;
     border-color:        transparent;
 }
@@ -33,7 +36,7 @@ window {
     padding:             0px;
     border:              1px;
     border-radius:       20px;
-    border-color:        @main-br; 
+    border-color:        @tn-accent; 
     background-color:    transparent;
     location:            center;
 }
@@ -43,7 +46,7 @@ window {
 mainbox {
     enabled:             true;
     children:            [ "listview" ]; 
-    background-color:    @main-bg;
+    background-color:    @tn-bg;
 }
 
 //----- Listview (İkon Listesi) -----//
@@ -60,7 +63,7 @@ listview {
     fixed-height:        true;
     fixed-columns:       true;
     background-color:    transparent;
-    text-color:          @main-fg;
+    text-color:          @tn-fg;
 }
 
 //----- Elements (Uygulama İkonları) -----//
@@ -72,14 +75,14 @@ element {
     padding:             10px; 
     border-radius:       20px;
     background-color:    transparent;
-    text-color:          @main-fg;
+    text-color:          @tn-fg;
     border:              0px;
 }
 
 /* --- Seçili Öğe: TAM ARKA PLAN DOLGUSU --- */
 element selected.normal {
-    background-color:    @select-bg;
-    text-color:          @select-fg;
+    background-color:    @tn-accent;
+    text-color:          @tn-bg;
     border:              0px;
     border-radius:       20px;
 }

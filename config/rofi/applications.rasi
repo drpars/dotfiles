@@ -3,21 +3,15 @@
  * Theme: Tokyonight (Night) with LAVENDER Accent
  *******************************************************************************/
 
-* {
-    /* --- Tokyonight Renk Paleti --- */
-    tn-bg:          #1a1b26;    /* Ana Arka Plan */
-    tn-bg-alt:      #24283b;    /* Alternatif Arka Plan (Input bar) */
-    tn-fg:          #c0caf5;    /* Ana Metin Rengi */
-    tn-fg-alt:      #565f89;    /* Pasif/Sönük Metin */
-    tn-accent:      #b4befe;    /* YENİ VURGU RENGİ: Lavanta (Çok daha açık) */
-    tn-urgent:      #f7768e;    /* Uyarı Rengi */
+/* Renk paleti ortak dosyada: colors.rasi */
+@import "colors.rasi"
 
+* {
     /* --- Genel Değişkenler --- */
     border:         0;
     margin:         0;
     padding:        0;
     spacing:        0;
-    dpi:            96;
 
     background-color: @tn-bg;
     text-color:       @tn-fg;

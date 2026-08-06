@@ -10,11 +10,11 @@ reboot="<span size='120%'>󰜉</span>  Yeniden başlat"
 shutdown="<span size='120%'>󰐥</span>  Kapat"
 
 chosen=$(printf '%s\n' "$lock" "$suspend" "$hibernate" "$logout" "$reboot" "$shutdown" \
-    | rofi -dmenu -i -markup-rows -p "Güç" -theme "$THEME")
+    | rofi -replace -dmenu -i -markup-rows -p "Güç" -theme "$THEME")
 
 # Yıkıcı eylemler için onay (Evet/Hayır dikey)
 confirm() {
-    [ "$(printf 'Evet\nHayır' | rofi -dmenu -i -p "$1" \
+    [ "$(printf 'Evet\nHayır' | rofi -replace -dmenu -i -p "$1" \
         -theme "$THEME" -theme-str 'listview { lines: 2; }')" = "Evet" ]
 }
 

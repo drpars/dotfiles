@@ -3,16 +3,10 @@
  * Theme Focus: Minimal list for quick window selection.
  */
 
-* {
-  /* Tokyo Night Renk Paleti */
-  background: #1a1b26;         /* Çok Koyu Arka Plan */
-  background-alt: #24283b;     /* Seçili Arka Plan / Alternatif */
-  foreground: #c0caf5;         /* Genel Metin (Parlak) */
-  selected-foreground: #1a1b26;/* Seçili Öğede Metin (Koyu) */
-  normal-foreground: #a9b1d6;  /* Normal Öğede Metin (Soluk) */
-  border-color: #b4befe;       /* Vurgu/Çerçeve Rengi (Lavanta Mavi) */
-  accent: #7aa2f7;             /* İkincil Vurgu (Mavi) */
+/* Renk paleti ortak dosyada: colors.rasi */
+@import "colors.rasi"
 
+* {
   /* Temel Sıfırlamalar */
   border: 0;
   margin: 0;
@@ -22,6 +16,16 @@
 
 configuration {
   font: "Ubuntu Nerd Font 11";
+
+  /* Dokunulmadan 10 sn gecerse kendini kapatir. Sayac etkilesimle sifirlanir
+     (man rofi, "Timeout"). Ayni deger applications.rasi ve menu.rasi'de de
+     yazili -- ucu de ayni davranissin diye. Bu dosya ALT+TAB disinda
+     cliphist (ALT+CTRL+V) ve alias (ALT+A) menulerinde de kullaniliyor,
+     timeout uclunun hepsine birden uygulanir. */
+  timeout {
+      delay:  10;
+      action: "kb-cancel";
+  }
 }
 
 /* 1. ANA PENCERE (ROFI'NİN ÇERÇEVESİ) */
@@ -32,10 +36,10 @@ window {
   x-offset: 0;
   y-offset: 0;
   
-  background-color: @background;
+  background-color: @tn-bg;
   border: 1px;
   border-radius: 8px;
-  border-color: @border-color;
+  border-color: @tn-accent;
   padding: 10px;
 }
 
@@ -58,7 +62,7 @@ listview {
   dynamic: true;
   scrollbar: false;
   
-  background-color: @background;
+  background-color: @tn-bg;
 }
 
 /* 5. ÖĞELER (PENCERE BAŞLIKLARI) */
@@ -71,19 +75,19 @@ element {
 
 /* Normal Durum */
 element normal {
-  background-color: @background;
-  text-color: @normal-foreground;
+  background-color: @tn-bg;
+  text-color: @tn-fg-dim;
 }
 
 /* Seçili (Vurgulu) Durum */
 element selected {
-  background-color: @border-color; /* Lavanta Mavi Vurgu */
-  text-color: @selected-foreground; /* Koyu Metin */
+  background-color: @tn-accent; /* Lavanta Mavi Vurgu */
+  text-color: @tn-bg; /* Koyu Metin */
 }
 
 element alternate {
-  background-color: @background;
-  text-color: @normal-foreground;
+  background-color: @tn-bg;
+  text-color: @tn-fg-dim;
 }
 
 /* 6. İKON VE METİN STİLLERİ */

@@ -2,14 +2,10 @@
  * ROFI Power Menu — Tokyonight (Night) · Lavanta vurgulu · kompakt dikey liste
  *******************************************************************************/
 
-* {
-    tn-bg:      #1a1b26;
-    tn-bg-alt:  #24283b;
-    tn-fg:      #c0caf5;
-    tn-fg-alt:  #565f89;
-    tn-accent:  #b4befe;
-    tn-urgent:  #f7768e;
+/* Renk paleti ortak dosyada: colors.rasi */
+@import "colors.rasi"
 
+* {
     border:  0;
     margin:  0;
     padding: 0;
@@ -22,6 +18,15 @@
 configuration {
     font:       "Ubuntu Nerd Font 11";
     show-icons: false;
+
+    /* Dokunulmadan 10 sn gecerse kapanir -- diger temalarla ayni deger.
+       Burada ayrica guvenlik islevi var: acik kalmis bir guc menusunde
+       sonraki Enter "Kapat"a gidebilir. `confirm()` diyaloglari da bu
+       temayi kullandigi icin onlar da kapsanir. */
+    timeout {
+        delay:  10;
+        action: "kb-cancel";
+    }
 }
 
 window {

@@ -13,7 +13,11 @@ hl.bind(M .. " + Y",      hl.dsp.exec_cmd(_G.terminal .. " yazi"))
 
 -- ── Pencere Yönetimi ───────────────────────────────
 hl.bind(M .. " + Q",               hl.dsp.window.close())
-hl.bind(M .. " + SHIFT + Q",       hl.dsp.exec_cmd("hyprctl dispatch exit"))
+-- Dogrudan dispatcher; kabuk dogurulmuyor. Onceki hali
+-- `exec_cmd("hyprctl dispatch exit")` idi ve OLUYDU: hyprctl klasik bicimi Lua
+-- ayristiricisinda `hl.dispatch(exit)`'e ceviriyor, `exit` global bir ad
+-- olmadigi icin nil gidiyor ve komut rc=7 ile dusuyordu (olculdu 2026-08-06).
+hl.bind(M .. " + SHIFT + Q",       hl.dsp.exit())
 hl.bind(M .. " + V",               hl.dsp.window.float({ action = "toggle" }))
 hl.bind(M .. " + F",               hl.dsp.window.fullscreen({ action = "toggle" }))
 
@@ -29,7 +33,7 @@ hl.bind(M .. " + J",               hl.dsp.layout("togglesplit"))
 
 -- ── Uygulama Başlatıcılar ──────────────────────────
 hl.bind(M .. " + R",                    hl.dsp.exec_cmd(_G.menu))
-hl.bind(A .. " + " .. C .. " + V",      hl.dsp.exec_cmd("cliphist list | rofi -dmenu -theme " .. _G.rofiDir .. "/window.rasi | cliphist decode | wl-copy"))
+hl.bind(A .. " + " .. C .. " + V",      hl.dsp.exec_cmd("cliphist list | rofi -replace -dmenu -theme " .. _G.rofiDir .. "/window.rasi | cliphist decode | wl-copy"))
 hl.bind(A .. " + A",                    hl.dsp.exec_cmd('zsh -i -c "alias | rofi -dmenu -replace -theme ' .. _G.rofiDir .. '/window.rasi 2> /dev/null"'))
 hl.bind(A .. " + TAB",                  hl.dsp.exec_cmd(_G.scriptsDir .. "/windowswitch"))
 

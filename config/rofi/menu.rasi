@@ -3,15 +3,10 @@
  * Theme: Tokyonight (Night Version) - LAVANTA VURGULU
  *******************************************************************************/
 
+/* Renk paleti ortak dosyada: colors.rasi */
+@import "colors.rasi"
+
 * {
-    /* Tokyonight Renk Paleti */
-    tn-bg:          #1a1b26;    /* Ana Arka Plan */
-    tn-bg-alt:      #24283b;    /* Alternatif Arka Plan (Input bar vb.) */
-    tn-fg:          #c0caf5;    /* Ana Yazı Rengi */
-    tn-fg-alt:      #565f89;    /* Sönük Yazı Rengi */
-    tn-accent:      #b4befe;    /* YENİ VURGU RENGİ (Lavanta/Açık Mor) */
-    tn-urgent:      #f7768e;    /* Acil Durum (Kırmızı) */
-    
     /* Genel Ayarlar */
     border:         0;
     margin:         0;
