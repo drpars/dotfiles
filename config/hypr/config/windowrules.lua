@@ -71,3 +71,20 @@ hl.window_rule({
     match     = { class = "scratch-term" },
     workspace = "special:terminal silent",
 })
+
+-- ── Waybar tiklamasiyla acilan TUI pencereleri ─────
+-- Bunlar scratchpad DEGIL: special workspace de toggle da yok. Istenen sey
+-- yalnizca "hep ayni geometride acilsin"di ve onu veren sey special alan degil
+-- asagidaki float/center/size ucludur -- zenity ve Tk kurallariyla ayni desen.
+-- Toggle olmadan special alana konsalardi pencereler hic gorunmezdi.
+-- Sinif ORTAK: dordu de ayni geometriyi paylastigi icin tek kural yetiyor;
+-- biri ayrisirsa sinif o zaman bolunur. Sinif modules.json'daki bes cagrida
+-- `--class=tui-popup` ile veriliyor (bluetui, impala, btop x2, nvtop), ikisi
+-- birlikte degisir. "kitty" yazilamaz -- SUPER+RETURN terminallerini de
+-- yakalardi.
+hl.window_rule({
+    match  = { class = "tui-popup" },
+    float  = true,
+    center = true,
+    size   = { 1536, 864 },
+})
