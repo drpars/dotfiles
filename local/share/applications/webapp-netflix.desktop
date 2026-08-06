@@ -1,0 +1,22 @@
+[Desktop Entry]
+Type=Application
+Name=Netflix
+Comment=Netflix Turkiye (Chrome uygulama kipi)
+# Elle yazildi. Bicim ve ~ / \\$ kacis tuzagi icin bkz.
+# webapp-whatsapp.desktop.
+#
+# URL'deki SON EGIK CIZGI onemli: Chrome app_id'yi URL'den turettigi icin
+# .../tr/ ile .../tr FARKLI sinif uretir. Olculen sinif sondaki cizgiyle
+# uyumlu (__tr_), o yuzden URL kisaltilmaz.
+#
+# Turkiye'de erisilebilir oldugu olculdu (2026-08-06): sayfa 200 donuyor,
+# baslik "Netflix Turkiye" ve ciplak netflix.com bu IP'den /tr-en/'e
+# yonlendiriyor -- yani konum Turkiye olarak taniniyor.
+Exec=sh -c "exec google-chrome-stable --app=https://www.netflix.com/tr/ --user-data-dir=\\$HOME/.local/share/webapps/netflix"
+StartupWMClass=chrome-www.netflix.com__tr_-Default
+# Sitenin en buyuk varligi 64x64 (ico'lardaki kareler PIL ile okundu: 48 ve
+# 64, daha buyugu yok). 64 hicolor'in ILAN ETTIGI bir boyut, o yuzden
+# olceklenmeden konuldu.
+Icon=webapp-netflix
+Terminal=false
+Categories=AudioVideo;Video;

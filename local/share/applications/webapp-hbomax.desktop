@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Name=HBO Max
+Comment=HBO Max Turkiye (Chrome uygulama kipi)
+# Elle yazildi. Bicim ve ~ / \\$ kacis tuzagi icin bkz.
+# webapp-whatsapp.desktop.
+#
+# URL, 2026-08-05'te silinen WebApp-HBOmax1475.desktop'tan devralindi
+# (git 88dca9f^). O girdi chromium cagirdigi icin oluydu; URL'in kendisi
+# hala gecerli: /tr/tr 200 donuyor, sayfanin dili tr ve basligi BluTV
+# icerigini sayiyor -- yani Turkiye vitrini canli (olculdu 2026-08-06).
+# max.com/tr/tr da buraya yonleniyor, kisa adres kullanilmadi.
+Exec=sh -c "exec google-chrome-stable --app=https://www.hbomax.com/tr/tr --user-data-dir=\\$HOME/.local/share/webapps/hbomax"
+StartupWMClass=chrome-www.hbomax.com__tr_tr-Default
+# Sitenin apple-touch-icon'u 180x180; 180 hicolor'in ilan ettiklerinden
+# degil, o yuzden 128'e KUCULTULDU (buyutme yapilmaz -- bkz. NOTLAR tuzaklar).
+Icon=webapp-hbomax
+Terminal=false
+Categories=AudioVideo;Video;
