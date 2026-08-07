@@ -1,0 +1,31 @@
+[Desktop Entry]
+Type=Application
+Name=YouTube
+Comment=YouTube (Chrome uygulama kipi)
+# Elle yazildi. Bicim ve ~ / \\$ kacis tuzagi icin bkz.
+# webapp-whatsapp.desktop.
+#
+# Bu girdi de special workspace'e BAGLANMAZ (bkz. webapp-primevideo.desktop):
+# izleme yuzeyi, toggle yuzeyi degil.
+#
+# Turkiye'den gercekten aciliyor (olculdu 2026-08-07): www.youtube.com/ 200
+# donuyor ve sayfa "GL":"TR" + "hl":"tr" ile geliyor -- konum Turkiye olarak
+# taniniyor.
+#
+# URL'deki SON EGIK CIZGI onemli (bkz. webapp-netflix.desktop): Chrome app_id'yi
+# URL'den turettigi icin .../ ile ... farkli sinif uretir.
+Exec=sh -c "exec google-chrome-stable --app=https://www.youtube.com/ --user-data-dir=\\$HOME/.local/share/webapps/youtube"
+StartupWMClass=chrome-www.youtube.com__-Default
+# Kurulu temalarda YouTube UYGULAMA ikonu yok: Qogir ailesindeki tek eslesme
+# `im-youtube` ve o bir Actions ikonu -- 24 px Type=Fixed, ustelik logo degil
+# genel bir oynatici glifi. O yuzden depoya kondu:
+# local/share/icons/hicolor/128x128/apps/webapp-youtube.png
+#
+# Sitenin verdigi en buyuk varlik 144x144 (favicon_144x144.png). 144
+# hicolor'in ILAN ETTIGI boyutlardan degil, o yuzden 128'e KUCULTULDU --
+# hbomax'ta izlenen yolun aynisi. Native 96 da vardi ve o ilan edilen bir
+# boyut; en buyuk varliktan kuculterek inmek tercih edildi.
+# Icon= ADI yazar, mutlak yol degil (~/.local/share/icons depoya symlink).
+Icon=webapp-youtube
+Terminal=false
+Categories=AudioVideo;Video;
