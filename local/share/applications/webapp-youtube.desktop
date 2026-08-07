@@ -16,16 +16,16 @@ Comment=YouTube (Chrome uygulama kipi)
 # URL'den turettigi icin .../ ile ... farkli sinif uretir.
 Exec=sh -c "exec google-chrome-stable --app=https://www.youtube.com/ --user-data-dir=\\$HOME/.local/share/webapps/youtube"
 StartupWMClass=chrome-www.youtube.com__-Default
-# Kurulu temalarda YouTube UYGULAMA ikonu yok: Qogir ailesindeki tek eslesme
-# `im-youtube` ve o bir Actions ikonu -- 24 px Type=Fixed, ustelik logo degil
-# genel bir oynatici glifi. O yuzden depoya kondu:
-# local/share/icons/hicolor/128x128/apps/webapp-youtube.png
+# Tema ikonu, depoda dosya YOK -- webapp-whatsapp.desktop ile ayni yol.
+# Aktif tema adi kendi cozuyor (olculdu, Gtk.IconTheme.lookup_icon):
+# /usr/share/icons/Qogir-Dark/scalable/apps/youtube.svg (Qogir'e symlink).
+# Diger dort web app depoya ikon koydu cunku onlarin ikonu KURULU HICBIR
+# TEMADA yoktu; bu adin oyle bir sorunu yok: 24 tema dizininden 13'u cozuyor
+# (Qogir ailesi + Tokyonight ailesi), yani `web-whatsapp`ten (9) daha genis.
+# Mutlak yol yazilmadigi icin tema degisince ikon da degisir, kirilmaz.
 #
-# Sitenin verdigi en buyuk varlik 144x144 (favicon_144x144.png). 144
-# hicolor'in ILAN ETTIGI boyutlardan degil, o yuzden 128'e KUCULTULDU --
-# hbomax'ta izlenen yolun aynisi. Native 96 da vardi ve o ilan edilen bir
-# boyut; en buyuk varliktan kuculterek inmek tercih edildi.
-# Icon= ADI yazar, mutlak yol degil (~/.local/share/icons depoya symlink).
-Icon=webapp-youtube
+# `im-youtube` DEGIL: o Qogir'de Actions baglaminda, 24 px Type=Fixed ve logo
+# degil genel bir oynatici glifi. Ad secilirken baglam da bakilir.
+Icon=youtube
 Terminal=false
 Categories=AudioVideo;Video;
