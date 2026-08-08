@@ -74,12 +74,18 @@ bat_uwh() {
 # olculdu), `read` ya aninda EOF okur ya da gorunmez bicimde asilir.
 # Bicim depoda zaten var: scripts/powermenu confirm(). Rofi ya da tema yoksa
 # ENGELLENMEZ -- bu bir hatirlatici, kapi degil.
+#
+# Tema confirm.rasi, powermenu.rasi DEGIL: ikincisinde mainbox yalnizca
+# listview ciziyor, yani sorulan sey hic gorunmuyordu -- ekranda "Evet / Hayir"
+# duruyor ve neye cevap verildigi belli olmuyordu (olculdu 2026-08-08, grim).
+# Soru -mesg ile veriliyor, -p ile DEGIL: prompt satir kaydirmaz ve tasan
+# metni elipssiz, sessizce keser. Olcumler confirm.rasi'nin basinda.
 confirm() {
-  local tema="$HOME/.config/rofi/powermenu.rasi"
+  local tema="$HOME/.config/rofi/confirm.rasi"
   command -v rofi >/dev/null 2>&1 || return 0
   [ -r "$tema" ] || return 0
-  [ "$(printf 'Evet\nHayır' | rofi -replace -dmenu -i -p "$1" \
-       -theme "$tema" -theme-str 'listview { lines: 2; }')" = "Evet" ]
+  [ "$(printf 'Evet\nHayır' | rofi -replace -dmenu -i -mesg "$1" \
+       -theme "$tema")" = "Evet" ]
 }
 
 note() {

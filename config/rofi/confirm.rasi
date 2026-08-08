@@ -1,0 +1,46 @@
+/*******************************************************************************
+ * ROFI Confirm — Evet/Hayır onay diyalogu
+ *
+ * powermenu.rasi'yi DEVRALIR (palet, yazi tipi, kenarlik, 10 sn timeout) ve
+ * yalnizca tek bir seyi degistirir: SORU METNI GORUNUR OLUR.
+ *
+ * Neden ayri dosya: powermenu.rasi'de `mainbox { children: [ listview ]; }`
+ * yaziyor, yani ne inputbar ne message ciziliyor. Onay diyaloglari o temayi
+ * kullandigi icin sorulan sey hic gorunmuyordu -- ekranda yalnizca "Evet /
+ * Hayir" duruyordu ve neye cevap verildigi belli degildi (olculdu 2026-08-08,
+ * grim ile). Duzeltme cagri yerine -theme-str olarak yazilabilirdi ama iki
+ * betikte (scripts/win, scripts/powermenu) ayni dizeyi tekrarlardi; depodaki
+ * karar zaten "rofi ayarinin adresi tema dosyasidir".
+ *
+ * Metin kanali -mesg, -p DEGIL. Olculdu: prompt (inputbar) satir kaydirmaz ve
+ * tasan metni ELIPSSIZ, SESSIZCE keser -- 30em'de ~78 karakterden sonrasi yok
+ * olur. message widget'i kaydirir; 95 karakterlik soru iki satira sarilarak
+ * tam gorundu. Bu yuzden soru uzunlugu icin bir sinir yazilmiyor.
+ *
+ * -mesg Pango isaretlemesi yorumlar: soru metninde `&` ve `<` kacisli
+ * yazilmali (`&amp;`, `&lt;`), yoksa metin cizilmez.
+ *******************************************************************************/
+
+@import "powermenu.rasi"
+
+/* 14em (powermenu genisligi) tek kelimelik menu icin dogru, cumle icin degil:
+   soru orada 3-4 satira sarilirdi. 30em, olculen en uzun soruyu
+   ("Dizustu pilde, 45,2 Wh (~32 dk). Misafir baslatilsin mi?") tek satirda
+   tutuyor. */
+window {
+    width: 30em;
+}
+
+mainbox {
+    children: [ message, listview ];
+}
+
+/* Iki secenek: Evet / Hayir. Cagri yerinde -theme-str ile tekrar edilmesin. */
+listview {
+    lines: 2;
+}
+
+/* message'in ic widget'i. Alt bosluk soruyu listeden ayirir. */
+textbox {
+    padding: 4px 6px 10px 6px;
+}

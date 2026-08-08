@@ -12,10 +12,17 @@ shutdown="<span size='120%'>󰐥</span>  Kapat"
 chosen=$(printf '%s\n' "$lock" "$suspend" "$hibernate" "$logout" "$reboot" "$shutdown" \
     | rofi -replace -dmenu -i -markup-rows -p "Güç" -theme "$THEME")
 
-# Yıkıcı eylemler için onay (Evet/Hayır dikey)
+# Yıkıcı eylemler için onay (Evet/Hayır dikey).
+#
+# Tema CONFIRM_THEME, THEME değil: powermenu.rasi'de mainbox yalnızca listview
+# çiziyor, yani soru metni hiç görünmüyordu — "Kapatılsın mı?" ekrana gelmiyor,
+# yalnızca Evet/Hayır duruyordu (ölçüldü 2026-08-08, grim). Burada bağlam bunu
+# örtüyordu (bir önceki menüde "Kapat" seçilmişti); `win` çağırınca örtü kalktı.
+# Soru -mesg ile veriliyor, -p ile değil — gerekçe confirm.rasi'nin başında.
+CONFIRM_THEME="$HOME/.config/rofi/confirm.rasi"
 confirm() {
-    [ "$(printf 'Evet\nHayır' | rofi -replace -dmenu -i -p "$1" \
-        -theme "$THEME" -theme-str 'listview { lines: 2; }')" = "Evet" ]
+    [ "$(printf 'Evet\nHayır' | rofi -replace -dmenu -i -mesg "$1" \
+        -theme "$CONFIRM_THEME")" = "Evet" ]
 }
 
 case "$chosen" in
