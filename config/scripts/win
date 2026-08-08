@@ -18,6 +18,70 @@ DOMAIN=win11
 VIRSH=(virsh --connect=qemu:///system)
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/win/client.log"
 
+# Yuk altinda OLCULEN cekis (2026-08-08, bu makine, pilde, misafir + dGPU
+# calisirken WebGL + 8 is parcacigi): ortalama 84,9 W, tepe 85,5 W. Boslukta
+# ana makine 30 W, misafir bosta 33-37 W -- yani devrin bostaki maliyeti ~5 W,
+# fark yuk altinda doguyor. Asagidaki tahmin bu sabite bolerek yapiliyor:
+# baslatma aninda power_now'a bakmak ~30 W okur ve fahis iyimser bir sure verir.
+YUK_WATT=85
+
+# "Pilde miyiz" -- 0 = evet (sorulur), 1 = hayir ya da bilinmiyor (sorulmaz).
+#
+# type=Mains filtresi SART: */online uzerinde ilk buldugunu alan bir dongu
+# USB-C saglayicisini (ucsi-source-psy-*, online=0) yakalayip fisteyken bile
+# "pilde" derdi ve readdir sirasi garanti degil -- ayni tuzak waybar'in
+# adaptor seciminde bir kez olculmustu.
+# scope=Device olanlar elenir, ama kontrol "eksikse kabul et" biciminde:
+# ADP0'da scope dosyasi HIC YOK, sart kosulsaydi ADP0 elenir ve betik her
+# zaman "pilde" derdi.
+# BAT0/status proxy olarak KULLANILMAZ: sarj siniri (70) yuzunden fise takili
+# haldeyken de "Not charging" yaziyor (olculdu).
+# Mains saglayicisi HIC yoksa (masaustu) soru sorulmaz -- hatirlaticinin
+# soyleyecegi bir sey yok.
+on_battery() {
+  local mains=0 ps t s o
+  for ps in /sys/class/power_supply/*; do
+    [ -r "$ps/type" ] && [ -r "$ps/online" ] || continue
+    read -r t < "$ps/type" || continue
+    [ "$t" = Mains ] || continue
+    s=''; [ -r "$ps/scope" ] && read -r s < "$ps/scope"
+    [ "$s" = Device ] && continue
+    mains=1
+    read -r o < "$ps/online" || continue
+    [ "$o" = 1 ] && return 1
+  done
+  [ "$mains" = 1 ]
+}
+
+# Pildeki kalan enerjiyi uWh olarak basar. Bulamazsa 1 doner ve cagiran taraf
+# tahmini mesajdan cikarir -- pil enerji yerine yuk (charge_now, uAh) da
+# raporlayabilir, o durumda sayi uydurulmaz.
+bat_uwh() {
+  local ps t e
+  for ps in /sys/class/power_supply/*; do
+    [ -r "$ps/type" ] || continue
+    read -r t < "$ps/type" || continue
+    [ "$t" = Battery ] || continue
+    [ -r "$ps/energy_now" ] || continue
+    read -r e < "$ps/energy_now" || continue
+    echo "$e"; return 0
+  done
+  return 1
+}
+
+# Grafik onay. Metin sorusu OLMAZ: menuden baslatildiginda stdin ve tty yok
+# (Hyprland cocuklarina fd1=fd2=/dev/null veriyor, rofi miras veriyor --
+# olculdu), `read` ya aninda EOF okur ya da gorunmez bicimde asilir.
+# Bicim depoda zaten var: scripts/powermenu confirm(). Rofi ya da tema yoksa
+# ENGELLENMEZ -- bu bir hatirlatici, kapi degil.
+confirm() {
+  local tema="$HOME/.config/rofi/powermenu.rasi"
+  command -v rofi >/dev/null 2>&1 || return 0
+  [ -r "$tema" ] || return 0
+  [ "$(printf 'Evet\nHayır' | rofi -replace -dmenu -i -p "$1" \
+       -theme "$tema" -theme-str 'listview { lines: 2; }')" = "Evet" ]
+}
+
 note() {
   echo "win: $*"
   if command -v notify-send >/dev/null 2>&1; then
@@ -39,6 +103,10 @@ Kullanim: win [SECENEK]
 
   -w, --windowed   Istemciyi pencereli ac (varsayilan: tam ekran)
   -h, --help       Bu yardimi goster
+
+Misafir KAPALIYKEN ve makine pildeyken bir onay sorusu cikar (rofi). Kapi
+degil hatirlatici: kalan sureyi soyler, karar sende. Zaten kosan bir misafirin
+ekranini acarken sorulmaz.
 
 Istemci gunlugu: ~/.cache/win/client.log -- her acilista uzerine yazilir,
 teshis edilen sey son kosudur.
@@ -65,6 +133,35 @@ state=$("${VIRSH[@]}" domstate "$DOMAIN" 2>&1) \
   || die "libvirt'e ulasilamadi (qemu:///system): $state"
 
 if [ "$state" != "running" ]; then
+  # Pil hatirlaticisi -- KAPI DEGIL. Karar kullanicida kalir; betik yalnizca
+  # olculmus bir olguyu, onemli oldugu anda yuzeye cikarir.
+  #
+  # Neden engellemiyor: "pilde calistirmak kotudur" onermesi bu makinede hic
+  # olculmemisti ve olculdugunde iki ucun ortasina dustu -- tam sarjda ~47 dk.
+  # Engellemeyi hakli cikarmayacak kadar uzun (kullanici bilerek isteyebilir),
+  # sessiz kalmayi hakli cikarmayacak kadar kisa.
+  #
+  # Neden BURADA, betigin basinda degil: `win` misafir zaten kosarken yalnizca
+  # istemciyi aciyor. O yol hicbir dGPU devri tetiklemiyor ve paylasilan
+  # bellekten okuyup iGPU'da cizen bir goruntuleyiciden ibaret -- orada pil
+  # sormak koşan bir VM'in ekranina erisimi gereksiz yere zorlastirirdi.
+  #
+  # Kapsam sinirli ve bu bilerek: paketin kendi looking-glass-client.desktop
+  # girdisi, rofi'nin `run` kipi ve dogrudan `virsh start` bu adimi hic gormez.
+  # Bir kapi icin bu olumcul bir kusur olurdu; bilgi sunan bir hatirlatici icin
+  # degil.
+  if on_battery; then
+    mesaj="Dizüstü pilde"
+    if uwh=$(bat_uwh); then
+      mesaj="$mesaj, $(awk -v e="$uwh" -v w="$YUK_WATT" \
+        'BEGIN{printf "%.1f Wh (~%.0f dk)", e/1e6, (e/1e6/w)*60}')"
+    fi
+    confirm "$mesaj. Misafir başlatılsın mı?" || {
+      echo "win: pilde baslatma iptal edildi"
+      exit 0
+    }
+  fi
+
   out=$("${VIRSH[@]}" start "$DOMAIN" 2>&1) || die "misafir baslatilamadi: $out"
   # 13 sn eski betikten devralindi ve HALA YENIDEN OLCULMEDI -- ama eski
   # yorumun gerekcesi yanlisti: "istemci yanlis hedefe bakinca bekler, yani
