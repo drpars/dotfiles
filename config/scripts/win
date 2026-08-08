@@ -169,17 +169,34 @@ if [ "$state" != "running" ]; then
   fi
 
   out=$("${VIRSH[@]}" start "$DOMAIN" 2>&1) || die "misafir baslatilamadi: $out"
-  # 13 sn eski betikten devralindi ve HALA YENIDEN OLCULMEDI -- ama eski
-  # yorumun gerekcesi yanlisti: "istemci yanlis hedefe bakinca bekler, yani
-  # misafir kapaliymis gibi gorunur" deniyordu. B7 kaynagi bunu curutuyor
-  # (main.c:1485-1511): konak uygulamasi karsida degilse istemci OLMUYOR,
-  # "Waiting for the host application to start..." yazip suresiz bekliyor.
-  # Geriye kalan gerekce kozmetik (kullanici bos pencere gormesin) ve o da
-  # olculmedi. Asagidaki gunluk bu sayiyi ILK KEZ olculebilir kiliyor: ilk
-  # "Waiting for..." satiri ile ilk kare arasindaki sure. Olculmeden
-  # degistirilmiyor.
-  note "Misafir onyukleniyor, pencere ~13 sn icinde gelecek."
-  sleep 13
+  # ESKI BETIKTEN DEVRALINAN `sleep 13` KALDIRILDI -- iki kosu olculdu.
+  #
+  # Uyku, istemciyi "misafir hazir olana kadar" geciktirdigini sanan bir
+  # gerekceyle konmustu. Gerekcenin ikisi de curudu:
+  #
+  # A) BEKLEME ZATEN ISTEMCININ ICINDE. Konak uygulamasi karsida degilse
+  #    istemci olmuyor, suresiz bekliyor (main.c:1485-1517).
+  # B) UYKU HICBIR SEY KAZANDIRMIYOR. Resme kadar gecen toplam sure ikisinde
+  #    de ayni -- belirleyen sey misafirin onyuklemesi:
+  #      uykuyla    (pilde) : virsh donusu + 13 + 9,0  = ~22,0 sn
+  #      uykusuz    (AC)    : virsh donusu +      20,6 = ~20,6 sn
+  #    Kazanilan sey PENCERENIN ACILDIGI AN: 13 sn hiclik yerine <1 sn.
+  #    Ustelik istemci 1 sn sonra SPICE ekranina duserek (main.c:1450-1456,
+  #    misafirde QXL var) misafirin gercek onyukleme ekranini gosteriyor.
+  #
+  # Uykunun SESSIZCE ORTTUGU tek gercek risk olculdu ve yok: SPICE baglantisi
+  # kurulamazsa istemci beklemiyor, KAPANIYOR (main.c:1042-1046 -> SHUTDOWN).
+  # Ama 127.0.0.1:5900 `virsh start` DONMEDEN once dinlemeye basliyor
+  # (olculdu: port t0+3,52 sn, virsh donusu t0+5,34 sn) -- yani istemci hicbir
+  # zaman erken degil. Bu sira degisirse (baska makine, farkli libvirt) burasi
+  # yeniden olculur; belirti "istemci acilir acilmaz kapaniyor" olur.
+  #
+  # Beklenen ama zarasiz: istemci ilk yarim saniyede "Host Application Not
+  # Running / Continuing to wait..." bilgi kutusu aciyor. Esik 30 tur ama
+  # `ds->wait(1000)` Wayland olaylarinda erken donduğu icin turlar 0,4 sn'de
+  # doluyor -- yani uykudan bagimsiz, uykuyla da cikiyordu. Konak uygulamasi
+  # baglaninca kutuyu istemci kendisi kapatiyor (main.c:1582-1587).
+  note "Misafir onyukleniyor, pencere birazdan gelecek."
 fi
 
 mkdir -p "${LOG%/*}" || die "gunluk dizini olusturulamadi: ${LOG%/*}"
