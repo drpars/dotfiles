@@ -5,30 +5,117 @@
 # win11.desktop bunu cagirir, boylece davranis tek yerde tanimli kalir.
 # Eski config/scripts/others/win11'in yerini aldi; oradaki supergfxctl
 # kontrolu dustu (paket kullanimdan kalkti, bu makinede kurulu degil).
+#
+# GORUNURLUK -- bu dosyadaki her `die` ve bildirim cagrisinin sebebi:
+# menuden baslatildiginda bu betigin stdout/stderr'i KULLANICIYA ULASMIYOR.
+# Olculdu: Hyprland tum cocuklarina fd1=fd2=/dev/null veriyor ve rofi bunu
+# oldugu gibi miras veriyor. Yani duz `echo ... >&2` + `exit 1` menude
+# "ikona bastim, hicbir sey olmadi" diye gorunur ve teshis yolu birakmaz.
+# Kanal notify-send'dir; depoda zaten yerlesik desen (bkz. scripts/gamemode).
 set -u
 
 DOMAIN=win11
 VIRSH=(virsh --connect=qemu:///system)
+LOG="${XDG_CACHE_HOME:-$HOME/.cache}/win/client.log"
 
-state=$("${VIRSH[@]}" domstate "$DOMAIN" 2>/dev/null) || {
-  echo "win: libvirt'e ulasilamadi (qemu:///system)" >&2
+note() {
+  echo "win: $*"
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send "win" "$*"
+  fi
+}
+
+die() {
+  echo "win: $*" >&2
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send -u critical "win" "$*"
+  fi
   exit 1
 }
 
+usage() {
+  cat <<'EOF'
+Kullanim: win [SECENEK]
+
+  -w, --windowed   Istemciyi pencereli ac (varsayilan: tam ekran)
+  -h, --help       Bu yardimi goster
+
+Istemci gunlugu: ~/.cache/win/client.log -- her acilista uzerine yazilir,
+teshis edilen sey son kosudur.
+EOF
+}
+
+# `$1` yerine `$# -gt 0`: `set -u` altinda argumansiz cagride `[ "$1" = ... ]`
+# "unbound variable" ile duserdi.
+full=yes
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -w|--windowed) full=no ;;
+    -h|--help) usage; exit 0 ;;
+    # Bilinmeyen arguman LG'ye PAS GECILMEZ. LG taninmadigi argumani yalnizca
+    # uyarip devam ediyor (option.c:339-343 ve :407-412, cikis kodu 0), uyari
+    # da yukaridaki sebeple /dev/null'a gider -- yani `win --windowd` yazim
+    # hatasi sessizce tam ekran acardi.
+    *) die "bilinmeyen arguman: $1 (yardim: win --help)" ;;
+  esac
+  shift
+done
+
+state=$("${VIRSH[@]}" domstate "$DOMAIN" 2>&1) \
+  || die "libvirt'e ulasilamadi (qemu:///system): $state"
+
 if [ "$state" != "running" ]; then
-  "${VIRSH[@]}" start "$DOMAIN" || exit 1
-  # Misafir onyuklerken LG konak uygulamasi henuz karsi tarafta degil. 13 sn
-  # eski betikten devralindi, yeniden olculmedi -- calisan bir degeri sirf
-  # sadelesme ugruna riske atmamak icin duruyor. Misafir zaten acikken
-  # beklenmez, pencere aninda gelir.
-  echo "win: misafir onyukleniyor..."
+  out=$("${VIRSH[@]}" start "$DOMAIN" 2>&1) || die "misafir baslatilamadi: $out"
+  # 13 sn eski betikten devralindi ve HALA YENIDEN OLCULMEDI -- ama eski
+  # yorumun gerekcesi yanlisti: "istemci yanlis hedefe bakinca bekler, yani
+  # misafir kapaliymis gibi gorunur" deniyordu. B7 kaynagi bunu curutuyor
+  # (main.c:1485-1511): konak uygulamasi karsida degilse istemci OLMUYOR,
+  # "Waiting for the host application to start..." yazip suresiz bekliyor.
+  # Geriye kalan gerekce kozmetik (kullanici bos pencere gormesin) ve o da
+  # olculmedi. Asagidaki gunluk bu sayiyi ILK KEZ olculebilir kiliyor: ilk
+  # "Waiting for..." satiri ile ilk kare arasindaki sure. Olculmeden
+  # degistirilmiyor.
+  note "Misafir onyukleniyor, pencere ~13 sn icinde gelecek."
   sleep 13
 fi
 
-# -f: paylasilan bellek olarak kvmfr karakter cihazi. Bu yapimda (B7) zaten
-# varsayilan, ama surumler arasinda degisen bir varsayilana guvenilmiyor;
-# istemci yanlis hedefe bakinca "The host application seems to not be running"
-# satirinda bekler, yani misafir kapaliymis gibi gorunur.
-# -F borderless tam ekran, -S ekran koruyucuyu engeller (ikisi de eski betikten).
-# setsid -f: istemci terminalden koparilir, kabuk hemen geri doner.
-setsid -f looking-glass-client -F -S -f /dev/kvmfr0 >/dev/null 2>&1
+mkdir -p "${LOG%/*}" || die "gunluk dizini olusturulamadi: ${LOG%/*}"
+
+# Secenekler POZISYONEL bicimde ("modul:ad=deger"), kisa bayrak (-F/-S/-f)
+# olarak DEGIL. Sebep olculdu: LG'nin kisa bool bayraklari deger ATAMAZ,
+# mevcut degeri TERSINE CEVIRIR (option.c:414-419) ve bir sonraki argv'yi de
+# asla tuketmez (option.c:350) -- yani "-F yes" diye bir sey yok. Pozisyonel
+# bicim option_set ile acik atama yapiyor (option.c:372-405): idempotent, sira
+# bagimsiz, ve config/looking-glass/client.ini ile catismaz. Bu, --windowed
+# argumaninin calisabilmesinin de tek yolu.
+#
+# app:shmFile bu yapimda (B7) zaten varsayilan (ivshmem.c:94) ama surumler
+# arasinda degisen bir varsayilana guvenilmiyor: istemci yanlis hedefe
+# bakarsa yukaridaki bekleme durumuna duser.
+#
+# -C / app:configFile BILEREK KULLANILMIYOR: o dosya komut satirindan SONRA
+# yukleniyor (config.c:625-639) ve buradaki atamalari sessizce ezerdi.
+#
+# setsid -f: istemci terminalden koparilir, kabuk hemen geri doner. Sarmalayici
+# ciktiyi gunluge alir ve ERKEN olumde bildirim basar -- `setsid -f` her zaman
+# 0 dondugu icin betigin kendi cikis kodu istemci hakkinda hicbir sey soylemez.
+setsid -f sh -c '
+  log=$1; shift
+  start=$(date +%s)
+  looking-glass-client "$@" >"$log" 2>&1
+  rc=$?
+  [ "$rc" -eq 0 ] && exit 0
+  # Esik cikis koduna degil SUREYE bakiyor: LG kullanici pencereyi elle
+  # kapattiginda ne donduruyor OLCULMEDI (misafir kapaninca 0 donduruyor,
+  # vfioctl arsivi). Erken olum teshis edilebilir arizadir -- konak uygulamasi
+  # karsida degil, paylasilan bellek yanlis; gec cikis normal kapanis olabilir
+  # ve her kapanista kritik bildirim basmak istemiyoruz. Ilk kosudan sonra
+  # gunluge bakilip bu esik gerekirse daraltilir.
+  [ $(( $(date +%s) - start )) -lt 10 ] || exit 0
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send -u critical "Looking Glass kapandi (kod $rc)" "$(tail -n 5 "$log")"
+  fi
+' sh "$LOG" \
+  "win:fullScreen=$full" \
+  "win:noScreensaver=yes" \
+  "app:shmFile=/dev/kvmfr0"
