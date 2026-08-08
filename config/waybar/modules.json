@@ -37,7 +37,7 @@
 
   "custom/hardware": {
     "format": "󰭵",
-    "on-click": "kitty --class=tui-popup --title btop sh -c 'btop'"
+    "on-click": "~/.config/scripts/tuipop btop btop"
   },
 
   "cpu": {
@@ -83,7 +83,7 @@
     "format": "{}",
     "tooltip": true,
     "interval": 1,
-    "on-click": "kitty --class=tui-popup --title btop sh -c 'btop'"
+    "on-click": "~/.config/scripts/tuipop btop btop"
   },
 
   "custom/gputemp": {
@@ -92,7 +92,7 @@
     "format": "{}",
     "tooltip": true,
     "interval": 1,
-    "on-click": "kitty --class=tui-popup --title nvtop sh -c 'nvtop'"
+    "on-click": "~/.config/scripts/tuipop nvtop nvtop"
   },
 
   "hyprland/window": {
@@ -249,7 +249,7 @@
     "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
     "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
     "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
-    "on-click": "kitty --class=tui-popup --title Bluetooth sh -c 'bluetui'",
+    "on-click": "~/.config/scripts/tuipop Bluetooth bluetui",
     "on-click-middle": "~/.config/scripts/bt-reconnect",
     "on-click-right": "~/.config/scripts/togglebluetooth"
   },
@@ -265,7 +265,7 @@
     "tooltip-format-ethernet": "{ifname} ",
     "tooltip-format-disconnected": "Bağlantı Yok",
     "max-length": 50,
-    "on-click": "kitty --class=tui-popup --title Wifi sh -c 'impala'",
+    "on-click": "~/.config/scripts/tuipop Wifi impala",
     "on-click-right": "~/.config/scripts/togglewifi"
   },
 

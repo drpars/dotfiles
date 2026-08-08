@@ -1,0 +1,57 @@
+#!/bin/bash
+# tuipop -- waybar tiklamasiyla acilan TUI penceresini TEK ORNEK tutar.
+#
+# Kullanim: tuipop <ad> <komut> [arguman...]
+#   tuipop btop btop        tuipop Wifi impala
+#
+# SORUN: modules.json'daki bes cagri dogrudan `kitty --class=tui-popup ...`
+# calistiriyordu. Waybar her tiklamada yeni bir surec doguruyor, kitty'nin
+# penceresi ise ~0,3 sn sonra haritalaniyor -- yani "acildi mi" diye pencereye
+# bakan bir kontrol arka arkaya tiklamayi YAKALAYAMAZ. Sabirsiz iki tik = iki
+# btop; ust uste yigiliyorlar cunku windowrules.lua hepsini ayni yere (yuzen,
+# ortalanmis, 1536x864) koyuyor.
+#
+# COZUM PENCEREYE DEGIL SURECE BAKIYOR: kilit `kitty`nin omru boyunca tutulur.
+# fd 9 exec sonrasi kitty'ye MIRAS KALIR (bash 3'ten buyuk fd'leri close-on-exec
+# isaretlemiyor), yani kilit ne betigin ne de kabugun degil, tam olarak
+# pencerenin yasadigi surece bagli. Yaris penceresi yok: ikinci tik kitty daha
+# hicbir sey cizmeden reddedilir.
+#
+# Ikinci tikin davranisi ODAKLAMAK, kapatmak degil: istenen sey "bir suru
+# acilmasin"di. Toggle isteniyorsa asagidaki `dispatch focuswindow`,
+# `dispatch closewindow` olur -- tek kelime.
+set -u
+
+[ $# -ge 2 ] || { echo "kullanim: tuipop <ad> <komut> [arguman...]" >&2; exit 2; }
+ad=$1; shift
+
+# XDG_RUNTIME_DIR tmpfs ve kullaniciya ozel; /tmp yedegi baska kullanicinin
+# ayni adli kilidine carpmasin diye UID tasiyor.
+dizin=${XDG_RUNTIME_DIR:-/tmp/tuipop-$(id -u)}
+mkdir -p "$dizin" 2>/dev/null
+kilit="$dizin/tuipop-$ad.lock"
+
+exec 9>"$kilit" || exit 1
+
+if flock -n 9; then
+  # --title, kitty'de calisan programin baslik degistirmesini de kalici olarak
+  # engelliyor ("permanently fixing the OS window's title" -- kitty --help).
+  # Asagidaki arama bu yuzden basliga guvenebiliyor.
+  exec kitty --class=tui-popup --title "$ad" "$@"
+fi
+
+# Zaten acik. Pencereyi one al -- jq ya da hyprctl yoksa sessizce cik:
+# tekillik zaten kilitle saglandi, odaklama yalnizca konfor.
+command -v jq >/dev/null 2>&1 || exit 0
+command -v hyprctl >/dev/null 2>&1 || exit 0
+
+adres=$(hyprctl -j clients 2>/dev/null | jq -r --arg t "$ad" '
+  .[] | select(.class == "tui-popup" and .title == $t) | .address' | head -n1)
+
+# Bicim OLCULDU: bu makinede Hyprland yapilandirmasi Lua ve dispatcher'lar
+# `hl.dsp.*` altinda. Yukari akisin `dispatch focuswindow address:0x...`
+# yazimi burada ayristirici hatasi veriyor ("')' expected near 'address'"),
+# `hl.dsp.focus` ise tablo bekliyor ve kabul ettigi anahtarlari hata mesajinda
+# sayiyor: direction, monitor, window, urgent_or_last, last.
+[ -n "$adres" ] && exec hyprctl dispatch "hl.dsp.focus({ window = \"address:$adres\" })"
+exit 0
