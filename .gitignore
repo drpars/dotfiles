@@ -36,3 +36,7 @@ config/gtk-3.0/bookmarks
 # config/looking-glass/client.ini.
 config/looking-glass/imgui.ini
 config/looking-glass/presets/
+
+# Betikler yerinde derlenince (py_compile, import) olusuyor. Uretilen
+# bytecode, depoya girmez -- bir kez calisma agacina dustu.
+config/scripts/__pycache__/

@@ -18,6 +18,12 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("waybar")
     hl.exec_cmd("mako")
     hl.exec_cmd("hypridle")
+    -- Düşük pil bildirimi. Eşik burada değil UPower'da (/etc/UPower/UPower.conf);
+    -- betiğin tek işi WarningLevel'ı dinleyip mako'ya yazmak — dinleyen o abone
+    -- bu makinede hiç yoktu, %20'de hiçbir şey olmamasının sebebi buydu.
+    -- Makine koruması gerekmiyor: pili olmayan makinede DisplayDevice'ın Type'ı
+    -- Battery değil ve betik hemen çıkıyor.
+    hl.exec_cmd("~/.config/scripts/batwarn.py")
 
     -- Pano
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
