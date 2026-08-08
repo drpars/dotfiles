@@ -16,8 +16,72 @@
 # the filesystem, so neither costs an nvidia-smi -- which matters at waybar's
 # one second interval.
 #
+# Lets the dGPU sleep, which it could not do while this module existed. The
+# card reaches D3cold only if nothing opens /dev/nvidia0 for about ten seconds,
+# and every nvidia-smi is such an open, so a one second interval pinned it at
+# D0 for entire sessions: 21013 s active out of 21057, runtime_suspended_time
+# 5 s in total, 11.10 W burned with no process on the card. Freezing waybar put
+# it to sleep in ten seconds and resuming waybar woke it instantly, repeatably
+# in both directions -- and with the poll gone the machine drew 8.43 W less on
+# battery (13.16 W against 21.59 W, both arms measured with waybar frozen so
+# that only the poll differed). Two mechanisms, neither sufficient alone:
+#
+#   gate    -- power/runtime_status is a plain sysfs read and does NOT wake the
+#              card (measured: thirty reads while suspended, suspended_time
+#              kept climbing throughout). Anything but "active" means no
+#              nvidia-smi at all, so a sleeping card is never woken by the bar.
+#
+#   backoff -- the gate can only fire once the card is already asleep, and the
+#              card can only get there through an idle window that this module
+#              has to stop polling for. So while the card is awake but idle,
+#              nvidia-smi runs at most once per SLEEP_BACKOFF seconds; the card
+#              falls asleep inside the first such window and the gate takes over
+#              from there.
+#
+# The backoff is not just a slower poll. It applies only to the awake-and-idle
+# state, which the card leaves within one window and then stops being polled
+# entirely. Merely raising the module's interval is the wrong fix and was
+# measured to be: a card woken on a schedule thrashes D0<->D3cold, and every
+# transition drops the power rail and retrains the PCIe link, which cost
+# +12.76 W instead of saving anything.
+#
+# A card that is genuinely in use keeps the full one second interval -- it
+# cannot sleep while a client holds it, so polling it is free. Whether it is in
+# use comes out of the same nvidia-smi call as the temperature, so knowing it
+# costs nothing.
+#
 # With no source at all the text is empty, which is how waybar hides a custom
 # module (same convention as peripheral-battery.py).
+
+# How long the card is left alone before it is polled again. This has to clear
+# the driver's own idle timer, and that timer is not a constant: the same card
+# on the same boot took 10 s to suspend once and 20 s another time. So the base
+# carries margin over the slowest run seen, and SLEEP_BACKOFF_MAX below carries
+# the case where even that is short.
+#
+# The two directions are not symmetric. Overshooting only leaves the previous
+# temperature on the bar a little longer -- and not even that in the normal
+# case, since once the card actually sleeps the gate replaces the number with
+# the sleep glyph. Undershooting wakes the card on a schedule forever, which is
+# the +12.76 W thrash this whole mechanism exists to avoid.
+SLEEP_BACKOFF=30
+
+# Self-correction, because undershooting is silent otherwise: it would show up
+# as battery life, not as anything on the bar. If a whole window goes by and
+# the card is still awake and still idle, the window was too short for this
+# machine and doubles. A card the driver can suspend gets there inside one
+# window and resets the base on the way (see the asleep branch); a card
+# something else is holding never sleeps regardless of us, and backing further
+# off it costs only staleness.
+SLEEP_BACKOFF_MAX=300
+
+# An idle card reports 1 MiB used. Anything actually holding it -- a game, a
+# PRIME offload, nvtop -- is orders of magnitude above this, and a card with a
+# client attached will not runtime-suspend anyway.
+BUSY_MEM_MIB=64
+
+# tmpfs, per user, gone at logout. Losing it costs one extra nvidia-smi.
+STATE=${XDG_RUNTIME_DIR:-/tmp}/waybar-gputemp.state
 
 # True while the dGPU is being handed over. The libvirt hook writes
 # driver_override before it unloads the module (50-vfio-handover, prepare/begin:
@@ -52,15 +116,123 @@ handover_pending() {
   return 1
 }
 
-nvidia_temp() {
-  compgen -G "/proc/driver/nvidia/gpus/*" >/dev/null 2>&1 || return 1
-  handover_pending && return 1
-  command -v nvidia-smi >/dev/null 2>&1 || return 1
-  local t
-  t=$(timeout 3 nvidia-smi --query-gpu=temperature.gpu \
-        --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
-  [[ $t =~ ^[0-9]+$ ]] || return 1
-  printf '%s' "$t"
+# PCI address of the first nvidia card, from the same /proc directory names
+# handover_pending() reads. Empty when the card is not on nvidia at all.
+nvidia_addr() {
+  local gpu
+  for gpu in /proc/driver/nvidia/gpus/*/; do
+    [ -d "$gpu" ] || continue
+    gpu=${gpu%/}
+    printf '%s' "${gpu##*/}"
+    return 0
+  done
+  return 1
+}
+
+# "active" / "suspending" / "suspended" / "resuming", and "active" when the
+# attribute cannot be read at all. That fallback is the conservative one: it
+# gives up the gate and leaves the backoff, rather than reporting a card as
+# asleep on a kernel that never told us.
+runtime_status() {
+  local s=active
+  if [ -r "/sys/bus/pci/devices/$1/power/runtime_status" ]; then
+    # read for its side effect, as in handover_pending(): its exit status
+    # reports the delimiter, not the value.
+    read -r s <"/sys/bus/pci/devices/$1/power/runtime_status"
+  fi
+  printf '%s' "$s"
+}
+
+# Sets st_when / st_temp / st_busy / st_wait from the last nvidia-smi call.
+# Anything unparseable is treated as "no state", which only costs one extra
+# call.
+state_read() {
+  st_when=0 st_temp="" st_busy=0 st_wait=$SLEEP_BACKOFF
+  [ -r "$STATE" ] || return 0
+  local w t b k
+  read -r w t b k <"$STATE"
+  [[ $w =~ ^[0-9]+$ ]] && st_when=$w
+  [[ $t =~ ^[0-9]+$ ]] && st_temp=$t
+  [[ $b =~ ^[01]$ ]] && st_busy=$b
+  [[ $k =~ ^[0-9]+$ ]] && [ "$k" -ge "$SLEEP_BACKOFF" ] && st_wait=$k
+  return 0
+}
+
+# Always four fields. An empty temperature would collapse to three and shift
+# every later field one place left on read-back, which reads as a valid state
+# rather than a broken one. "-" fails state_read's numeric test and lands back
+# as "no cached temperature", which is what it means.
+state_write() {
+  printf '%s %s %s %s\n' "$1" "${2:--}" "$3" "$4" >"$STATE"
+}
+
+# Sets nv_state to one of:
+#   off     -- no nvidia card here, or it is leaving / already gone
+#   asleep  -- card is in runtime suspend; nothing was asked of it
+#   temp    -- nv_temp holds a temperature (possibly the cached one, during
+#              the backoff window)
+nvidia_read() {
+  nv_state=off
+  nv_temp=""
+
+  local addr status now t u m busy wait
+  addr=$(nvidia_addr) || return 0
+  handover_pending && return 0
+  command -v nvidia-smi >/dev/null 2>&1 || return 0
+
+  status=$(runtime_status "$addr")
+  state_read
+
+  if [ "$status" != active ]; then
+    nv_state=asleep
+    # The card got where it needed to get, so whatever window was in force was
+    # long enough and the next cycle starts from the base again. Written only
+    # on the transition, not once a second.
+    [ "$st_wait" != "$SLEEP_BACKOFF" ] &&
+      state_write "$st_when" "$st_temp" "$st_busy" "$SLEEP_BACKOFF"
+    return 0
+  fi
+
+  # Awake but idle as of the last call: hold off so the card can reach D3cold,
+  # and show the last reading in the meantime rather than blanking the module.
+  now=$EPOCHSECONDS
+  if [ "$st_busy" = 0 ] && [ $((now - st_when)) -lt "$st_wait" ]; then
+    if [ -n "$st_temp" ]; then
+      nv_temp=$st_temp
+      nv_state=temp
+    fi
+    return 0
+  fi
+
+  # ", " splits cleanly: comma is a non-whitespace IFS character, so the space
+  # beside it is absorbed rather than producing an empty field.
+  IFS=', ' read -r t u m < <(timeout 3 nvidia-smi \
+        --query-gpu=temperature.gpu,utilization.gpu,memory.used \
+        --format=csv,noheader,nounits 2>/dev/null)
+  [[ $t =~ ^[0-9]+$ ]] || return 0
+
+  busy=0
+  if [[ $u =~ ^[0-9]+$ ]] && [ "$u" -gt 0 ]; then busy=1; fi
+  if [[ $m =~ ^[0-9]+$ ]] && [ "$m" -gt "$BUSY_MEM_MIB" ]; then busy=1; fi
+
+  # A window elapsed with the card idle at both ends and still awake now, so it
+  # grows. st_when guards the very first run, which has no window behind it.
+  #
+  # This also fires when the window did work and something else woke the card
+  # just before it expired -- measured, with a foreign 1 Hz poller as the
+  # holder. That is not worth telling apart: either way the card is awake for a
+  # reason that is not us, backing further off it costs only a staler number,
+  # and the moment it does suspend the branch above puts the base back.
+  wait=$SLEEP_BACKOFF
+  if [ "$st_when" -gt 0 ] && [ "$st_busy" = 0 ] && [ "$busy" = 0 ]; then
+    wait=$((st_wait * 2))
+    [ "$wait" -gt "$SLEEP_BACKOFF_MAX" ] && wait=$SLEEP_BACKOFF_MAX
+  fi
+
+  state_write "$now" "$t" "$busy" "$wait"
+  nv_temp=$t
+  nv_state=temp
+  return 0
 }
 
 amd_temp() {
@@ -81,16 +253,27 @@ amd_temp() {
   return 1
 }
 
-nv=$(nvidia_temp) || nv=""
+nvidia_read
 amd=$(amd_temp) || amd=""
 
 short=()
 long=()
 
-if [ -n "$nv" ]; then
-  short+=("NV ${nv}°C")
-  long+=("NVIDIA: ${nv}°C")
-fi
+# A sleeping card still gets a slot on the bar. Hiding it would be the wrong
+# report -- the card is present and fine, it is asleep, which is the state this
+# module exists to stop breaking -- and it would make the bar jump every time
+# something touches the GPU. U+F0904 is nf-md-sleep; Ubuntu Nerd Font carries
+# it, so it does not fall back to another family at a different weight.
+case $nv_state in
+  temp)
+    short+=("NV ${nv_temp}°C")
+    long+=("NVIDIA: ${nv_temp}°C")
+    ;;
+  asleep)
+    short+=("NV 󰤄")
+    long+=("NVIDIA: uykuda — kart boşta, yoklanmıyor")
+    ;;
+esac
 
 if [ -n "$amd" ]; then
   short+=("AMD ${amd}°C")
