@@ -27,3 +27,12 @@ local/share/applications/mimeapps.list
 # (masaustunde ~/Projects, dizustunde ~/Projeler). GTK bu dosyada degisken
 # genisletmiyor, o yuzden versiyonlanmiyor.
 config/gtk-3.0/bookmarks
+
+
+# ~/.config/looking-glass bu depoya symlink oldugu icin istemci kendi durum
+# dosyalarini buraya yaziyor. Dizini istemcinin KENDISI olusturuyor
+# (main.c:1865 lgPathsInit, her calistirmada) -- yani symlink dizin
+# duzeyindedir ve uretilen dosyalar kacinilmaz. Versiyonlanan tek sey
+# config/looking-glass/client.ini.
+config/looking-glass/imgui.ini
+config/looking-glass/presets/
