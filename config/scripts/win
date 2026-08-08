@@ -159,8 +159,13 @@ if [ "$state" != "running" ]; then
   if on_battery; then
     mesaj="Dizüstü pilde"
     if uwh=$(bat_uwh); then
+      # Ondalik ayirici elle virgule cevriliyor: gawk POSIX kipinde olmadigi
+      # icin %.1f'i yerelden bagimsiz olarak NOKTAYLA basiyor. Diyalogda
+      # "28.7 Wh" gorundu (olculdu 2026-08-09, grim) -- metnin geri kalani
+      # Turkce ve arayuzun her yeri (waybar, pacman) virgul kullaniyor.
       mesaj="$mesaj, $(awk -v e="$uwh" -v w="$YUK_WATT" \
-        'BEGIN{printf "%.1f Wh (~%.0f dk)", e/1e6, (e/1e6/w)*60}')"
+        'BEGIN{s=sprintf("%.1f Wh (~%.0f dk)", e/1e6, (e/1e6/w)*60)
+               sub(/\./, ",", s); print s}')"
     fi
     confirm "$mesaj. Misafir başlatılsın mı?" || {
       echo "win: pilde baslatma iptal edildi"
