@@ -38,6 +38,7 @@
     // "wireplumber#source",
     // "pulseaudio#microphone",
     "backlight",
+    "custom/refreshrate",
     "battery",
     "group/peripherals",
     "custom/weather",

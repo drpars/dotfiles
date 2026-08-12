@@ -300,9 +300,12 @@
     // getAdapterStatus yalnız durum "Unknown" iken çağrılıyor (BAT0 okunuyor).
     // Masaüstünde modül zaten pil yokluğundan gizli.
     "adapter": "",
+    // Yalnız "critical" kaldı, çünkü CSS'te karşılığı olan tek durum o.
+    // "good" hiçbir zaman stillenmiyordu; "warning" 2026-08-12'de kaldırıldı —
+    // düşük pil uyarısı batwarn.py'nin işi (UPower WarningLevel → mako) ve
+    // durumun bardaki karşılığı yanıp sönmekti, bedeli ölçüldü: 6,86 W, tam da
+    // en kötü anda. Karşılığı olmayan durum ölü ayardır, okuyanı yanıltır.
     "states": {
-      "good": 70,
-      "warning": 30,
       "critical": 20
     },
     "format": "{icon}",
@@ -349,6 +352,24 @@
     "on-scroll-up": "$HOME/.config/scripts/brightness up",
     "on-scroll-down": "$HOME/.config/scripts/brightness down",
     "tooltip-format": "{percent}%"
+  },
+
+  "custom/refreshrate": {
+    "exec": "~/.config/scripts/refreshrate status",
+    "return-type": "json",
+    "format": "{}",
+    "tooltip": true,
+    // YOKLAMA YOK ve bu ölçülmüş bir seçim: "once" modülü açılışta bir kez
+    // koşturuyor, SIGRTMIN+11 her geldiğinde bir kez daha, kendiliğinden hiç
+    // (ölçüldü 2026-08-12: 1 → 2 → 3 koşum, aradaki 4 sn'de artış yok).
+    // Sinyali betiğin kendisi atıyor; hız yalnızca o betikle değişiyor.
+    // KABUL EDİLEN BEDEL: mod dışarıdan değiştirilirse (doğrudan hyprctl)
+    // gösterge bayatlar. Hyprland mod değişiminde OLAY YAYINLAMIYOR — 2026-08-12'de
+    // .socket2.sock dinlenerek ölçüldü, iki mod değişiminde sıfır monitör olayı —
+    // yani olay güdümlü tazeleme diye bir seçenek yok, yoklamaya dönmek gerekirdi.
+    "interval": "once",
+    "signal": 11,
+    "on-click": "~/.config/scripts/refreshrate toggle"
   },
 
   "wireplumber": {

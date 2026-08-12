@@ -162,14 +162,10 @@ tooltip label {
 
 #custom-pacman {
   padding: 0 10px;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
 }
 
 #custom-pacman.pending-updates {
-  animation-name: blink-update;
-  animation-duration: 3s;
+  color: #7aa2f7;
 }
 
 #clock,
@@ -210,19 +206,20 @@ tooltip label {
   padding: 0 10px 0 20px;
 }
 
-#bluetooth.on,
-#custom-pacman.pending-updates,
-#battery.warning,
-#battery.critical {
-  transition: background-color 0.3s ease-in-out;
-}
+/* SONSUZ ANIMASYON YOK -- ölçüldü (2026-08-12, pilde): tek bir sonsuz CSS
+   animasyonu widget'ı her karede yeniden çizdiriyor, compositor de onu 165
+   Hz'de yeniden birleştiriyor. Bedeli 6,86 W: boşta çekimin ~üçte biri, ve
+   165 → 60 Hz kaldıracından (5,46 W) büyük. Barın geri kalan HER ŞEYİ
+   (bütün modüller, bütün 1 Hz yoklamalar, çizim) toplam 0,51 W — yani
+   maliyet yoklamada değil, hareketin kendisindeydi.
 
-#bluetooth.on {
-  animation-name: blink-update;
-  animation-duration: 3s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
+   Bu yüzden kalıcılaşan durumlar renkle işaretlenir: "bluetooth açık",
+   "güncelleme var", "pil düşük" günlerce sürebilen durumlar, ve pil için
+   yanıp sönmenin bedeli tam da en kötü anda ödenirdi. Dikkat çekme işi
+   mako bildirimine ait (batwarn.py). Geçiş kalıyor ama sınırlı: 0,3 s. */
+#custom-pacman.pending-updates,
+#battery.critical {
+  transition: color 0.3s ease-in-out;
 }
 
 #bluetooth.off {
@@ -267,16 +264,11 @@ tooltip label {
   padding: 0 10px;
 }
 
-#battery.warning {
-  animation-iteration-count: infinite;
-  animation-name: blink-update;
-  animation-duration: 3s;
-}
-
+/* .warning'in karşılığı yok ve bu kasıtlı: düşük pil uyarısı batwarn.py'nin
+   işi (UPower WarningLevel → mako), barın işi değil. Kritik seviye yalnızca
+   renkle duruyor. */
 #battery.critical {
-  animation-iteration-count: infinite;
-  animation-name: blink-battery;
-  animation-duration: 3s;
+  color: #f7768e;
 }
 
 #backlight {
@@ -285,24 +277,25 @@ tooltip label {
   padding: 0 20px 0 8px;
 }
 
+/* Yenileme hızı kendi kapsülünde: wireplumber|backlight bitişik bir çift
+   (soldan ve sağdan yuvarlanıyorlar), araya girmek o çifti bozardı. */
+#custom-refreshrate {
+  margin-right: 10px;
+  border-radius: 10px;
+  padding: 0 14px;
+}
+
+/* 60 Hz = tasarruf kolu açık. Yeşil, çünkü peripherals'ta "charging" de yeşil:
+   bu dosyada yeşil "iyi durumdasın" demek. */
+#custom-refreshrate.low {
+  color: #9ece6a;
+}
+
 #custom-hypridle,
 #idle_inhibitor {
   margin-right: 10px;
   border-radius: 10px;
   padding: 0 25px 0 20px;
-}
-
-/* Animations */
-@keyframes blink-update {
-  to {
-    background-color: #7aa2f7;
-  }
-}
-
-@keyframes blink-battery {
-  to {
-    background-color: #f7768e;
-  }
 }
 
 /* Mouse ve Klavye Batarya Durumu (Tokyo Night tonları)
@@ -340,14 +333,7 @@ tooltip label {
 #custom-peripherals.critical,
 #custom-keyboard-battery.critical,
 #custom-mouse-battery.critical {
-  /* color: #f7768e; */
-  /* animation: blink-battery 1s infinite; */
-  animation-name: blink-update;
-  animation-duration: 3s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-
+  color: #f7768e;
 }
 
 #custom-peripherals.unknown,

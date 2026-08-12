@@ -1,0 +1,173 @@
+#!/bin/bash
+# Panel yenileme hızı: yerel mod ↔ 60 Hz, elle.
+#
+#   refreshrate            -- toggle (argümansız biçim de budur)
+#   refreshrate toggle
+#   refreshrate set <hz>
+#   refreshrate get        -- yuvarlanmış güncel hız, tek sayı
+#   refreshrate status     -- waybar custom modülü için JSON
+#
+# NEDEN VAR: 165 → 60 Hz pilde 5,46 W ölçüldü (2026-08-12, A/B/A/B; tekrar
+# saçılımının 29 katı) — boşta çekimin ~%30'u, tam şarjda ~1 sa 33 dk. Ölçüm
+# vardı ama kullanımı yoktu: kaldıraç yalnız ölçüm harness'ının içinde
+# yaşıyordu. Bu betik onu günlük kullanıma çıkarır.
+#
+# POLİTİKA YOK, YALNIZ ANAHTAR: "pilde otomatik 60'a in" bilerek yazılmadı
+# (kullanıcı kararı, 2026-08-12). Fişte 165 isteyip pilde 60 istemek her zaman
+# doğru değil — pilde oyun da oynanır, fişte de metin okunur.
+#
+# ÜÇ TUZAK, ÜÇÜ DE ÖLÇÜLDÜ. Elle yapmak masum olmadığı için bu betik var:
+#
+#   1. `hyprctl keyword monitor ...` BU YAPILANDIRMADA ÖLÜ ve ÇIKIŞ 0 VERİYOR.
+#      Lua yapılandırması non-legacy parser kullanıyor; keyword "can't work
+#      with non-legacy parsers" diyip başarı bildiriyor. Yani yanlış yol
+#      sessizce çalışmış gibi görünür. Kanal: `hyprctl eval` + hl.monitor().
+#
+#   2. bitdepth ve cm mod dizesine BİNMEK ZORUNDA. hl.monitor() satırın
+#      tamamını değiştiriyor; bitdepth/cm yazılmazsa 10-bit ve geniş gam
+#      sessizce düşer ve "yenileme hızını değiştirdim" aslında "10 bitten
+#      8 bite indim" olur. Değerler hostfact'ten gelir, sabit yazılmaz.
+#
+#   3. Okunan hız YUVARLANIR, kesilmez. Panel 165.00301 ve 59.951 diyor;
+#      noktadan kesen ikinciyi 59 okur ve doğrulamayı düşürür.
+#
+# Modül YOKLAMAZ: değişimden sonra bu betik waybar'a sinyal atar (desen:
+# mouse-battery "signal": 9). Bilinen eksik — mod dışarıdan değiştirilirse
+# (ör. doğrudan hyprctl) gösterge bayatlar; Hyprland'in mod değişiminde olay
+# yayınlayıp yayınlamadığı ölçülmedi.
+
+set -uo pipefail
+
+HOSTFACT="$HOME/.config/scripts/hostfact"
+LOW=60          # tasarruf kolu; panelin mod listesinde olduğu doğrulanıyor
+SIGNAL=11       # waybar custom/refreshrate "signal": 11
+
+die() { printf 'refreshrate: %s\n' "$*" >&2; exit 1; }
+
+# Tek bir bildirim yuvası: aynı etiketle gelen yenisi öncekini DEĞİŞTİRİR,
+# üst üste yığmaz (depodaki desen: volume, bt-reconnect, powerprofileasus).
+# Tuşa üst üste basıldığında ekranı bildirimle doldurmamak için.
+notify() {
+  command -v notify-send >/dev/null 2>&1 || return 0
+  notify-send -e -u low -h string:x-canonical-private-synchronous:refreshrate "$@"
+}
+
+# Makine olguları. MONITOR_OUTPUT burada "desc:..." — konektör adı (eDP-1 /
+# eDP-2) oturumlar arasında değişiyor, açıklama değişmiyor.
+mon_out=$("$HOSTFACT" MONITOR_OUTPUT 2>/dev/null || true)
+mon_mode=$("$HOSTFACT" MONITOR_MODE 2>/dev/null || true)
+mon_pos=$("$HOSTFACT" MONITOR_POSITION 2>/dev/null || true)
+mon_scale=$("$HOSTFACT" MONITOR_SCALE 2>/dev/null || true)
+mon_bits=$("$HOSTFACT" MONITOR_BITDEPTH 2>/dev/null || true)
+mon_cm=$("$HOSTFACT" MONITOR_CM 2>/dev/null || true)
+native=${mon_mode##*@}
+
+# Panelin hyprctl'deki kaydı. desc: öneki varsa açıklamaya ÖN EK olarak bakılır
+# (Hyprland de öyle eşliyor), yoksa konektör adına.
+panel_json() {
+  local sel=$mon_out
+  case "$sel" in
+    desc:*) jq -c --arg d "${sel#desc:}" \
+              'map(select(.description | startswith($d))) | first // empty' ;;
+    *)      jq -c --arg n "$sel" \
+              'map(select(.name == $n)) | first // empty' ;;
+  esac
+}
+
+# Yuvarlanmış, kesilmiş değil (yukarıda tuzak 3). Boş dönerse panel bulunamadı.
+cur_hz() {
+  hyprctl monitors -j 2>/dev/null | panel_json \
+    | jq -r '.refreshRate // empty' | awk 'NF {printf "%.0f", $1}'
+}
+
+# Panelin mod listesinde bu hız var mı. Liste okunamıyorsa engel çıkarmaz —
+# asıl doğrulama zaten değişimden sonraki geri okuma.
+rate_available() {
+  local hz=$1 modes
+  modes=$(hyprctl monitors -j 2>/dev/null | panel_json \
+            | jq -r '.availableModes[]? // empty') || return 0
+  [ -n "$modes" ] || return 0
+  printf '%s\n' "$modes" | awk -v hz="$hz" -F'@' '
+    NF > 1 { r = $2; sub(/[Hh]z$/, "", r); if (int(r + 0.5) == hz) found = 1 }
+    END { exit(found ? 0 : 1) }'
+}
+
+set_hz() {
+  local hz=$1 lua out got
+  [ -n "$mon_mode" ] || die "MONITOR_MODE boş — bu makine için ~/.config/hosts/ kaydı yok"
+  rate_available "$hz" || die "panel ${hz} Hz sunmuyor; mevcut: $(hyprctl monitors -j | panel_json | jq -r '[.availableModes[]?] | join(", ")')"
+
+  lua="hl.monitor({output=\"$mon_out\", mode=\"${mon_mode%@*}@$hz\", position=\"$mon_pos\""
+  [ -n "$mon_scale" ] && lua="$lua, scale=$mon_scale"
+  [ -n "$mon_bits"  ] && lua="$lua, bitdepth=$mon_bits"
+  [ -n "$mon_cm"    ] && lua="$lua, cm=\"$mon_cm\""
+  lua="$lua})"
+
+  # hyprctl eval hatayı HEM stdout'a basıyor HEM rc 7 veriyor; ikisi de tek
+  # başına güvenilir değil, ikisine de bakılır.
+  out=$(hyprctl eval "$lua" 2>&1) || die "hyprctl eval rc=$? — $out"
+  case "$out" in *[Ee]rror*|*rror*) die "hyprctl eval: $out" ;; esac
+
+  # Mod değişimi anında bitmiyor; panel karararak dönüyor.
+  sleep 3
+  got=$(cur_hz)
+  [ -n "$got" ] || die "panel hyprctl'de bulunamadı ($mon_out)"
+  [ "$got" -ge "$((hz - 1))" ] && [ "$got" -le "$((hz + 1))" ] \
+    || die "mod değişmedi: istenen ${hz} Hz, okunan ${got} Hz"
+
+  # Gösterge yoklamıyor, itiliyor. waybar yoksa pkill 1 döner, sorun değil.
+  pkill -RTMIN+$SIGNAL waybar 2>/dev/null || true
+
+  if [ "$got" -le "$LOW" ]; then
+    notify "󰍹 ${got} Hz — tasarruf" "Pilde ~5,46 W az çekiyor (ölçüldü)."
+  else
+    notify "󰍹 ${got} Hz — yerel mod" "Akıcılık tam; pilde ~5,46 W fazlası."
+  fi
+  printf '%s\n' "$got"
+}
+
+case "${1-toggle}" in
+  get)
+    cur_hz; echo
+    ;;
+
+  status)
+    # waybar modülü: hiçbir koşulda gürültü etmez. Panel okunamıyorsa boş
+    # metin döner — waybar boş metinli custom modülü gizler (aynı sözleşme:
+    # peripheral-battery.py, gputemp).
+    hz=$(cur_hz)
+    if [ -z "$hz" ]; then
+      printf '{"text":""}\n'
+      exit 0
+    fi
+    if [ -n "$native" ] && [ "$hz" -lt "$native" ] 2>/dev/null; then
+      cls=low
+      tip="Panel ${hz} Hz — tasarruf. Yerel mod ${native} Hz.\nÖlçüldü: 165 → 60 Hz = 5,46 W (tam şarjda ~1 sa 33 dk)."
+    else
+      cls=native
+      tip="Panel ${hz} Hz — yerel mod.\n60 Hz'e inmek pilde 5,46 W kazandırıyor (ölçüldü)."
+    fi
+    printf '{"text":"󰍹 %s","class":"%s","tooltip":"%s"}\n' "$hz" "$cls" "$tip"
+    ;;
+
+  set)
+    [ $# -ge 2 ] || die "kullanım: refreshrate set <hz>"
+    case "$2" in *[!0-9]*|'') die "hz bir tamsayı olmalı: $2" ;; esac
+    set_hz "$2" >/dev/null
+    ;;
+
+  toggle)
+    [ -n "$native" ] || die "MONITOR_MODE boş — bu makine için ~/.config/hosts/ kaydı yok"
+    [ "$native" -gt "$LOW" ] 2>/dev/null \
+      || die "yerel mod zaten ${native} Hz; toggle edecek bir şey yok"
+    cur=$(cur_hz)
+    [ -n "$cur" ] || die "panel hyprctl'de bulunamadı ($mon_out)"
+    if [ "$cur" -le "$LOW" ]; then set_hz "$native" >/dev/null
+    else                           set_hz "$LOW"    >/dev/null
+    fi
+    ;;
+
+  *)
+    die "bilinmeyen komut: $1 (toggle | set <hz> | get | status)"
+    ;;
+esac

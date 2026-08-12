@@ -161,6 +161,12 @@ end
 hl.bind("xf86MonBrightnessDown",   hl.dsp.exec_cmd(scriptsDir .. "/brightness down"))
 hl.bind("xf86MonBrightnessUp",     hl.dsp.exec_cmd(scriptsDir .. "/brightness up"))
 
+-- ── Ekran Yenileme Hızı ────────────────────────────
+-- Yerel mod ↔ 60 Hz. Pilde ölçülen kazanç 5,46 W (2026-08-12), yani boşta
+-- çekimin ~%30'u. Makine koruması betiğin içinde: MONITOR_MODE'u olmayan
+-- makinede sessizce değil, söyleyerek düşer.
+hl.bind(M .. " + H",                   hl.dsp.exec_cmd(_G.scriptsDir .. "/refreshrate toggle"))
+
 -- ── Özel ───────────────────────────────────────────
 hl.bind("WIN + F1",                    hl.dsp.exec_cmd(_G.scriptsDir .. "/gamemode"))
 
