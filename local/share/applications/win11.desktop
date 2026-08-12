@@ -11,7 +11,13 @@ Comment[tr]=Misafiri baslat ve masaustunu ac (Looking Glass)
 Exec=sh -c "exec ~/.config/scripts/win"
 # LG kurulu olmayan makinede girdi kendiliginden gizlenir.
 TryExec=looking-glass-client
-Icon=looking-glass
+# Ikon depoya konmadi: ad tema icinde cozunuyor (Qogir-Dark/scalable/apps/
+# windows.svg). Dogrulama Gtk.IconTheme ile yapildi, dosya varligiyla DEGIL --
+# devralma zinciri her ada bir sonuc dondurur, bkz. NOTLAR.md tuzagi. rofi'nin
+# kendi icon-theme'i de Qogir-Dark, yani menude de ayni dosya cizilir.
+# Onceki deger looking-glass idi: goruntuleyiciyi adlandiriyordu, oysa girdinin
+# isi misafiri baslatmak -- Name= da "Windows 11" diyor.
+Icon=windows
 Terminal=false
 StartupNotify=false
 StartupWMClass=looking-glass-client
