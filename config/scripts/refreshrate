@@ -16,6 +16,10 @@
 # (kullanıcı kararı, 2026-08-12). Fişte 165 isteyip pilde 60 istemek her zaman
 # doğru değil — pilde oyun da oynanır, fişte de metin okunur.
 #
+# MAKİNE KAPSAMI: özellik pille çalışan makineye özgü ve bunu betik kendi
+# söylüyor — `toggle` ve bardaki gösterge pilsiz makinede kapalı, `set <hz>`
+# açık. Gerekçe ve neden `config/hosts` DEĞİL: aşağıda, toggle kolunda.
+#
 # ÜÇ TUZAK, ÜÇÜ DE ÖLÇÜLDÜ. Elle yapmak masum olmadığı için bu betik var:
 #
 #   1. `hyprctl keyword monitor ...` BU YAPILANDIRMADA ÖLÜ ve ÇIKIŞ 0 VERİYOR.
@@ -189,6 +193,25 @@ case "${1-toggle}" in
     ;;
 
   toggle)
+    # PİLSİZ MAKİNEDE TOGGLE YOK. Bu özellik bir güç ödünü; masaüstünde ödün
+    # diye bir şey yok, 60 Hz orada yalnızca daha kötü ekran demek.
+    #
+    # Koşul burada, TÜKETİCİDE: bağlama her makinede aynı kalıyor ("koşulu
+    # tüketiciye koy, dosyayı bölme") ve `SUPER+H` masaüstünde kendiliğinden
+    # ölü oluyor. `config/hosts`'a anahtar EKLENMEDİ, bilerek: "pil var mı"
+    # çalışma anında sorulabilen bir şey, ve kimliğe bağlanırsa ikinci bir
+    # dizüstü o dosya elle düzenlenene kadar sessizce özelliksiz kalırdı
+    # (`ORNEK.conf`'ta anahtarların hepsi yorumlu). Aynı ayrımın ölçülmüş
+    # emsali: batwarn.py:197 pil sorusunu betiğin içinde soruyor, buna karşılık
+    # RGB_DEVICES hosts'ta — çünkü orada çalışma anı testi ayırt etmiyor.
+    #
+    # `set <hz>` kasten kapsam dışı: kaçış kapısı kalsın (titreşen monitör gibi
+    # bir sebep çıkarsa) ve o yolda durum görünmez de kalmıyor — hız yerel modun
+    # altındayken gösterge pilsiz makinede de beliriyor.
+    if ! has_battery; then
+      notify "󰍹 Yenileme hızı" "Bu makinede pil yok; düşürmenin karşılığı yok.\nGerekiyorsa: refreshrate set <hz>"
+      die "pil yok — toggle bu makinede kapalı (gerekirse: refreshrate set <hz>)"
+    fi
     [ -n "$native" ] || die "MONITOR_MODE boş — bu makine için ~/.config/hosts/ kaydı yok"
     [ "$native" -gt "$LOW" ] 2>/dev/null \
       || die "yerel mod zaten ${native} Hz; toggle edecek bir şey yok"
