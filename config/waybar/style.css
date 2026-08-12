@@ -57,6 +57,7 @@ tooltip label {
 #pulseaudio,
 #custom-weather,
 #custom-hypridle,
+#custom-refreshrate,
 #idle_inhibitor {
   background: #1a1b26;
   opacity: 0.8;
@@ -277,12 +278,16 @@ tooltip label {
   padding: 0 20px 0 8px;
 }
 
-/* Yenileme hızı kendi kapsülünde: wireplumber|backlight bitişik bir çift
-   (soldan ve sağdan yuvarlanıyorlar), araya girmek o çifti bozardı. */
+/* Yenileme hızı AYRI bir bölüm, pil gibi: kendi kapsülü, iki yanı yuvarlak.
+   Araya girmiyor çünkü wireplumber|backlight bitişik bir çift (biri soldan
+   biri sağdan yuvarlanıyor) ve aralarına girmek o çifti bozardı.
+   Arka planı ve dikey hizası yukarıdaki "Global Module Styling" bloğundan
+   geliyor — o listeye yazılmayan modül kapsülsüz kalır ve barın üst kenarına
+   yapışır (ölçüldü: ilk hâli tam olarak öyle çizildi). */
 #custom-refreshrate {
   margin-right: 10px;
   border-radius: 10px;
-  padding: 0 14px;
+  padding: 0 20px;
 }
 
 /* 60 Hz = tasarruf kolu açık. Yeşil, çünkü peripherals'ta "charging" de yeşil:

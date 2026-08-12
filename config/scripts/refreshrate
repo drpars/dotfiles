@@ -80,6 +80,18 @@ cur_hz() {
     | jq -r '.refreshRate // empty' | awk 'NF {printf "%.0f", $1}'
 }
 
+# Bu makinede pil var mı. Sorulabilen bir şey olduğu için host dosyasına
+# yazılmıyor; sysfs yeter, D-Bus gerekmez.
+has_battery() {
+  local d t
+  for d in /sys/class/power_supply/*/type; do
+    [ -r "$d" ] || continue
+    read -r t < "$d"
+    [ "$t" = Battery ] && return 0
+  done
+  return 1
+}
+
 # Panelin mod listesinde bu hız var mı. Liste okunamıyorsa engel çıkarmaz —
 # asıl doğrulama zaten değişimden sonraki geri okuma.
 rate_available() {
@@ -140,12 +152,32 @@ case "${1-toggle}" in
       printf '{"text":""}\n'
       exit 0
     fi
+
+    # PİLİ OLMAYAN MAKİNEDE GÖSTERGE YOK. Bu modülün söylediği şey bir güç
+    # ödünü; masaüstünde ödün diye bir şey yok, orada 60 Hz yalnızca daha
+    # kötü bir ekran demek. Koşul makine kimliğine değil çalışma anına
+    # sorulur (batwarn.py:197 ile aynı desen: "pil var mı" sorulabilen bir
+    # şey, `config/hosts`'a yazılacak bir olgu değil).
+    #
+    # AMA KOŞULSUZ GİZLEMEK DE YANLIŞ olurdu: SUPER+H her makinede çalışıyor
+    # ve göstergesi olmayan bir durum değişimi görünmez olurdu. O yüzden
+    # ölçüt "pil yok" değil, "pil yok VE söylenecek bir şey yok": masaüstünde
+    # hız yerel modun altına inerse modül belirir.
+    if ! has_battery && [ -n "$native" ] && [ "$hz" -ge "$native" ] 2>/dev/null; then
+      printf '{"text":""}\n'
+      exit 0
+    fi
+    # Watt iddiası YALNIZ pilli makinede yazılır: 5,46 W bu dizüstünde
+    # ölçüldü, evrensel bir olgu değil. Pilsiz makinede tooltip yalnız
+    # durumu söyler — ölçülmemiş bir sayıyı başka donanıma taşımaz.
     if [ -n "$native" ] && [ "$hz" -lt "$native" ] 2>/dev/null; then
       cls=low
-      tip="Panel ${hz} Hz — tasarruf. Yerel mod ${native} Hz.\nÖlçüldü: 165 → 60 Hz = 5,46 W (tam şarjda ~1 sa 33 dk)."
+      tip="Panel ${hz} Hz — düşük mod. Yerel mod ${native} Hz."
+      has_battery && tip="Panel ${hz} Hz — tasarruf. Yerel mod ${native} Hz.\nÖlçüldü: 165 → 60 Hz = 5,46 W (tam şarjda ~1 sa 33 dk)."
     else
       cls=native
-      tip="Panel ${hz} Hz — yerel mod.\n60 Hz'e inmek pilde 5,46 W kazandırıyor (ölçüldü)."
+      tip="Panel ${hz} Hz — yerel mod."
+      has_battery && tip="Panel ${hz} Hz — yerel mod.\n60 Hz'e inmek pilde 5,46 W kazandırıyor (ölçüldü)."
     fi
     printf '{"text":"󰍹 %s","class":"%s","tooltip":"%s"}\n' "$hz" "$cls" "$tip"
     ;;
