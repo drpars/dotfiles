@@ -36,11 +36,6 @@ text-color=#cdd6f4
 border-color=#ffe9a0
 progress-color=over #313244
 
-[urgency=high]
-text-color=#fab387
-border-color=#ffe9a0
-default-timeout=2000
-
 [urgency=normal]
 border-color=#ffe9a0
 default-timeout=5000
