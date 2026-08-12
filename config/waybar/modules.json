@@ -270,7 +270,22 @@
   },
 
   "battery": {
-    "interval": 1,
+    // "interval" YAZILMIYOR: varsayılan 60 (battery.cpp:19). Devralınan
+    // dosyada 1 vardı ve hiç seçilmemişti — modules.json'un ilk import'uyla
+    // geldi. Modülün asıl güncelleme kanalı zamanlayıcı değil: BAT0/uevent
+    // üstünde inotify + power_supply üstünde udev netlink. Zamanlayıcının işi
+    // kaynağın kendi yorumuyla "kaçırılmış bir inotify olayına karşı emniyet
+    // ağı" (battery.cpp:73). Bar metni {icon}, yani on bir kovadan biri —
+    // 30 W'ta bir kova ~13 dk (66,2 Wh tam şarj), fişteyken zaten sabit glif.
+    // Görünen hiçbir şey 60'tan hızlısını istemiyor.
+    // KABUL EDİLEN BEDEL: tooltip'teki {power} ve {time} 60 sn'ye kadar eski
+    // olabilir — waybar tooltip'i hover anında değil zamanlayıcıda hesaplıyor.
+    // Yetmezse çare ÖLÇÜLMÜŞ bir sayı yazmaktır, 1'e dönmek değil.
+    // 1 Hz masaüstünde tümüyle boştu: modül pil yokluğundan gizli
+    // (update() → batteries_.empty() → hide) ama worker()'ın zamanlayıcısı
+    // koşulsuz koşup her turda /sys/class/power_supply'ı tarıyor
+    // (refreshBatteries). Burada da çoğu tur boş: fişte/sınırda 60 sn
+    // dinlendi, sıfır çekirdek uevent'i geldi (ölçüldü 2026-08-12).
     // BOŞ BIRAKILDI, unutulmadı — "Plugged" yükseltmesi bilerek kapalı.
     // battery.cpp:580'deki yükseltme yalnız adapter_ doluyken çalışıyor ve
     // "Discharging"i de kapsıyor; ADP0'da "status" dosyası olmadığı için
