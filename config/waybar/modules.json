@@ -371,10 +371,17 @@
   },
 
   "backlight": {
-    // "device" bilerek yazılmıyor: aygıt adı makineye göre değişiyor (bu
-    // dizüstünde amdgpu_bl2, sabit değil) ve waybar ad tutmazsa zaten en büyük
-    // "backlight" alt sistemi aygıtını kendisi seçiyor. Yanlış ad sessizce
-    // otomatik seçime düşer, yani yazmak yalnızca yanıltır.
+    // "device" bilerek yazılmıyor: aygıt adı MAKİNEDEN DE ÖNCE BOOT'A GÖRE
+    // değişiyor — bu dizüstünde bir açılışta amdgpu_bl2, sonrakinde amdgpu_bl1
+    // (ölçüldü 2026-08-13). waybar ad tutmazsa zaten "backlight" alt sistemi
+    // aygıtını kendisi seçiyor. Yanlış ad sessizce otomatik seçime düşer, yani
+    // yazmak yalnızca yanıltır.
+    //
+    // on-scroll-*/on-click-* betiğe gidiyor ve bu ZORUNLU: waybar-backlight(5),
+    // bu girdilerin "parlaklık denetiminin varsayılan davranışını DEĞİŞTİRDİĞİNİ"
+    // söylüyor. Modülün kendi yazma yolunda tavan diye bir seçenek yok
+    // (min-brightness var, karşılığı yok), yani girdiler kaldırılırsa panelin
+    // söndüğü ham değer buradan yazılabilir hâle gelir → scripts/brightness.
     "format": "{icon}",
     "format-icons": ["󰃞", "󰃟", "󰃠"],
     "on-click": "$HOME/.config/scripts/brightness up",

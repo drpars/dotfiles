@@ -8,6 +8,13 @@
 #
 # Kept in bash on purpose: this runs on a key press, with key repeat, and a
 # python interpreter start would be felt on every step.
+#
+# THE ONE PLACE A BRIGHTNESS STEP IS DECIDED. Every consumer lands here: the
+# Fn keys (keybindings.lua), and waybar's backlight module, whose on-click /
+# on-scroll entries point at this script -- waybar-backlight(5) says those
+# "replace the default behaviour of brightness control", so the module writes
+# nothing on its own. Anything added later goes through here too, because the
+# ceiling below cannot be expressed anywhere else.
 
 KBD_LED="asus::kbd_backlight"
 
@@ -19,6 +26,15 @@ screen)
   dev=()
   step=10
   label="Ekran Parlaklığı"
+  # NEVER WRITE max_brightness ITSELF. On linux-zen 7.1.8 amdgpu advertises
+  # 65535 for this panel and the panel goes dark at exactly that value, while
+  # 65534 is bright; linux-g14 caps the same panel at 62451 and has no dark
+  # spot. So the ceiling is "one below whatever the kernel advertises" -- and
+  # it is read at every step, never hardcoded: the number moves with the
+  # kernel, and even the device name does (amdgpu_bl2 on one boot, amdgpu_bl1
+  # on the next). The headroom costs nothing measurable: 62450 and 62451 are
+  # indistinguishable by eye, and brightnessctl still reports max-1 as 100%.
+  headroom=1
   ;;
 kbd)
   # Only ASUS laptops have this LED. Bail quietly elsewhere so the script is
@@ -27,6 +43,9 @@ kbd)
   dev=(-d "$KBD_LED")
   step=33
   label="Klavye Parlaklığı"
+  # No headroom: this LED has four levels (0-3) and the top one is a working
+  # value. The defect above belongs to the panel, not to backlights in general.
+  headroom=0
   ;;
 *)
   echo "usage: brightness up|down|get [screen|kbd]" >&2
@@ -34,8 +53,19 @@ kbd)
   ;;
 esac
 
+# device,class,current,percent,max -- one call, the two raw numbers we need.
+IFS=, read -r _ _ cur _ max < <(brightnessctl "${dev[@]}" -m 2>/dev/null)
+
+# No backlight at all (the desktop has none): do nothing, quietly, like the
+# kbd guard above. Guarding on the parsed maximum rather than on a sysfs path
+# covers every device brightnessctl might have picked.
+[ -n "$max" ] && [ "$max" -gt 0 ] || exit 0
+
+# brightnessctl's own display rounding, reproduced so the notification needs no
+# second call on the key repeat path. Verified against it on every value
+# measured here: 62451->95, 55898->85, 65534->100, and 2/3->67, 3/3->100.
 percent() {
-  brightnessctl "${dev[@]}" -m | cut -d, -f4 | tr -d '%'
+  echo $(((cur * 100 + max / 2) / max))
 }
 
 notify() {
@@ -46,8 +76,21 @@ notify() {
 
 case "$action" in
 up | down)
-  [ "$action" = up ] && arg="${step}%+" || arg="${step}%-"
-  brightnessctl "${dev[@]}" set "$arg" >/dev/null && notify "$(percent)"
+  # The step is computed here instead of being handed to brightnessctl as
+  # "10%+" because brightnessctl clamps to max, which is the one value that
+  # must not be written, and it has no way to express a lower ceiling. The
+  # formula reproduces what it does -- measured on both devices: 6553 raw on
+  # the 65535 screen (62451 -> 55898 -> 62451, exactly symmetric), and 1 raw
+  # on the 3 step LED, where truncation alone would have given a step of zero.
+  delta=$((max * step / 100))
+  ((delta < 1)) && delta=1
+
+  [ "$action" = up ] && cur=$((cur + delta)) || cur=$((cur - delta))
+  ceiling=$((max - headroom))
+  ((cur > ceiling)) && cur=$ceiling
+  ((cur < 0)) && cur=0
+
+  brightnessctl "${dev[@]}" -q set "$cur" && notify "$(percent)"
   ;;
 get)
   echo "$(percent)%"
