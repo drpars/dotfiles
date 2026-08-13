@@ -1,0 +1,88 @@
+#!/bin/bash
+# Bar tıklamasıyla açılan güncelleme penceresi.
+#
+#   sysupdate repo   -- sudo pacman -Syu   (custom/pacman sol tık)
+#   sysupdate aur    -- yay -Sua           (custom/pacman sağ tık)
+#
+# TEK ÖRNEK GARANTİSİ BU BETİKTE DEĞİL, ÇAĞIRANDA. İkisi de `tuipop Update`
+# ile çağrılıyor — AYNI ad, dolayısıyla AYNI kilit (`tuipop-Update.lock`).
+# Biri koşarken diğerine tıklamak var olan pencereyi öne getirir. Ayrı adlar
+# yazılsaydı iki ayrı kilit olurdu ve ikisi sessizce aynı anda koşardı; bu
+# satır o hatayı önlemek için burada.
+#
+# NEDEN KİLİT GEREKİYOR: `yay -Sua` AUR paketlerini DERLİYOR. Yarım
+# güncellenmiş kütüphanelere karşı derlemek gerçek bir tehlike ve pacman'in
+# kendi db kilidi bunu KORUMAZ — o yalnız kurulum adımını kilitler, derleme
+# adımını değil. Yani koruma bu seviyede olmak zorunda.
+#
+# `yay -Syu` DEĞİL `-Sua`: yay pacman'in sarmalayıcısı, `-Syu` repo
+# paketlerini de yükseltir ve sağ tık sol tıkı kapsardı. `-a/--aur` =
+# "Assume targets are from the AUR" (yay --help).
+#
+# PENCERE KOMUT BİTİNCE KAPANMAZ. Devralınan tuipop çağrılarının beşi de
+# sonsuz TUI (btop, nvtop, bluetui, impala) — bitiş diye bir şeyleri yok.
+# Güncelleme ise biter, ve kitty o anda kapanırsa sonucu, hatayı, `.pacnew`
+# uyarısını ya da keyring sorununu okuyamazsın. Sondaki bekleme süsleme değil.
+#
+# SUDO BURADA NORMAL SORULUR: kitty gerçek bir terminal, denetim tty'si var.
+# Claude Code kabuğundaki askpass/`!` kanalının bu betikle ilgisi yok.
+
+set -uo pipefail
+
+MODULE="$HOME/.config/scripts/waybar-updates"
+SIGNAL=12   # waybar custom/pacman "signal": 12
+
+case "${1:-}" in
+  repo)
+    baslik="Resmi depo güncellemesi  --  pacman -Syu"
+    komut=(sudo pacman -Syu)
+    # Sol tık AUR'a dokunmuyor (kullanıcı kararı 2026-08-13). Kalan AUR
+    # güncellemesi ikonu yanık bırakır ve bu YALAN DEĞİL; aşağıdaki rapor
+    # bunu görünür kılıyor ki "güncelledim, hâlâ yanıyor" şaşırtmasın.
+    ipucu="AUR kaldıysa bar ikonu yanık kalır — sağ tık onu alır."
+    ;;
+  aur)
+    baslik="AUR güncellemesi  --  yay -Sua"
+    komut=(yay -Sua)
+    ipucu=""
+    ;;
+  *)
+    printf 'kullanım: sysupdate repo|aur\n' >&2
+    exit 2
+    ;;
+esac
+
+if ! command -v "${komut[0]}" >/dev/null 2>&1; then
+  printf '\n  %s bulunamadı.\n\n' "${komut[0]}"
+  [ -t 0 ] && { printf '  Kapatmak için bir tuşa bas... '; read -rsn1 _; }
+  exit 127
+fi
+
+printf '\n  \033[1m%s\033[0m\n\n' "$baslik"
+
+"${komut[@]}"
+rc=$?
+
+# --- bitiş raporu ----------------------------------------------------------
+printf '\n\033[1m----------------------------------------\033[0m\n'
+if ((rc == 0)); then
+  printf '  Bitti.\n'
+else
+  printf '  \033[1;31mÇıkış kodu %d\033[0m — yukarıdaki çıktıyı oku.\n' "$rc"
+fi
+
+# Güncel durumu modülün KENDİ betiğinden sor: tek bir doğruluk kaynağı olsun,
+# sayım mantığı burada ikinci kez yazılmasın. Çevrimiçi senkron dahil ~3 sn.
+if [[ -x $MODULE ]]; then
+  durum=$("$MODULE" 2>/dev/null | jq -r '.tooltip // empty' 2>/dev/null)
+  [[ -n $durum ]] && printf '  Durum: %s\n' "$durum"
+fi
+[[ -n $ipucu ]] && printf '  %s\n' "$ipucu"
+
+# Barı tazele. `-x`: ada göre eşleşir, komut satırına DEĞİL — `pkill -f` olsaydı
+# bu betiği koşturan kabuğu da eşleyip zincirin kalanını hiç çalıştırmazdı.
+pkill -RTMIN+"$SIGNAL" -x waybar 2>/dev/null
+
+printf '\033[1m----------------------------------------\033[0m\n\n'
+[ -t 0 ] && { printf '  Kapatmak için bir tuşa bas... '; read -rsn1 _; printf '\n'; }
+exit "$rc"

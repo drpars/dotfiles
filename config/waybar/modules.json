@@ -131,7 +131,22 @@
     // Guard artık ARACI ölçüyor, betiği değil: betik depoda hep var (symlink),
     // makineye bağlı olan şey checkupdates'in varlığı (pacman-contrib).
     "exec-if": "command -v checkupdates",
-    "exec": "~/.config/scripts/waybar-updates"
+    "exec": "~/.config/scripts/waybar-updates",
+    // ÜÇ TIK, İKİSİ AYNI KİLİDİ PAYLAŞIYOR. tuipop'un kilidi ADA bağlı
+    // (tuipop-<ad>.lock), bu yüzden sol ve sağ tık ikisi de "Update" adını
+    // kullanıyor: biri koşarken diğerine tıklamak var olan pencereyi öne
+    // getirir. Ayrı adlar yazılsaydı iki ayrı kilit olurdu ve pacman ile
+    // yay SESSİZCE aynı anda koşardı — yay AUR paketlerini derlediği için
+    // yarım güncellenmiş kütüphaneye karşı derleme riski gerçek, ve pacman'in
+    // kendi db kilidi derleme adımını KORUMAZ.
+    // Sağ tık `yay -Syu` DEĞİL: o repo paketlerini de alır ve sol tıkı
+    // kapsardı. AUR-only bayrağı -a/--aur (ölçüldü, yay --help).
+    "on-click": "~/.config/scripts/tuipop Update ~/.config/scripts/sysupdate repo",
+    "on-click-right": "~/.config/scripts/tuipop Update ~/.config/scripts/sysupdate aur",
+    // Orta tık = yeniden denetle. Güncelleme betikleri bitişte sinyali kendi
+    // atıyor, yani bu yol yalnız "başka terminalden güncelledim" ya da
+    // "saatlik turu beklemeyeceğim" için. Desen: bluetooth on-click-middle.
+    "on-click-middle": "pkill -RTMIN+12 -x waybar"
   },
 
   "clock": {
