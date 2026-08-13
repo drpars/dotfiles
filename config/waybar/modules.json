@@ -109,14 +109,29 @@
   },
 
   "custom/pacman": {
-    "format": "{icon}{0}",
+    // Yalnız simge: sayı bilerek gösterilmiyor (kullanıcı kararı 2026-08-13).
+    // Betik sayıyı yine de "text"e yazıyor — biçim "{icon}{}" yapılırsa
+    // görünür, betiğe dokunmak gerekmez.
+    "format": "{icon}",
     "return-type": "json",
     "format-icons": {
       "pending-updates": "",
       "updated": ""
     },
-    "exec-if": "which waybar-updates",
-    "exec": "waybar-updates"
+    // DAEMON YOK ve bu bir arıza sonrası seçim. Önceki AUR paketi 6 sn'lik
+    // sonsuz döngüydü; 2026-08-13'te öldü, waybar onu YENİDEN BAŞLATMADI
+    // ("restart-interval" bu dosyada hiç yazmıyor) ve gösterge 4 saat boyunca
+    // sessizce karanlıkta kaldı — o sırada 109 güncelleme bekliyordu. Kanıt
+    // süreç ağacından: waybar 10 sa 46 dk ayaktaydı ve HİÇ ÇOCUĞU YOKTU.
+    // Tek atımlık betikte ölecek daemon yok: başarısız koşu bir tura mal olur.
+    // Bedeli ölçüldü — tam koşu (çevrimiçi senkron dahil) 3,2 sn, saatte bir.
+    "interval": 3600,
+    // Anında tazeleme kanalı: pkill -RTMIN+12 waybar. 8/9/10/11 dolu.
+    "signal": 12,
+    // Guard artık ARACI ölçüyor, betiği değil: betik depoda hep var (symlink),
+    // makineye bağlı olan şey checkupdates'in varlığı (pacman-contrib).
+    "exec-if": "command -v checkupdates",
+    "exec": "~/.config/scripts/waybar-updates"
   },
 
   "clock": {

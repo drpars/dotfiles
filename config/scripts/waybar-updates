@@ -1,0 +1,142 @@
+#!/bin/bash
+# waybar custom/pacman: bekleyen güncelleme VAR / YOK göstergesi.
+#
+# NEDEN VAR: yerini aldığı AUR paketi (waybar-updates 0.6.0) KALICI BİR
+# DAEMON'dı — 6 sn'lik sonsuz döngü, saatte bir çevrimiçi senkron. Ölçüldü
+# (2026-08-13): süreç 07:36'dan sonra öldü, waybar onu YENİDEN BAŞLATMADI
+# (modülde `restart-interval` yok) ve gösterge 4 saat boyunca sessizce
+# karanlıkta kaldı — o sırada 109 pacman güncellemesi bekliyordu. Kanıt
+# süreç ağacından: waybar (pid 1095) 10 sa 46 dk ayaktaydı ve HİÇ ÇOCUĞU
+# YOKTU. Ölümün sebebi loglara düşmedi; artık kalan geçici dosya betiğin
+# `cleanup()`'ının hiç koşmadığını söylüyor, yani temiz bir SIGTERM değildi.
+#
+# Yapısal kusur sebep değil sonuçtu: ölecek bir daemon varsa ve yeniden
+# başlatma politikası yoksa, TEK bir geçici hata göstergeyi süresiz karartır.
+# Bu betik tek atımlıktır — çalışır ve ÇIKAR. Başarısız bir koşunun bedeli
+# bir turdur, sonsuza kadar değil. Tazeleme waybar'ın işi:
+# "interval": 3600 + "signal": 12 (desen: custom/refreshrate, sinyal 11).
+#
+# KAPSAM (kullanıcı kararı 2026-08-13): yalnız ikili durum. Sayı barda
+# GÖSTERİLMİYOR ("format": "{icon}"), tooltip'te PAKET LİSTESİ YOK. Devredilen
+# betiğin devel/kernel/flatpak/notify özellikleri hiç taşınmadı — modül zaten
+# bayraksız çağrılıyordu, yani dördü de kapalıydı ve gövdeleri ölü koddu.
+#
+# BİLİNMİYOR ≠ GÜNCEL. İki ağ işi de düşerse modül GİZLENİR ("text":"" →
+# {icon} boş → waybar etiketi çizmez), "Sistem güncel" YAZMAZ. Bilmediğini
+# biliyormuş gibi göstermek yanlış cevabın en kötü türü (aynı gerekçe:
+# get-layout.sh, klavye okunamadığında "US" yazmıyor).
+#
+# İKİ ZAMAN AŞIMI, ikisi de devralınan betikteki gerçek boşluk: onun curl
+# çağrılarında --max-time YOKTU. Askıya alma/uyanma turu TCP bağlantısını
+# öldürdüğünde zaman aşımsız bir curl döngüyü süresiz kilitleyebilirdi
+# (ölümün kanıtlanmış sebebi değil, ama kapatılabilir bir boşluk).
+#
+# checkupdates NEDEN YERİNDE DURUYOR: çevrimiçi yolu `fakeroot -- pacman -Sy
+# --dbpath <geçici>` (pacman-contrib, satır 147-153). Gerçek veritabanına
+# dokunmadan senkronlar; tek işi KISMİ YÜKSELTMEYİ önlemek. Yeniden yazılırdı,
+# ama yeniden yazılacak şey tam da güvenlik için var olan parça.
+
+set -uo pipefail
+
+SYNC_TIMEOUT=120   # checkupdates -Sy: db indirir (extra.db ~9 MB)
+NET_TIMEOUT=20     # AUR RPC tek atış
+
+# --- pacman tarafı ---------------------------------------------------------
+# checkupdates çıkışları: 0 = liste var, 2 = güncelleme yok, 1 = senkron düştü.
+# IgnorePkg'i checkupdates kendisi eliyor (`pacman -Qu` çıktısındaki [ignored]
+# satırlarını grep'liyor), burada tekrar süzmeye gerek yok.
+stale=0
+pacman_list=$(timeout "$SYNC_TIMEOUT" checkupdates --nocolor 2>/dev/null)
+rc=$?
+
+if ((rc != 0 && rc != 2)); then
+  # Senkron düştü (ağ yok, timeout, fakeroot yok). Son başarılı senkronun
+  # geçici veritabanı duruyorsa ondan oku — bayat ama sessizce sıfır demekten
+  # iyi; tooltip bayatlığı söylüyor.
+  stale=1
+  pacman_list=$(checkupdates --nosync --nocolor 2>/dev/null)
+  rc=$?
+  if ((rc != 0 && rc != 2)); then
+    printf '{"text":""}\n'
+    exit 0
+  fi
+fi
+
+if [[ -z $pacman_list ]]; then
+  pacman_count=0
+else
+  pacman_count=$(wc -l <<< "$pacman_list")
+fi
+
+# --- AUR tarafı ------------------------------------------------------------
+# Sayım TUTULUYOR: 32 yabancı paket var, atlanırsa yalnız AUR'da güncelleme
+# olan günlerde simge YALAN söyler. Bedeli bu blok kadar.
+aur_count=0
+aur_unknown=0
+
+mapfile -t foreign < <(pacman -Qm 2>/dev/null)
+
+if ((${#foreign[@]} > 0)); then
+  declare -A ignored=()
+  while read -r name; do
+    [[ -n $name ]] && ignored[$name]=1
+  done < <(pacman-conf IgnorePkg 2>/dev/null)
+
+  # curl -g: URL globbing'i kapatır. "arg[]=" içindeki köşeli parantezi curl
+  # aksi hâlde glob deseni sanar.
+  url="https://aur.archlinux.org/rpc?v=5&type=info"
+  for entry in "${foreign[@]}"; do
+    url+="&arg[]=${entry%% *}"
+  done
+
+  remote=$(curl -sfg --max-time "$NET_TIMEOUT" "$url" 2>/dev/null \
+    | jq -r '.results[]? | .Name + " " + .Version' 2>/dev/null)
+
+  if [[ -z $remote ]]; then
+    # Sorgu düştü. 0 saymak eksik bildirmek olurdu; tooltip söylesin.
+    aur_unknown=1
+  else
+    declare -A upstream=()
+    while read -r name ver; do
+      [[ -n $name ]] && upstream[$name]=$ver
+    done <<< "$remote"
+
+    for entry in "${foreign[@]}"; do
+      name=${entry%% *}
+      local_ver=${entry#* }
+      [[ -n ${ignored[$name]:-} ]] && continue
+      remote_ver=${upstream[$name]:-}
+      [[ -n $remote_ver ]] || continue
+      if [[ $(vercmp "$local_ver" "$remote_ver") -lt 0 ]]; then
+        aur_count=$((aur_count + 1))
+      fi
+    done
+  fi
+fi
+
+# --- çıktı -----------------------------------------------------------------
+# Sözleşme dört anahtar: text / alt / tooltip / class. `alt` format-icons'a,
+# `class` style.css'teki #custom-pacman.pending-updates'e bağlı — ikisi de
+# devralınan betikle AYNI, o yüzden modules.json'ın biçim satırları ve CSS
+# değişmedi. Tooltip içeriği tümüyle burada üretiliyor (sayılar + sabit
+# Türkçe dizeler), dışarıdan metin girmiyor; printf ile kaçış sorunu yok.
+total=$((pacman_count + aur_count))
+
+if ((total > 0)); then
+  tooltip="$total güncelleme bekliyor"
+  detail="$pacman_count pacman"
+  if ((aur_unknown)); then
+    detail+=", AUR sorgulanamadı"
+  else
+    detail+=", $aur_count AUR"
+  fi
+  tooltip+=" ($detail)"
+  ((stale)) && tooltip+=" — çevrimdışı, son bilinen durum"
+  printf '{"text":"%s","alt":"pending-updates","tooltip":"%s","class":"pending-updates"}\n' \
+    "$total" "$tooltip"
+else
+  tooltip="Sistem güncel"
+  ((aur_unknown)) && tooltip+=" (AUR sorgulanamadı)"
+  ((stale)) && tooltip+=" — çevrimdışı, son bilinen durum"
+  printf '{"text":"0","alt":"updated","tooltip":"%s","class":"updated"}\n' "$tooltip"
+fi
