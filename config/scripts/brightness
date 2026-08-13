@@ -26,15 +26,27 @@ screen)
   dev=()
   step=10
   label="Ekran Parlaklığı"
-  # NEVER WRITE max_brightness ITSELF. On linux-zen 7.1.8 amdgpu advertises
-  # 65535 for this panel and the panel goes dark at exactly that value, while
-  # 65534 is bright; linux-g14 caps the same panel at 62451 and has no dark
-  # spot. So the ceiling is "one below whatever the kernel advertises" -- and
-  # it is read at every step, never hardcoded: the number moves with the
-  # kernel, and even the device name does (amdgpu_bl2 on one boot, amdgpu_bl1
-  # on the next). The headroom costs nothing measurable: 62450 and 62451 are
-  # indistinguishable by eye, and brightnessctl still reports max-1 as 100%.
-  headroom=1
+  # THE TOP OF THE ADVERTISED RANGE IS NOT REACHABLE. On linux-zen 7.1.8 the
+  # amdgpu PWM mapping overflows 16 bits near the top: raw 64500 still gives
+  # PWM 0xffff, raw 64550 gives 0x00e8 -- it wraps, and the panel goes black.
+  # Measured through /sys/kernel/debug/dri/*/eDP-1/amdgpu_target_backlight_pwm:
+  #
+  #   raw 64000 -> 0xfe2c    raw 64300..64500 -> 0xffff   (saturated)
+  #   raw 64550 -> 0x00e8    raw 65534/65535  -> 0x048e   (wrapped, dark)
+  #
+  # Two consequences. The PWM SATURATES at raw 64300 = 98.1% of max, so every
+  # raw value above that buys no brightness at all -- it only walks toward the
+  # wrap. And "max - 1" is no fix: 65534 is deep inside the wrapped region,
+  # which is why the first attempt at this still went dark.
+  #
+  # So the headroom is a FRACTION of the advertised range, not a raw offset,
+  # and it is taken at every step because max moves with the kernel (zen 65535,
+  # g14 62451) and even the device name moves with the boot (amdgpu_bl2 once,
+  # amdgpu_bl1 the next). 3% lands on 63569 here: PWM 0xfd43, i.e. 98.9% of
+  # what the panel can emit -- no eye can see the difference -- while sitting
+  # 981 raw units below the wrap. 2% would be 0.7 points brighter for a third
+  # of the margin, which is the wrong side of that trade.
+  headroom_pct=3
   ;;
 kbd)
   # Only ASUS laptops have this LED. Bail quietly elsewhere so the script is
@@ -45,7 +57,7 @@ kbd)
   label="Klavye Parlaklığı"
   # No headroom: this LED has four levels (0-3) and the top one is a working
   # value. The defect above belongs to the panel, not to backlights in general.
-  headroom=0
+  headroom_pct=0
   ;;
 *)
   echo "usage: brightness up|down|get [screen|kbd]" >&2
@@ -61,11 +73,17 @@ IFS=, read -r _ _ cur _ max < <(brightnessctl "${dev[@]}" -m 2>/dev/null)
 # covers every device brightnessctl might have picked.
 [ -n "$max" ] && [ "$max" -gt 0 ] || exit 0
 
-# brightnessctl's own display rounding, reproduced so the notification needs no
-# second call on the key repeat path. Verified against it on every value
-# measured here: 62451->95, 55898->85, 65534->100, and 2/3->67, 3/3->100.
+# The ceiling IS this script's 100%. Percentages are taken against it, not
+# against max_brightness, so pressing up to the top still says 100% and ten
+# steps still cover the whole usable range. brightnessctl and waybar's tooltip
+# both divide by max instead, so they read ~97% at the top -- that is them
+# describing an unreachable range, not a disagreement about the value.
+ceiling=$((max - max * headroom_pct / 100))
+
 percent() {
-  echo $(((cur * 100 + max / 2) / max))
+  local p=$(((cur * 100 + ceiling / 2) / ceiling))
+  ((p > 100)) && p=100
+  echo "$p"
 }
 
 notify() {
@@ -77,16 +95,16 @@ notify() {
 case "$action" in
 up | down)
   # The step is computed here instead of being handed to brightnessctl as
-  # "10%+" because brightnessctl clamps to max, which is the one value that
-  # must not be written, and it has no way to express a lower ceiling. The
-  # formula reproduces what it does -- measured on both devices: 6553 raw on
-  # the 65535 screen (62451 -> 55898 -> 62451, exactly symmetric), and 1 raw
-  # on the 3 step LED, where truncation alone would have given a step of zero.
-  delta=$((max * step / 100))
+  # "10%+" because brightnessctl clamps to max -- the far side of the wrap --
+  # and has no way to express a lower ceiling. The shape of the formula is its
+  # own, measured: truncated, but never zero (on the 3 step LED a percentage
+  # step truncates to nothing, and the LED would never move).
+  delta=$((ceiling * step / 100))
   ((delta < 1)) && delta=1
 
   [ "$action" = up ] && cur=$((cur + delta)) || cur=$((cur - delta))
-  ceiling=$((max - headroom))
+  # Clamping down is also the way OUT of a dark screen: if something left the
+  # value inside the wrapped region, one press of up lands on the ceiling.
   ((cur > ceiling)) && cur=$ceiling
   ((cur < 0)) && cur=0
 

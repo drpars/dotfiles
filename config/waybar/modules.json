@@ -382,6 +382,12 @@
     // söylüyor. Modülün kendi yazma yolunda tavan diye bir seçenek yok
     // (min-brightness var, karşılığı yok), yani girdiler kaldırılırsa panelin
     // söndüğü ham değer buradan yazılabilir hâle gelir → scripts/brightness.
+    //
+    // {percent} max_brightness'a bölünüyor, betiğin kullandığı tavana değil:
+    // tepede ~%97 okur. Yanlış değil — betik erişilemez bir aralığı dışarıda
+    // bırakıyor (amdgpu'nun PWM eşlemesi tepede sarıyor, gerekçe betikte).
+    // waybar'da bunu düzeltecek bir anahtar yok; format {icon} olduğu için
+    // fark yalnız tooltip'te görünür ve üç ikonun seçimi etkilenmiyor.
     "format": "{icon}",
     "format-icons": ["󰃞", "󰃟", "󰃠"],
     "on-click": "$HOME/.config/scripts/brightness up",
