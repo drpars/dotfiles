@@ -1,18 +1,148 @@
 #!/bin/bash
+# Control the hypridle daemon.
+#   Usage: hypridle status | toggle | start | stop | restart
+#
+# This script is named `hypridle`, exactly like the daemon it controls, and that
+# is not cosmetic: the kernel takes a shebang script's comm from the script's
+# own basename, so this process shows up as "hypridle" too. Measured: while this
+# script runs, `pgrep -x hypridle` returns two pids -- the daemon and this
+# script. The old version tested exactly that, so:
+#   - `status` could never report NOT RUNNING, and
+#   - `toggle` always took the kill branch; its start branch was dead code.
+# `killall hypridle` matches by comm as well, so it would have taken this script
+# down along with the daemon. Every lookup below therefore filters by
+# /proc/PID/exe -- the daemon's exe is hypridle, this script's is bash -- and
+# killing is done by pid, never by name.
+#
+# For the same reason the daemon is never invoked as a bare `hypridle`: both
+# /usr/bin and ~/.config/scripts are on PATH, and a reordering would make this
+# script call itself. The path is resolved explicitly instead.
+#
+# The daemon is started detached (`setsid -f`). Started in the foreground, as
+# the old version did, it dies with whatever shell ran it -- a waybar click or a
+# terminal -- and a `stop` + `start` pair written as a shell chain leaves the
+# machine with no idle handling at all if the second half fails. That happened:
+# the start half hit a Lua parser error while the kill half had already run, and
+# dimming, locking and suspend were off for a whole session.
 
 SERVICE="hypridle"
-if [[ "$1" == "status" ]]; then
-    sleep 1
-    if pgrep -x "$SERVICE" >/dev/null ;then
-        echo '{"text": "RUNNING", "class": "activated", "tooltip": "Ekran kilidi devrede"}'
-    else
-        echo '{"text": "NOT RUNNING", "class": "deactivated", "tooltip": "Ekran kilidi devredışı"}'
+SELF=$(readlink -f "$0")
+
+# The standard system PATH does not contain ~/.config/scripts, so this cannot
+# resolve to the script itself; the check afterwards covers the odd install.
+resolve_daemon() {
+  local cand
+  cand=$(PATH="$(getconf PATH)" command -v "$SERVICE" 2>/dev/null)
+  if [ -n "$cand" ] && [ "$(readlink -f "$cand")" != "$SELF" ]; then
+    printf '%s\n' "$cand"
+    return 0
+  fi
+  for cand in /usr/bin/"$SERVICE" /usr/local/bin/"$SERVICE"; do
+    if [ -x "$cand" ] && [ "$(readlink -f "$cand")" != "$SELF" ]; then
+      printf '%s\n' "$cand"
+      return 0
     fi
-fi
-if [[ "$1" == "toggle" ]]; then
-    if pgrep -x "$SERVICE" >/dev/null ;then
-        killall hypridle
+  done
+  return 1
+}
+
+# Only pids whose executable really is the daemon; drops this script and any
+# other wrapper that happens to carry the same name.
+daemon_pids() {
+  local pid exe
+  for pid in $(pgrep -x "$SERVICE" 2>/dev/null); do
+    exe=$(readlink "/proc/$pid/exe" 2>/dev/null) || continue
+    exe=${exe% (deleted)}
+    [ "${exe##*/}" = "$SERVICE" ] && printf '%s\n' "$pid"
+  done
+}
+
+running() { [ -n "$(daemon_pids)" ]; }
+
+fail() {
+  notify-send -u critical "hypridle" "$1" 2>/dev/null
+  echo "hypridle: $1" >&2
+  exit 1
+}
+
+do_stop() {
+  local pids i
+  mapfile -t pids < <(daemon_pids)
+  [ "${#pids[@]}" -gt 0 ] || return 0
+  kill -TERM "${pids[@]}" 2>/dev/null
+  for i in $(seq 30); do
+    running || return 0
+    sleep 0.1
+  done
+  mapfile -t pids < <(daemon_pids)
+  [ "${#pids[@]}" -gt 0 ] && kill -KILL "${pids[@]}" 2>/dev/null
+  for i in $(seq 10); do
+    running || return 0
+    sleep 0.1
+  done
+  return 1
+}
+
+# 0 = up, 1 = start did not take, 2 = daemon not found
+do_start() {
+  local daemon i
+  running && return 0
+  daemon=$(resolve_daemon) || return 2
+  # The caller's stdout is not inherited: a waybar click would keep that pipe
+  # open for as long as the daemon lives. Diagnostics still have to go
+  # somewhere, so they go to the journal (`journalctl --user -t hypridle`) --
+  # started from Hyprland the daemon logs into the compositor's log, and a
+  # restart should not be the thing that makes it mute.
+  if command -v systemd-cat >/dev/null 2>&1; then
+    setsid -f systemd-cat -t "$SERVICE" "$daemon" </dev/null >/dev/null 2>&1
+  else
+    setsid -f "$daemon" </dev/null >/dev/null 2>&1
+  fi
+  for i in $(seq 30); do
+    running && return 0
+    sleep 0.1
+  done
+  return 1
+}
+
+start_or_fail() {   # $1 = message prefix for the failure notification
+  do_start
+  case "$?" in
+    0) return 0 ;;
+    2) fail "$1daemon bulunamadı — hypridle kurulu mu?" ;;
+    *) fail "$1başlatılamadı" ;;
+  esac
+}
+
+case "${1:-status}" in
+  status)
+    if running; then
+      echo '{"text": "RUNNING", "class": "activated", "tooltip": "Ekran kilidi devrede"}'
     else
-        hypridle
+      echo '{"text": "NOT RUNNING", "class": "deactivated", "tooltip": "Ekran kilidi devredışı"}'
     fi
-fi
+    ;;
+  start)
+    start_or_fail ""
+    ;;
+  stop)
+    do_stop || fail "durdurulamadı (SIGKILL sonrası hâlâ ayakta)"
+    ;;
+  restart)
+    do_stop || fail "durdurulamadı (SIGKILL sonrası hâlâ ayakta)"
+    # Past this point the daemon is down, so a failure here is not cosmetic:
+    # say what state the machine was left in.
+    start_or_fail "durduruldu ama "
+    ;;
+  toggle)
+    if running; then
+      do_stop || fail "durdurulamadı (SIGKILL sonrası hâlâ ayakta)"
+    else
+      start_or_fail ""
+    fi
+    ;;
+  *)
+    echo "usage: hypridle status|toggle|start|stop|restart" >&2
+    exit 1
+    ;;
+esac
