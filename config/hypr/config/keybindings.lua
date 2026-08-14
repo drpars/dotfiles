@@ -115,15 +115,27 @@ hl.bind(M .. " + mouse:273",           hl.dsp.window.resize(), { mouse = true })
 -- ile panoya kopyala. `--raw` diske bir şey yazmaz, kaydetme kararı swappy'de
 -- kalır. `-s` hyprshot'ın kendi bildirimini susturur (dosya kaydetmiyor ki).
 -- `-z` seçim boyunca ekranı dondurur; tam ekran modunda seçim olmadığı için yok.
-hl.bind("Print",                       hl.dsp.exec_cmd("hyprshot -m region -z --raw -s | swappy -f -"))
+-- `-z` TUŞA DEĞİL MODA ait: bağlamalar takaslanırken komut yarıları taşınır,
+-- tuş adları değil. Aksi hâlde dondurma tam ekrana geçer, bölgeden düşer.
+--
+-- Modların tuşlara dağılımı ucuzluk sırasına göre: değiştiricisiz tek tuş,
+-- başka hiçbir yolu olmayan moda (tam ekran) verilir. Bölge en pahalı akorda
+-- durabilir, çünkü onun ayrıca kendi donanım tuşu var (Fn+F6, aşağıda) — ve
+-- bu dağılım donanımın varsaydığı Windows modeliyle de hizalanıyor (PrtScn =
+-- tam ekran). Takas fazlalığı KALDIRMAZ, taşır: bölgeye giden iki yol (aşağıki
+-- `CTRL + Print` ve `SUPER + SHIFT + S`) takastan sonra da iki yoldur.
+-- Pencere modunun değiştiricisi Windows'takinden ayrı (`SHIFT`, orada `ALT`);
+-- bu ayrışma takastan önce de vardı, bilerek korundu.
+hl.bind("Print",                       hl.dsp.exec_cmd("hyprshot -m output --raw -s | swappy -f -"))
 hl.bind("SHIFT + Print",               hl.dsp.exec_cmd("hyprshot -m window -z --raw -s | swappy -f -"))
-hl.bind(C .. " + Print",               hl.dsp.exec_cmd("hyprshot -m output --raw -s | swappy -f -"))
+hl.bind(C .. " + Print",               hl.dsp.exec_cmd("hyprshot -m region -z --raw -s | swappy -f -"))
 
 -- Fn+F6 (G513RM). Tuşun üstünde kırpma ikonu var ama özel bir tuş kodu
 -- üretmiyor: firmware Windows akorunu basıyor, `SUPER + SHIFT + S` (Win+Shift+S
 -- = Ekran Alıntısı). İki makinede bağımsız ölçüldü — burada sonda bağlamasıyla,
 -- g14 çekirdeğinde `libinput record --show-keycodes` ile → g14-boot-hatalari
--- notu. Bu yüzden yukarıdaki `Print` ile AYNI işe bağlı: ikisi de bölge kırpma.
+-- notu. Bu yüzden yukarıdaki `CTRL + Print` ile AYNI işe bağlı: ikisi de bölge
+-- kırpma. (2026-08-14 öncesinde eşi düz `Print`'ti; takasla oraya taşındı.)
 -- Yan etkisi kabul edilmiş: elle SUPER+SHIFT+S basmak da bunu açar, çünkü
 -- Hyprland için iki olay ayırt edilemez.
 hl.bind(M .. " + SHIFT + S",           hl.dsp.exec_cmd("hyprshot -m region -z --raw -s | swappy -f -"))
