@@ -223,7 +223,13 @@ tooltip label {
   transition: color 0.3s ease-in-out;
 }
 
-#bluetooth.off {
+/* Fn+F12 uçak modudur: rfkill hem wlan'ı hem bluetooth'u keser (ölçüldü
+   2026-08-14, ikisi de aynı örneklemede soft=1). Modül bunu göstermiyordu —
+   `format-off`/`format-disabled` tanımsızken genel `format`'a düşüyor, o da
+   glif olduğu için gösterge KAPALIYKEN DE AÇIK görünüyordu. Bu sınıf zaten
+   burada duruyordu ama karşılığı olan biçim hiç yazılmamıştı. */
+#bluetooth.off,
+#bluetooth.disabled {
   color: #565f89;
 }
 

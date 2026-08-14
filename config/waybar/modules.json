@@ -273,6 +273,10 @@
 
   "bluetooth": {
     "interval": 1,
+    "format-off": "󰂲",
+    "format-disabled": "󰂲",
+    "tooltip-format-off": "Bluetooth kapalı",
+    "tooltip-format-disabled": "Bluetooth devre dışı (rfkill)",
     "format": "",
     "format-connected": "",
     "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
