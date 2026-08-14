@@ -60,27 +60,41 @@ fi
 
 printf '\n  \033[1m%s\033[0m\n\n' "$baslik"
 
-# STDERR YAKALANIR, STDOUT'A DOKUNULMAZ. Gerekçe ölçülmüş bir kullanımdan:
-# ilk gerçek sol tıkta pacman indirme aşamasında düştü ve kullanıcı hatayı
-# okuyamadı — 111 paketlik indirme çıktısı hata satırını yukarı kaydırmıştı,
-# ve rapor "yukarıdaki çıktıyı oku" diyerek kaymış bir yeri işaret ediyordu.
-# Pencereyi açık tutmak tek başına yetmiyor; hatanın rapora GERİ GETİRİLMESİ
-# gerekiyor.
+# ÇIKTI YAKALANIR AMA TEK AKIŞTA KALIR. Yakalamanın gerekçesi duruyor ve
+# ölçülmüş bir kullanımdan geliyor: ilk gerçek sol tıkta pacman indirme
+# aşamasında düştü, 111 paketlik çıktı hata satırını yukarı kaydırmıştı ve
+# rapor "yukarıdaki çıktıyı oku" diyerek kaymış bir yeri işaret ediyordu.
+# Hata metni `pacman.log`'da YOKTUR (log işlemleri tutar), yakalanmazsa geri
+# getirilemez.
 #
-# Yalnız stderr: pacman ilerleme çubuklarını stdout'a yazıyor ve orası tty
-# kalmalı, yoksa çıktı biçimi bozulur. Hatalar stderr'e gidiyor. `tee ... >&2`
-# akışı canlı görünür tutuyor, kopyası dosyaya düşüyor.
-# sudo'nun parola istemi etkilenmez -- onu /dev/tty'ye yazıyor.
+# ÖNCEKİ BİÇİM (stdout tty'de, yalnız stderr `tee` ile kopyalanıyordu) BU
+# GEREKÇEYİ KARŞILIYORDU AMA SIRAYI BOZDU. İki ayrı yol terminalde yeniden
+# birleşiyor ve aralarındaki sıra zamanlamaya kalıyor. Bedeli tam da onay
+# adımına düştü: pacman ONAY SORUSUNU stderr'e yazar (yönlendirme altında da
+# görünsün diye), PAKET TABLOSUNU stdout'a — yani "neyi onaylıyorum" ile
+# "onaylıyor musun" ayrı yollara ayrılmıştı. Ölçüldü (2026-08-14): bölünmüş
+# yapıda `pacman -Q`'nun `hata:` satırları 3/3 koşuda birer satır kaydı, tek
+# tty'de kusursuz sıralıydı; gerçek bir güncellemede soru tablonun 12 satır
+# ÜSTÜNDE çıktı. Ekranın dibinde soru kalmadığı için "sorulmadı" sanıldı ve
+# körlemesine Enter'landı -- Enter = EVET (varsayılan `[E/h]`), yani liste
+# hiç görülmeden onaylandı. `--noconfirm` yokken fiilen onaysız güncelleme.
+#
+# `script` çocuğa GERÇEK bir pty verir: pacman yine tty görür (ilerleme
+# çubukları ve sütun genişliği bozulmaz), ama stdout ile stderr aynı akışta
+# kalır — sıra artık yapısal olarak korunur, yarış yok. Log, ekranın kopyası.
+#
+# PAROLA LOGA DÜŞMEZ: `script` ÇIKTIYI kaydeder, echo'suz girdiyi değil.
+# Ölçüldü: echo'lu `read` girdisi logda çıktı, `read -s` girdisi çıkmadı;
+# sudo parolayı echo'suz okur.
 hatalog=$(mktemp --suffix=-sysupdate) || hatalog=""
-temizle=1   # başarılıysa hata logu silinir; düşen koşuda 0'a iner ve durur
+temizle=1   # başarılıysa log silinir; düşen koşuda 0'a iner ve durur
 
-# BORU, SÜREÇ İKAMESİ DEĞİL. `2> >(tee ...)` asenkron: kabuk `tee`yi
-# beklemediği için rapor, log dosyası yazılmadan okunabilir -- yarış.
-# Borulu biçimde bash bütün üyeleri bekler, yarış yapısal olarak yok.
-# fd 3 = özgün stdout (tty): komutun stdout'u oraya gider, DOKUNULMAZ.
-# `2>&1 1>&3` sırası önemli -- önce stderr boruya, sonra stdout fd 3'e.
-if [[ -n $hatalog ]]; then
-  { "${komut[@]}" 2>&1 1>&3 | tee -a "$hatalog" >&2; rc=${PIPESTATUS[0]}; } 3>&1
+if [[ -n $hatalog ]] && command -v script >/dev/null 2>&1; then
+  # `-e`: çocuğun çıkış kodunu döndür -- yoksa `script` hep 0 döner ve düşen
+  # koşu başarılı sayılırdı. `-c` tek bir DİZİ ister, dizi değil; `@Q` her
+  # kelimeyi kabuk-güvenli tırnaklar.
+  script -q -e -c "${komut[*]@Q}" "$hatalog"
+  rc=$?
 else
   "${komut[@]}"
   rc=$?
@@ -96,7 +110,21 @@ else
   # kez basmak değil, en son ne söylendiğini göz hizasına almak.
   if [[ -n $hatalog && -s $hatalog ]]; then
     printf '\n  \033[1mSon hata satırları:\033[0m\n'
-    tail -n 12 "$hatalog" | sed 's/^/  | /'
+    # Log artık ekranın TAM kopyası, yani içinde renk dizileri, ilerleme
+    # çubuklarının `\r` ile üst üste yazdığı ara kareler ve `script`'in kendi
+    # başlık/bitiş satırları var. Önce temizlenir; sonra HATA satırları aranır.
+    # Eskiden ham `tail` vardı ve kuyruğa sorular, `::` bilgi satırları da
+    # giriyordu -- aranan şey oysa hatanın metni.
+    temiz=$(sed -e 's/\x1b\[[0-9;?]*[a-zA-Z]//g' -e 's/\x1b[()][A-Z0-9]//g' "$hatalog" \
+              | tr '\r' '\n' \
+              | grep -avE '^Script (started|done) on ' \
+              | grep -a .)
+    # Türkçe locale'de pacman `hata:`/`uyarı:` yazar, İngilizce'de
+    # `error:`/`warning:`; yay ikisini de kullanır. Hiç eşleşme yoksa eski
+    # davranışa düşülür -- boş rapordan kırpılmış çıktı iyidir.
+    hatalar=$(printf '%s\n' "$temiz" | grep -aE '^(hata|error|uyarı|warning):' | tail -n 12)
+    [[ -z $hatalar ]] && hatalar=$(printf '%s\n' "$temiz" | tail -n 12)
+    printf '%s\n' "$hatalar" | sed 's/^/  | /'
     printf '\n  Tamamı: %s\n' "$hatalog"
     temizle=0   # düşen koşuda log DURUR, kullanıcı okuyabilsin
   else
