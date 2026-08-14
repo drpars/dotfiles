@@ -17,6 +17,14 @@
 # the user manager stops at the last logout, so logging out revokes. If that
 # hook ever fails, the tmpfs still caps the exposure at one boot.
 #
+# That bound is read back rather than assumed. `systemctl start` exiting 0 is a
+# different claim from the unit being active, and the earlier behaviour --
+# start, warn on stderr, grant anyway -- was measured to fail silently: on one
+# machine the grant was live for a whole session with LoadState=not-found,
+# because config/systemd was never linked into ~/.config there and nobody read
+# the warning. So `on` verifies the unit is active and rolls the grant back
+# when it is not; `on --force` grants without the bound and says what is left.
+#
 # Scope, stated plainly: the rule names the *user*. sudoers matches on who runs
 # a command, never on what spawned it, so there is no way to hand this to
 # Claude alone -- while the grant is on, anything running as this user reaches
@@ -35,6 +43,7 @@
 #
 #   claude-sudo             toggle
 #   claude-sudo on|off      explicit
+#   claude-sudo on --force  grant even when the logout bound cannot be set up
 #   claude-sudo status      report state; exit 0 when on, 1 when off
 #   claude-sudo setup       one-time, needs root: install the include hook
 #   claude-sudo remove      undo setup
@@ -45,6 +54,22 @@
 #                     so stopping the unit cannot recurse back into it
 #   __hold <pid>      register a holder
 #   __release <pid>   drop a holder; revoke if it was the last one
+#
+# Calling this from somewhere that is not the user's own terminal -- ssh, a
+# hook, a unit -- goes through the absolute path ~/.config/scripts/claude-sudo,
+# never the bare name. The login shell on both machines is bash, and
+# `ssh host <cmd>` runs it non-interactively, so no rc file is read at all and
+# PATH never gains ~/.config/scripts (that entry is added by
+# config/zsh/variables.zsh, which only an interactive zsh sources). Measured:
+# `command -v claude-sudo` over ssh fails, the absolute path answers normally.
+#
+# The two failures must not be collapsed, because they differ by one digit and
+# mean opposite things: 127 is "not on PATH, nothing was asked", 1 from
+# `status` is "asked, and the grant is off". A remote close that reads 127 as
+# "already off" reports success while the window stays open -- that misreading
+# happened. systemctl --user does work over ssh: XDG_RUNTIME_DIR and
+# DBUS_SESSION_BUS_ADDRESS are both set in that shell (measured), so the unit
+# can be started and stopped remotely as well.
 
 set -euo pipefail
 
@@ -53,6 +78,7 @@ RUN_FILE="$RUN_DIR/claude-sudo"
 HOOK_FILE=/etc/sudoers.d/99-claude-sudo
 UNIT=claude-sudo.service
 WHO=$(id -un)
+FORCE=0
 
 # One marker file per shell running claude under the wrapper. On the user's
 # runtime tmpfs, so it is cleared by the same reboot that clears the grant --
@@ -81,6 +107,27 @@ is_on() { [ -e "$RUN_FILE" ]; }
 # is root-only. Ask sudo instead of the filesystem -- if a NOPASSWD rule is
 # live, `sudo -n` succeeds without a cached credential.
 grant_is_live() { sudo -n true 2>/dev/null; }
+
+# The logout bound, asserted rather than attempted: start only if it is not
+# already up, then answer with what the unit actually is. Both halves are
+# needed -- `start` on a unit that is not installed fails, and `start` on one
+# that is installed can still fail, and neither shows up in a caller that only
+# looks at whether the grant file exists.
+ensure_unit() {
+    if systemctl --user is-active --quiet "$UNIT"; then
+        return 0
+    fi
+    systemctl --user start "$UNIT" 2>/dev/null || true
+    systemctl --user is-active --quiet "$UNIT"
+}
+
+# Why it is not active, in the words systemd uses. LoadState=not-found is the
+# one that means "this machine never got the file", which is a deployment
+# question and not a runtime one; ActiveState/Result cover the rest.
+unit_diag() {
+    systemctl --user show "$UNIT" -p LoadState -p ActiveState -p Result \
+        2>/dev/null | tr '\n' ' '
+}
 
 cmd_setup() {
     printf 'Bir kerelik kurulum: sudo, /run/sudoers.d dizinini de okuyacak.\n'
@@ -116,6 +163,15 @@ cmd_remove() {
 
 cmd_on() {
     if is_on; then
+        # The grant is left alone, but a missing bound is still repaired here:
+        # this is the path a second claude takes while the window is already
+        # open, and it is the only chance to fix a unit that was not up when
+        # the window was opened.
+        if ! ensure_unit; then
+            printf 'claude-sudo: uyarı — %s etkin değil (%s).\n' \
+                "$UNIT" "$(unit_diag)" >&2
+            printf '  Yetki AÇIK ve oturum kapanışında iptal olmayacak; kalan tek sınır yeniden başlatma.\n' >&2
+        fi
         cmd_status
         return 0
     fi
@@ -139,10 +195,31 @@ EOF
         die "kural yazıldı ama etkili olmadı — önce \`claude-sudo setup\` çalıştırın"
     fi
 
-    # Best effort: the unit is what revokes at logout. Losing it costs the
-    # logout bound, not the reboot bound, so it is a warning and not an error.
-    systemctl --user start "$UNIT" 2>/dev/null ||
-        printf 'claude-sudo: uyarı — %s başlatılamadı, oturum kapanışında iptal olmayacak\n' "$UNIT" >&2
+    # The grant is not reported as on until the logout bound is proven. Losing
+    # that bound costs more than the comment here used to say: what is left is
+    # the reboot, and a desktop that stays up for days is not a bound at all.
+    if ! ensure_unit; then
+        if [ "$FORCE" = 1 ]; then
+            printf 'claude-sudo: UYARI — %s etkin değil (%s).\n' \
+                "$UNIT" "$(unit_diag)" >&2
+            printf '  Oturum kapanışında iptal YOK; kalan tek sınır yeniden başlatma (/run tmpfs).\n' >&2
+            printf '  --force verildiği için yine de açıldı.\n' >&2
+        else
+            # What the rollback actually did, not what it was asked to do: the
+            # one message a reader must be able to trust here is whether root
+            # is still handed out.
+            local rolled
+            if revoke; then
+                rolled="yetki geri alındı"
+            else
+                rolled="yetki geri ALINAMADI, hâlâ açık ($RUN_FILE) — \`claude-sudo off\`"
+            fi
+            die "$UNIT etkin değil ($(unit_diag)) — çıkış bağı kurulamadı, $rolled.
+  LoadState=not-found ise bu makinede dotfiles'ın config/systemd bölümü
+  ~/.config'e bağlanmamıştır (archsetup → dotfiles ekranı).
+  Bağ olmadan açmak için: claude-sudo on --force"
+        fi
+    fi
 
     cmd_status
 }
@@ -242,7 +319,8 @@ cmd_status() {
             printf '  Ayrıca: sarmalayıcıyla başlatılmış claude çıkınca da kapanır.\n'
         grant_is_live || printf '  Uyarı: kural dosyası var ama sudo uygulamıyor ("claude-sudo setup" gerekebilir).\n' >&2
         systemctl --user is-active --quiet "$UNIT" ||
-            printf '  Uyarı: %s çalışmıyor — oturum kapanışında iptal olmayacak.\n' "$UNIT" >&2
+            printf '  Uyarı: %s çalışmıyor (%s) — oturum kapanışında iptal olmayacak.\n' \
+                "$UNIT" "$(unit_diag)" >&2
         return 0
     fi
     printf 'claude-sudo: KAPALI\n'
@@ -251,7 +329,17 @@ cmd_status() {
 
 case "${1-}" in
     "")       if is_on; then cmd_off; else cmd_on; fi ;;
-    on)       cmd_on ;;
+    # An unrecognised word here must stop before cmd_on, not be ignored: this
+    # subcommand hands out passwordless root, so a typo that silently falls
+    # through to the default behaviour grants it. Measured on the third
+    # argument, which used to be dropped without a word.
+    on)       case "${2-}" in
+                  "")      ;;
+                  --force) FORCE=1 ;;
+                  *)       die "bilinmeyen seçenek: ${2}" ;;
+              esac
+              [ "$#" -le 2 ] || die "fazladan argüman: ${3}"
+              cmd_on ;;
     off)      cmd_off ;;
     status)   cmd_status ;;
     setup)    cmd_setup ;;
@@ -259,5 +347,5 @@ case "${1-}" in
     __revoke)  revoke ;;
     __hold)    cmd_hold "${2-}" ;;
     __release) cmd_release "${2-}" ;;
-    *)        die "kullanım: claude-sudo [on|off|status|setup|remove]" ;;
+    *)        die "kullanım: claude-sudo [on [--force]|off|status|setup|remove]" ;;
 esac
