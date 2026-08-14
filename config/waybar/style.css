@@ -245,6 +245,16 @@ tooltip label {
   color: #565f89;
 }
 
+/* rfkill (Fn+F12 / uçak modu) wlan'ı engellediğinde waybar ayrı bir durum
+   kullanıyor: `disconnected` değil `disabled`. Karşılığı tanımlı olmadığı
+   sürece modül boş metin üretip SIFIR GENİŞLİĞE iniyordu ve modül sırası
+   `bluetooth, network, wireplumber` olduğu için bluetooth ses simgesine
+   yapışıyordu — kullanıcının gördüğü kusur buydu. Renk `.disconnected` ve
+   `#bluetooth.off` ile aynı: durum bilgisi, uyarı değil. */
+#network.disabled {
+  color: #565f89;
+}
+
 #wireplumber {
   border-radius: 10px 0 0 10px;
   padding: 0 10px 0 20px;

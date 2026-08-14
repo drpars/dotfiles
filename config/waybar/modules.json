@@ -287,6 +287,7 @@
   "network": {
     "interval": 1,
     "format": "{ifname}",
+    "format-disabled": "󰖪",
     "format-wifi": "",
     "format-ethernet": "{ipaddr}/{cidr} 󰊗",
     "format-disconnected": "",
@@ -294,6 +295,7 @@
     "tooltip-format-wifi": "{ifname}\n\n{essid}\t{signalStrength}%\t{ipaddr}\nDown: {bandwidthDownBits}\tUp: {bandwidthUpBits}",
     "tooltip-format-ethernet": "{ifname} ",
     "tooltip-format-disconnected": "Bağlantı Yok",
+    "tooltip-format-disabled": "Kablosuz kapalı (rfkill)",
     "max-length": 50,
     "on-click": "~/.config/scripts/tuipop Wifi impala",
     "on-click-right": "~/.config/scripts/togglewifi"

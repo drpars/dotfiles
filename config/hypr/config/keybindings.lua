@@ -119,6 +119,15 @@ hl.bind("Print",                       hl.dsp.exec_cmd("hyprshot -m region -z --
 hl.bind("SHIFT + Print",               hl.dsp.exec_cmd("hyprshot -m window -z --raw -s | swappy -f -"))
 hl.bind(C .. " + Print",               hl.dsp.exec_cmd("hyprshot -m output --raw -s | swappy -f -"))
 
+-- Fn+F6 (G513RM). Tuşun üstünde kırpma ikonu var ama özel bir tuş kodu
+-- üretmiyor: firmware Windows akorunu basıyor, `SUPER + SHIFT + S` (Win+Shift+S
+-- = Ekran Alıntısı). İki makinede bağımsız ölçüldü — burada sonda bağlamasıyla,
+-- g14 çekirdeğinde `libinput record --show-keycodes` ile → g14-boot-hatalari
+-- notu. Bu yüzden yukarıdaki `Print` ile AYNI işe bağlı: ikisi de bölge kırpma.
+-- Yan etkisi kabul edilmiş: elle SUPER+SHIFT+S basmak da bunu açar, çünkü
+-- Hyprland için iki olay ayırt edilemez.
+hl.bind(M .. " + SHIFT + S",           hl.dsp.exec_cmd("hyprshot -m region -z --raw -s | swappy -f -"))
+
 -- ── Renk Seçici ────────────────────────────────────
 hl.bind(M .. " + SHIFT + X",           hl.dsp.exec_cmd("hyprpicker -a -n"))
 
@@ -145,8 +154,13 @@ if has("rog-control-center") then
     hl.bind("xf86Launch1",         hl.dsp.exec_cmd("rog-control-center"))
 end
 
+-- asusctl 6.3.11 dropped `led-mode` entirely (it is `aura effect` now) and
+-- turned `profile -n` into `profile next`. Both bindings kept firing into an
+-- "Unrecognized argument" exit 1, so the keys looked dead while the binding
+-- was fine. Version-sensitive: verify against `asusctl <cmd> --help` after an
+-- asusctl upgrade, not against this comment.
 if has("asusctl") then
-    hl.bind("xf86Launch3",         hl.dsp.exec_cmd("asusctl led-mode -n"))
+    hl.bind("xf86Launch3",         hl.dsp.exec_cmd("asusctl aura effect --next-mode"))
     hl.bind("xf86Launch4",         hl.dsp.exec_cmd(scriptsDir .. "/powerprofileasus next"))
 end
 
@@ -155,6 +169,15 @@ if exists("/sys/class/leds/asus::kbd_backlight") then
     hl.bind("xf86KbdBrightnessDown", hl.dsp.exec_cmd(scriptsDir .. "/brightness down kbd"))
     hl.bind("xf86KbdBrightnessUp",   hl.dsp.exec_cmd(scriptsDir .. "/brightness up kbd"))
 end
+
+-- ── Touchpad ───────────────────────────────────────
+-- Fn+F10 gerçek bir tuş kodu üretiyor (`KEY_TOUCHPAD_TOGGLE`, evdev 530) ve
+-- keysym'i de var; eksik olan yalnızca bağlamaydı. Kod 247'nin (KEY_RFKILL)
+-- üstünde olduğu için xkb dosyasında "cannot be used in X" damgalı, ama bu X11
+-- sınırı — xkbcommon derliyor, ölçüldü (`xkbcli compile-keymap` → <I538> =
+-- XF86TouchpadToggle). Bağlama yalnız touchpad'i olan makinede iş yapar;
+-- koruma betiğin içinde (aygıt adı çalışma anında aranıyor).
+hl.bind("XF86TouchpadToggle",      hl.dsp.exec_cmd(scriptsDir .. "/touchpad toggle"))
 
 -- ── Ekran Parlaklığı ───────────────────────────────
 -- ROG'a özgü değil: bu tuşlar zaten yalnız dizüstü klavyelerinde var.

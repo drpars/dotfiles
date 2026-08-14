@@ -1,39 +1,55 @@
 #!/bin/bash
+# Platform power profile: waybar JSON on stdout, `next` to cycle.
+#   Usage: powerprofileasus          -> {"text": ..., "tooltip": ...}
+#          powerprofileasus next     -> cycle, signal waybar, notify
+#
+# asusctl 6.3.11 replaced the flag-style CLI with subcommands: `profile -p`
+# and `profile -n` became `profile get` and `profile next`. The old forms do
+# not fail quietly -- they print "Unrecognized argument" and exit 1 -- but
+# nothing here read the exit code, so the hotkey kept firing while the profile
+# never moved. Both call sites are checked now.
+#
+# The profile is read by label, not by line number: `profile get` prints
+# "AC profile" / "Battery profile" lines underneath the active one and those
+# are the parts likely to move again.
 
 get_pwr() {
-  PWR=$(asusctl profile -p | awk 'NR==2 {print $NF}')
+  PWR=$(asusctl profile get 2>/dev/null |
+          awk -F': ' '/^Active profile:/ { print $2; exit }')
 }
 
-get_pwr
-
-PWR_TR() {
-  get_pwr
-  if [ $PWR == Balanced ]; then
-    PWR="Dengeli"
-  elif [ $PWR == Performance ]; then
-    PWR="Performans"
-  elif [ $PWR == Quiet ]; then
-    PWR="Sessiz"
-  fi
-
+# Empty for anything unrecognised, so "unknown" stays distinguishable from a
+# real profile instead of being reported as one.
+pwr_tr() {
+  case "$1" in
+    Balanced)    printf 'Dengeli' ;;
+    Performance) printf 'Performans' ;;
+    Quiet)       printf 'Sessiz' ;;
+  esac
 }
 
-if [ $PWR == Balanced ]; then
-  text="󰾅"
-  tooltip="Dengeli"
-elif [ $PWR == Performance ]; then
-  text="󰓅"
-  tooltip="Performans"
-elif [ $PWR == Quiet ]; then
-  text="󰾆"
-  tooltip="Sessiz"
-fi
-
-echo '{"text": "'$text'", "tooltip": "'$tooltip'"}'
+pwr_icon() {
+  case "$1" in
+    Balanced)    printf '󰾅' ;;
+    Performance) printf '󰓅' ;;
+    Quiet)       printf '󰾆' ;;
+  esac
+}
 
 if [[ "$1" == "next" ]]; then
-  asusctl profile -n
+  if ! err=$(asusctl profile next 2>&1); then
+    # The failure that hid for months was a silent one; make this one audible.
+    notify-send -u critical "Güç Profili" "asusctl profile next başarısız: ${err:-bilinmeyen hata}"
+    exit 1
+  fi
   pkill -SIGRTMIN+8 waybar
-  PWR_TR
-  notify-send -h string:x-canonical-private-synchronous:sys-notify -u low "Güç Profili: $PWR"
+  get_pwr
+  label=$(pwr_tr "$PWR")
+  notify-send -h string:x-canonical-private-synchronous:sys-notify -u low \
+    "Güç Profili: ${label:-$PWR}"
+  exit 0
 fi
+
+get_pwr
+# No data -> hide the module rather than claim a state (see NOTLAR.md).
+printf '{"text": "%s", "tooltip": "%s"}\n' "$(pwr_icon "$PWR")" "$(pwr_tr "$PWR")"

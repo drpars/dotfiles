@@ -1,0 +1,53 @@
+#!/bin/bash
+# Toggle the touchpad.
+#   Usage: touchpad toggle | on | off | status
+#
+# Hyprland accepts `hl.device({name=..., enabled=...})` but does not report the
+# resulting state back -- `hyprctl devices` lists the device either way -- so
+# the state is tracked here. It lives in the runtime dir, which means a fresh
+# login starts from "enabled", matching the config's own default.
+#
+# The device name is discovered, not hardcoded: it is a kernel/firmware string
+# and differs per machine. On a machine with no touchpad the script says so
+# instead of silently succeeding.
+
+STATE="${XDG_RUNTIME_DIR:-/tmp}/touchpad-disabled"
+
+dev=$(hyprctl devices 2>/dev/null |
+        awk '/^\s+Mouse at/ {inm=1} inm && /touchpad/ {print $1; exit}')
+[ -n "$dev" ] || dev=$(hyprctl devices 2>/dev/null | grep -oE '^[[:space:]]*[a-z0-9:._-]*touchpad[a-z0-9:._-]*' | head -1 | tr -d ' ')
+
+if [ -z "$dev" ]; then
+  case "$1" in
+    status) echo '{"text": "", "tooltip": ""}' ;;
+    *) notify-send -u low "Touchpad" "Bu makinede touchpad yok" ;;
+  esac
+  exit 0
+fi
+
+set_state() {   # $1 = true|false
+  hyprctl eval "hl.device({ name = \"$dev\", enabled = $1 })" >/dev/null 2>&1
+}
+
+case "${1:-toggle}" in
+  on)
+    set_state true && rm -f "$STATE"
+    notify-send -h string:x-canonical-private-synchronous:touchpad -u low "Touchpad: açık"
+    ;;
+  off)
+    set_state false && : > "$STATE"
+    notify-send -h string:x-canonical-private-synchronous:touchpad -u low "Touchpad: kapalı"
+    ;;
+  toggle)
+    if [ -e "$STATE" ]; then exec "$0" on; else exec "$0" off; fi
+    ;;
+  status)
+    if [ -e "$STATE" ]; then
+      echo '{"text": "󰤳", "tooltip": "Touchpad kapalı", "class": "off"}'
+    else
+      echo '{"text": "󰟸", "tooltip": "Touchpad açık", "class": "on"}'
+    fi
+    ;;
+  *)
+    echo "usage: touchpad toggle|on|off|status" >&2; exit 1 ;;
+esac
