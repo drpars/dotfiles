@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Waybar peripheral battery module.
 
-Reports the Razer keyboard (via the openrazer daemon) and the Logitech mouse
+Reports the Razer peripheral (via the openrazer daemon) and the Logitech mouse
 (via solaar) battery levels. Designed to back a waybar drawer group:
 
-    peripheral-battery.py kbd       -> keyboard JSON
-    peripheral-battery.py mouse     -> mouse JSON
+    peripheral-battery.py kbd       -> openrazer device JSON
+    peripheral-battery.py mouse     -> solaar device JSON
     peripheral-battery.py summary   -> combined trigger JSON (tooltip = both)
+
+The `kbd` verb and the `custom/keyboard-battery` module name are the openrazer
+*slot*, not a claim about the device in it: this laptop's Razer device is a
+mouse. The glyph follows what openrazer reports the device to be, so the slot
+name never reaches the bar.
 
 Each call prints a single waybar JSON object: {text, tooltip, class, percentage}.
 
@@ -43,6 +48,12 @@ _BATT = ["\U000f007a", "\U000f007a", "\U000f007b", "\U000f007c", "\U000f007d",
 _CHARGING = "\U000f0084"   # 󰂄
 _UNKNOWN = "\U000f0091"    # 󰂑
 
+# openrazer's DeviceManager reports a device class (measured on this laptop:
+# type == "mouse"); only these two glyphs are verified present in the bar font,
+# so anything else falls back to the unknown-battery glyph rather than to a
+# guessed codepoint or -- worse -- to a glyph that names the wrong device.
+RAZER_GLYPHS = {"keyboard": KBD_GLYPH, "mouse": MOUSE_GLYPH}
+
 
 def batt_glyph(level, charging):
     if level is None:
@@ -64,16 +75,17 @@ def level_class(level, charging):
     return "normal"
 
 
-def read_keyboard():
-    """(name, level, charging) for the Razer keyboard, or (None, None, None)."""
+def read_razer():
+    """(glyph, name, level, charging) for the Razer device, or (…, None, None)."""
     try:
         from openrazer.client import DeviceManager
         for d in DeviceManager().devices:
             if d.has("battery"):
-                return d.name, int(d.battery_level), bool(d.is_charging)
+                glyph = RAZER_GLYPHS.get(getattr(d, "type", None), _UNKNOWN)
+                return glyph, d.name, int(d.battery_level), bool(d.is_charging)
     except Exception:
         pass
-    return None, None, None
+    return _UNKNOWN, None, None, None
 
 
 def read_mouse():
@@ -123,18 +135,18 @@ def main():
     if what in ("kbd", "mouse"):
         # Both devices are read even though only one is reported: the caps are a
         # property of the rendered set, not of the device (see module docstring).
-        k_name, k_lvl, k_chg = read_keyboard()
+        k_glyph, k_name, k_lvl, k_chg = read_razer()
         m_name, m_lvl, m_chg = read_mouse()
         solo = (k_lvl is None) != (m_lvl is None)
         if what == "kbd":
-            print(json.dumps(device_obj(KBD_GLYPH, k_name, k_lvl, k_chg, solo)))
+            print(json.dumps(device_obj(k_glyph, k_name, k_lvl, k_chg, solo)))
         else:
             print(json.dumps(device_obj(MOUSE_GLYPH, m_name, m_lvl, m_chg, solo)))
         return
 
     # summary: one trigger icon driven by the lower of the two levels, with a
     # tooltip listing both peripherals.
-    k_name, k_lvl, k_chg = read_keyboard()
+    k_glyph, k_name, k_lvl, k_chg = read_razer()
     m_name, m_lvl, m_chg = read_mouse()
 
     # Hiçbiri okunamıyorsa bu makinede bu çevre birimleri yok: gizlen.
@@ -142,13 +154,19 @@ def main():
         print(json.dumps(HIDDEN))
         return
 
+    # The tooltip lists the RENDERED SET, same as the caps do: a device whose
+    # level is None is a hidden child, so a line for it would describe something
+    # the drawer never draws. It would also be wrong about what is missing --
+    # on this laptop solaar is not installed at all, so "Fare: ?" read as a
+    # flat battery when there is no mouse and no solaar. The guard above is what
+    # keeps this list from ever coming out empty.
     lines = [
-        f"{KBD_GLYPH}  {k_name or 'Klavye yok'}: "
-        f"{'?' if k_lvl is None else str(k_lvl) + '%'}"
-        + (" (şarjda)" if k_chg else ""),
-        f"{MOUSE_GLYPH}  {m_name or 'Fare yok'}: "
-        f"{'?' if m_lvl is None else str(m_lvl) + '%'}"
-        + (" (şarjda)" if m_chg else ""),
+        f"{glyph}  {name}: {lvl}%" + (" (şarjda)" if chg else "")
+        for glyph, name, lvl, chg in (
+            (k_glyph, k_name, k_lvl, k_chg),
+            (MOUSE_GLYPH, m_name, m_lvl, m_chg),
+        )
+        if lvl is not None
     ]
 
     levels = [(l, c) for l, c in ((k_lvl, k_chg), (m_lvl, m_chg)) if l is not None]
