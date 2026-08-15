@@ -209,10 +209,16 @@
     "modules": ["custom/peripherals", "custom/keyboard-battery", "custom/mouse-battery"]
   },
 
+  // Çevre birimi pili saatler mertebesinde değişiyor; 60 sn'lik yoklama bunun
+  // için fazlaydı ve her tur bir `solaar show` alt süreci demek. 300 sn: en
+  // kötü bayatlık 5 dk, ve üç modülün toplamı dakikada 2 solaar çağrısından
+  // 0,6'ya iniyor (çocuklar artık kümeyi okuduğu için tur başına 3 çağrı var).
+  // Daha yukarı çıkılmadı: "signal": 9'u HİÇBİR betik göndermiyor, yani
+  // interval tek tazeleme kanalı — fişe takınca yeşile dönmesi buna bağlı.
   "custom/peripherals": {
     "exec": "~/.config/scripts/peripheral-battery.py summary",
     "return-type": "json",
-    "interval": 60,
+    "interval": 300,
     "format": "{}",
     "tooltip": true,
     "signal": 9
@@ -221,7 +227,7 @@
   "custom/keyboard-battery": {
     "exec": "~/.config/scripts/peripheral-battery.py kbd",
     "return-type": "json",
-    "interval": 60,
+    "interval": 300,
     "format": "{}",
     "tooltip": true,
     "signal": 9
@@ -230,7 +236,7 @@
   "custom/mouse-battery": {
     "exec": "~/.config/scripts/peripheral-battery.py mouse",
     "return-type": "json",
-    "interval": 60,
+    "interval": 300,
     "format": "{}",
     "tooltip": true,
     "signal": 9

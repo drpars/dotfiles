@@ -320,7 +320,12 @@ tooltip label {
 }
 
 /* Mouse ve Klavye Batarya Durumu (Tokyo Night tonları)
-   Drawer sola açılır → fiziksel sıra: [mouse | keyboard]  (boşluk)  [trigger]
+   Fiziksel sıra: [keyboard | mouse]  (boşluk)  [trigger] — TETİK SAĞDA.
+   Bu satır bir kez ters yazılmıştı ([mouse | keyboard]) ve aşağıdaki kapakları
+   ters çevirmeye davet ediyordu. Kaynaktan okundu (waybar 0.15.0.r959):
+   `transition-left-to-right: false` iken group.cpp:98-102 önce revealer'ı,
+   sonra tetiği paketliyor; çocuklar da revealer_box'a modules[] sırasıyla
+   giriyor (group.cpp:265-270).
    group/hardware ile aynı: trigger ayrı yuvarlak, çocuklar bağlı bir hap. */
 #custom-peripherals {
   padding: 0 20px;
@@ -336,6 +341,28 @@ tooltip label {
 #custom-mouse-battery {
   border-radius: 0 10px 10px 0;
   padding: 0 20px 0 10px;
+  margin-right: 10px;
+}
+
+/* Yukarıdaki iki kural İKİ çocuğun da çizildiğini varsayar: kapaklar cihaza
+   çivili (klavye = sol kapak, fare = sağ kapak + boşluk). Tek cihazlı makinede
+   (dizüstü: razer var, logitech yok) kalan çocuk yarım kapsül olarak çiziliyor
+   ve boşluk da kayboluyor — çünkü waybar boş çıktıda modülü GİZLİYOR
+   (custom.cpp:196-198), gizli GTK widget'ı ise `margin-right`'ını da götürür.
+   Ölçüldü (2026-08-15, dizüstü, ekran görüntüsünün piksel haritası): klavye
+   kapsülü x2-70 ve sağ kenarı köşeli, tetik x71-122, aradaki boşluk 0 px.
+
+   Kapak ve dış boşluk cihazın değil, O AN ÇİZİLEN KÜMEDEKİ KONUMUN özelliği.
+   CSS bunu burada göremez: `#custom-*` adı waybar'da LABEL'a veriliyor ve label
+   kendi event box'ının tek çocuğu (ALabel.cpp:39,44) — yani `:only-child` /
+   `:last-child` / `:nth-child` HER ZAMAN eşleşir, kardeş modülleri hiç görmez.
+   `children-class` de ayırt etmiyor, iki çocuğa da ekleniyor (group.cpp:272).
+   O yüzden konumu betik yayıyor: tek görünen çocuk kaldığında
+   peripheral-battery.py `solo` sınıfını ekliyor. */
+#custom-keyboard-battery.solo,
+#custom-mouse-battery.solo {
+  border-radius: 10px;
+  padding: 0 20px;
   margin-right: 10px;
 }
 

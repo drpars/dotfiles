@@ -15,6 +15,14 @@ the object is printed with an empty text, which is waybar's way of hiding a
 custom module. That is what keeps the drawer out of the bar on machines
 without these peripherals, so the same config works everywhere and nothing
 has to be commented out per machine.
+
+A hidden module also takes its CSS margin with it, and the rounded caps of the
+children pill are pinned to a device in style.css (keyboard = left cap, mouse =
+right cap + gap). So each child has to know the whole *rendered set*, not just
+its own device: when it is the only visible child it emits an extra `solo`
+class and style.css gives it a full capsule. waybar cannot work this out on its
+own -- see the `.solo` rule for why structural CSS selectors cannot see sibling
+modules.
 """
 
 import json
@@ -91,15 +99,20 @@ def read_mouse():
 HIDDEN = {"text": ""}
 
 
-def device_obj(glyph, name, level, charging):
+def device_obj(glyph, name, level, charging, solo=False):
     if level is None:
         return HIDDEN
     pct = f"{level}%"
+    # waybar accepts a string or an array here (src/modules/custom.cpp), and it
+    # clears the previous classes on every update, so the array is safe.
+    classes = [level_class(level, charging)]
+    if solo:
+        classes.append("solo")
     return {
         "text": f"{glyph} {pct}",
         "tooltip": f"{name or 'cihaz yok'}: {pct}"
                    + (" (şarjda)" if charging else ""),
-        "class": level_class(level, charging),
+        "class": classes,
         "percentage": level if level is not None else 0,
     }
 
@@ -107,14 +120,16 @@ def device_obj(glyph, name, level, charging):
 def main():
     what = sys.argv[1] if len(sys.argv) > 1 else "summary"
 
-    if what == "kbd":
-        name, level, charging = read_keyboard()
-        print(json.dumps(device_obj(KBD_GLYPH, name, level, charging)))
-        return
-
-    if what == "mouse":
-        name, level, charging = read_mouse()
-        print(json.dumps(device_obj(MOUSE_GLYPH, name, level, charging)))
+    if what in ("kbd", "mouse"):
+        # Both devices are read even though only one is reported: the caps are a
+        # property of the rendered set, not of the device (see module docstring).
+        k_name, k_lvl, k_chg = read_keyboard()
+        m_name, m_lvl, m_chg = read_mouse()
+        solo = (k_lvl is None) != (m_lvl is None)
+        if what == "kbd":
+            print(json.dumps(device_obj(KBD_GLYPH, k_name, k_lvl, k_chg, solo)))
+        else:
+            print(json.dumps(device_obj(MOUSE_GLYPH, m_name, m_lvl, m_chg, solo)))
         return
 
     # summary: one trigger icon driven by the lower of the two levels, with a
