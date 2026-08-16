@@ -183,6 +183,14 @@ keymap = [
   # SSHFS -- eklentinin onerdigi "M s" kullanilamadi: "M" tam bir baglama
   # oldugu icin onu onek yapan bir akort tanimlanamiyor. Serbest tek tus: F.
   { on = "F", run = "plugin sshfs -- menu", desc = "SSHFS: uzak sunucu bagla/coz" },
+  # Klasor/secim boyutu (what-size). Eklentinin onerdigi "." oneki
+  # kullanilamadi: "." tam bir baglama ("hidden toggle"), yani onu onek yapan
+  # bir akort tanimlanamiyor -- sshfs'in "M s" ile carptigi duvarin aynisi.
+  # Serbest tek harf kalmamisti (yalniz "g" ve "m", ikisi de zaten onek), o
+  # yuzden linemode ailesine bitisik secildi: "m s" satirin ne gosterdigini
+  # degistirir, "m S" gercek boyutu hesaplar. Buyuk/kucuk ciftinin emsali ayni
+  # dosyada var ("," ailesi).
+  { on = [ "m", "S" ], run = "plugin what-size", desc = "Secimin/klasorun boyutunu hesapla" },
   # Open shell here
   { on = "!", run = 'shell "zsh" --block', desc = "Open shell here (Blocking)" },
   # Toggle pane

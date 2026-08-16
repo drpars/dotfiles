@@ -58,6 +58,16 @@ use = "KKV9/compress"
 rev = "e60e122"
 hash = "fbaf0adc8efc59555b748d36aab62d40"
 
+[[plugin.deps]]
+use = "shafayetejaman/sduf"
+rev = "f43ba4a"
+hash = "5f9b8fcd37fc225437a213c9674a0ffa"
+
+[[plugin.deps]]
+use = "pirafrank/what-size"
+rev = "c1a8cb6"
+hash = "57056b9728006881d580ccabe8154a9c"
+
 [[flavor.deps]]
 use = "BennyOe/tokyo-night"
 rev = "8e6296f"

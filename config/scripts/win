@@ -80,8 +80,15 @@ bat_uwh() {
 # duruyor ve neye cevap verildigi belli olmuyordu (olculdu 2026-08-08, grim).
 # Soru -mesg ile veriliyor, -p ile DEGIL: prompt satir kaydirmaz ve tasan
 # metni elipssiz, sessizce keser. Olcumler confirm.rasi'nin basinda.
+#
+# Tema confirm-wide.rasi, confirm.rasi DEGIL: buradaki soru 56 karakter,
+# powermenu'nunkiler 14-23. Ortak dosya 2026-08-17'de dar olana (14em) gore
+# ayarlandi -- powermenu gerekenin ~2,1 kati genis kutu ciziyordu -- ve genis
+# olan aykiri kaldigi icin kendi dosyasina tasindi. Gerekce ve olcum o
+# dosyanin basinda. Genislik bir okunaklilik tercihi: dosya kaybolursa soru
+# sarar, kaybolmaz.
 confirm() {
-  local tema="$HOME/.config/rofi/confirm.rasi"
+  local tema="$HOME/.config/rofi/confirm-wide.rasi"
   command -v rofi >/dev/null 2>&1 || return 0
   [ -r "$tema" ] || return 0
   [ "$(printf 'Evet\nHayır' | rofi -replace -dmenu -i -mesg "$1" \

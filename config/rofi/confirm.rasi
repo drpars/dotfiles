@@ -23,12 +23,22 @@
 
 @import "powermenu.rasi"
 
-/* 14em (powermenu genisligi) tek kelimelik menu icin dogru, cumle icin degil:
-   soru orada 3-4 satira sarilirdi. 30em, olculen en uzun soruyu
-   ("Dizustu pilde, 45,2 Wh (~32 dk). Misafir baslatilsin mi?") tek satirda
-   tutuyor. */
+/* 14em -- powermenu.rasi'nin kendi genisligi, yani menuden onaya gecerken kutu
+   ziplamiyor.
+
+   Deger 2026-08-17'de 30em'den indirildi. Olcum kanali `hyprctl layers`
+   (katmanin gercek xywh'si): 1em = tam 17px, ve yukseklik sarmayi soyluyor --
+   139 = mesaj tek satir, 156 = iki satir. powermenu'nun DORT sorusunun dordu
+   de 14em'de tek satirda kaliyor; en uzunu ("Yeniden baslatilsin mi?", 23 krk)
+   11em'de bile sarmiyor, yani pay genis.
+
+   30em bu dosyaya powermenu icin degil, `scripts/win`in 56 karakterlik pil
+   sorusu icin girmisti; o soru 22em'de iki satira sariyor. Tek dosya boyu cok
+   farkli iki tuketiciye hizmet ediyordu ve genis olan kazanmisti -- powermenu
+   gerekenin ~2,1 kati genis ciziliyordu. Artik aykiri olan kendi dosyasini
+   kullaniyor: confirm-wide.rasi. */
 window {
-    width: 30em;
+    width: 14em;
 }
 
 mainbox {

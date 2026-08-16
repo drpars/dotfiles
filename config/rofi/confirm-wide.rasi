@@ -1,0 +1,30 @@
+/*******************************************************************************
+ * ROFI Confirm (genis) — yalnizca `scripts/win` icin
+ *
+ * confirm.rasi'yi DEVRALIR ve tek bir seyi degistirir: GENISLIK.
+ *
+ * Neden ayri dosya: confirm.rasi'nin iki tuketicisi var (`grep -rn confirm.rasi`
+ * ile dogrulandi: scripts/powermenu, scripts/win) ve sorularinin boyu cok
+ * farkli -- powermenu'nunkiler 14-23 karakter, win'inki 56. Ortak dosya genis
+ * olana gore olculunce powermenu'nun onayi gerekenin ~2,1 kati genis
+ * ciziliyordu. Simdi varsayilan dar (14em), bedeli aykiri olan oduyor.
+ *
+ * Cagri yerinde -theme-str ile de yazilabilirdi; depodaki karar "rofi ayarinin
+ * adresi tema dosyasidir" ve confirm.rasi de zaten tam bu gerekceyle acilmisti.
+ *
+ * Olculdu 2026-08-17, kanal `hyprctl layers` (katmanin gercek xywh'si):
+ * 1em = tam 17px, yukseklik 139 = mesaj tek satir, 156 = iki satir.
+ * "Dizustu pilde, 45,2 Wh (~32 dk). Misafir baslatilsin mi?" 30em'de tek
+ * satir, 22em'de iki satira sariyor.
+ *
+ * Sarma bir KUSUR DEGIL -- message widget'i kaydirir ve metin tam gorunur
+ * (gerekce confirm.rasi'nin basinda) -- ama tek satir okunakli oldugu icin
+ * 30em burada korundu. Yani bu dosya bir dogruluk gereksinimi degil, bir
+ * okunaklilik tercihidir; silinirse win'in sorusu sarar, kaybolmaz.
+ *******************************************************************************/
+
+@import "confirm.rasi"
+
+window {
+    width: 30em;
+}
