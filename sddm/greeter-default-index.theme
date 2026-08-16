@@ -1,0 +1,30 @@
+# Reference copy. Target: /var/lib/sddm/.local/share/icons/default/index.theme
+# Owner sddm:sddm, mode 644; the three parent dirs are sddm:sddm 700.
+#
+# Cursor fallback for the SDDM greeter, which runs as user sddm
+# (HOME=/var/lib/sddm -- confirmed by its own .cache/sddm-greeter-qt6/).
+#
+# Why this file and not XCURSOR_THEME: the greeter is Qt6/xcb, and Qt6 resolves
+# cursors through libxcb-cursor. That library reads the theme NAME only from the
+# "Xcursor.theme" X resource -- the literal "XCURSOR_THEME" does not appear in
+# libxcb-cursor.so.0 at all, so the env var sddm exports from
+# [Theme] CursorTheme= is ignored on this path. With no X resource manager on
+# the greeter's display (Xsetup is empty and xrdb is not installed) the library
+# falls back to the theme named "default" and searches
+#   ~/.local/share/icons:~/.icons:/usr/share/icons:/usr/share/pixmaps
+# with ~ expanded from HOME. This file is therefore the first hit, and it wins
+# over /usr/share/icons/default/index.theme, which says Inherits=Adwaita.
+#
+# The other cursor path (the plain arrow, inherited from the X root window) is
+# handled by sddm itself: it runs `xsetroot -cursor_name left_ptr` with
+# XCURSOR_THEME set, and xsetroot uses libXcursor, which DOES honour that env
+# var. That path needs the xorg-xsetroot package -- without it sddm logs
+# "Could not setup default cursor" and the arrow stays the X server built-in.
+#
+# Comment syntax matters: '/* ... */' parses fine for libXcursor's line scanner
+# but makes GLib reject the whole file ("not a key-value pair, group, or
+# comment"). Keep comments '#'.
+[Icon Theme]
+Name=Default
+Comment=Default Cursor Theme
+Inherits=Mocu-White-Right

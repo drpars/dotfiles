@@ -15,7 +15,7 @@ edilemez, ya da başka bir işletim sistemine aittir.
 | `config/` | `~/.config` | **Otomatik** — [archsetup](https://github.com/drpars/archsetup), öge öge seçilir |
 | `home/` | `~` | **Otomatik** — archsetup |
 | `local/share/` | `~/.local/share` | **Otomatik** — archsetup (`applications`, `icons`, `color-schemes`) |
-| `sddm/` | `/etc/sddm.conf` | **Elle / root** — archsetup'ın ayrı SDDM görevi yazar; buradaki dosya referans kopyadır |
+| `sddm/` | `/etc/sddm.conf` + greeter'ın `~/.local/share/icons` | **Elle / root** — archsetup'ın ayrı SDDM görevi yazar; buradakiler referans kopyadır |
 | `browser/` | Firefox / Zen profil dizini | **Elle** — profil klasörünün adı rastgele, sabit hedef yok |
 | `claude/` | `~/.claude` | **Elle** — kendi betiği var: `claude/install.sh` (geri yön: `save.sh`) |
 | `windows/` | Windows | **Elle** — PowerShell profili ve Scoop kurulum betiği, başka işletim sistemi |
