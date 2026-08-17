@@ -1,3 +1,25 @@
+-- plugins:session (yazi'nin gomulu preset eklentisi, ya pkg ile kurulmaz)
+-- Ornekler arasi yank/paste. Yayin tarafi zaten kosulsuz calisiyor -- Rust
+-- cekirdeginde Pubsub::pub_after_yank(self.cut, &self.urls) -- ama ALICI taraf
+-- bu secenegin arkasinda ve varsayilani KAPALI. Gomulu kaynak tam olarak su:
+--     local function setup(_, opts)
+--       if opts.sync_yanked then
+--         ps.sub_remote("@yank", function(state) ya.emit("update_yanked", { state }) end)
+--       end
+--     end
+-- Yani kanal canli olsa bile (DDS soketi /run/user/<uid>/yazi+<uid>/.dds.sock
+-- LISTEN, ikinci ornek ona bagli) dinleyen olmadigi icin `y` ... `p` calismaz;
+-- olculdu 2026-08-17, once bu satir yokken calismadi.
+--
+-- "@" oneki DDS'te "kalici saklanir ve yeni ornek acilinca geri yuklenir"
+-- demek, o yuzden bu acikken sonradan acilan bir yazi de yank'i devralir.
+-- Sinir: ayni kullanici, ve yollar her iki ornekten de erisilebilir olmali.
+-- init.lua acilista kostugu icin degisiklik ACIK yazi'lere uygulanmaz; ikisi
+-- de yeniden baslatilmali.
+require("session"):setup({
+	sync_yanked = true,
+})
+
 -- plugins:full-border
 require("full-border"):setup({
 	-- Available values: ui.Border.PLAIN, ui.Border.ROUNDED
@@ -43,17 +65,31 @@ require("sshfs"):setup()
 -- mount.yazi'nin kendi tablosunda boyut sutunu YOK (redraw()'da dort sutun:
 -- aygit / etiket / baglama noktasi / fstype).
 --
--- Renkler eklentinin Catppuccin varsayilanlarindan flavor'a (tokyo-night)
--- cevrildi. Tek bir text_fg hem dolu hem bos parcanin uzerine dusuyor -- ayni
--- metin doluluk noktasindan ikiye bolunuyor -- o yuzden iki zemin de acik
--- tonda, yazi koyu secildi. Flavor'in kendi kurali da bu:
--- count_copied = { fg = "#1a1b26", bg = "#9ece6a" }.
+-- RENKLER — koyu sema, ve sayilari hesaplanarak secildi (2026-08-17).
+--
+-- Kisit yapisaldir: eklenti durum rengini ZEMINDE tasiyor ama metin icin TEK
+-- bir text_fg aliyor, ve o metin doluluk noktasindan bolunup hem dolu hem bos
+-- zeminin ustune dusuyor. Tokyo Night'in uyari renkleri (#e0af68, #f7768e)
+-- ACIK renkler oldugu icin "bos kismi koyult, dolgulari birak" isleme:
+-- 256 gri tonu tarandi, tek bir fg ile ulasilabilen en iyi MINIMUM kontrast
+-- 2,24 -- WCAG'in buyuk metin esigi (3,0) bile gecilmiyor. Ilk surumun acik
+-- kapsulu bu yuzden aciktı, keyfi degil.
+--
+-- Cozum dolgulari da koyultmak: her aksanin TONU ve DOYGUNLUGU korunup yalniz
+-- parlakligi #c0caf5'e karsi kontrast 4,5'e (WCAG AA) inene kadar dusuruldu.
+-- Iz olarak #1a1b26 secildi -- Tokyo Night'in kendi bg'si, yani cubugun zemini:
+-- bos kisim cubuga karisip gorunmez oluyor, geriye yalnizca dolu dilim kaliyor.
+-- Olculen sonuc: yaziya karsi min kontrast 4,50; iz ile dolgu arasi 2,34
+-- (ikisi ayni anda yan yana duruyor, o yuzden ayrica olculdu).
+--
+-- error_fg zeminSIZ ciziliyor (`ui.Span(" Disk: ?? "):fg(...)`), yani cubugun
+-- zemini uzerinde: #f7768e orada 6,46 veriyor, koyultmaya gerek yok.
 require("sduf"):setup({
-	filled_bg        = "#9ece6a", -- yesil
-	filled_bg_warn   = "#e0af68", -- %75'ten sonra sari
-	filled_bg_danger = "#f7768e", -- %90'dan sonra kirmizi
-	unfilled_bg      = "#a9b1d6", -- bos parca
-	text_fg          = "#1a1b26",
+	filled_bg        = "#415f1f", -- tokyonight yesil #9ece6a, koyultulmus
+	filled_bg_warn   = "#754f18", -- %75'ten sonra: sari #e0af68, koyultulmus
+	filled_bg_danger = "#ae0a29", -- %90'dan sonra: kirmizi #f7768e, koyultulmus
+	unfilled_bg      = "#1a1b26", -- iz = cubugun zemini
+	text_fg          = "#c0caf5", -- tokyonight fg
 	error_fg         = "#f7768e",
 })
 
