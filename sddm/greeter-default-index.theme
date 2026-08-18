@@ -1,5 +1,5 @@
 # Reference copy. Target: /var/lib/sddm/.local/share/icons/default/index.theme
-# Owner sddm:sddm, mode 644; the three parent dirs are sddm:sddm 700.
+# Owner sddm:sddm, mode 644; the four parent dirs are sddm:sddm 700.
 #
 # Cursor fallback for the SDDM greeter, which runs as user sddm
 # (HOME=/var/lib/sddm -- confirmed by its own .cache/sddm-greeter-qt6/).
