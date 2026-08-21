@@ -39,8 +39,8 @@
     // "pulseaudio#microphone",
     "backlight",
     "custom/refreshrate",
-    "battery",
     "group/peripherals",
+    "battery",
     "custom/weather",
     "custom/language",
     "idle_inhibitor"
