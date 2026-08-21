@@ -1,21 +1,21 @@
 /*  Remove text from homepage/newtab website shortcuts. */
-/*  Check if pinned by using context menu.              */
+/*  Check if pinned by using context menu.             */
+
+/*  Anchored on #root, NOT .outer-wrapper. Firefox 154 renders about:newtab
+    through the "nova" layout, whose container className is `nova-outer-wrapper`;
+    plain `outer-wrapper` is only produced by the legacy branch. Both branches
+    ship in the same activity-stream bundle, so a `.outer-wrapper ... 
+    .top-site-inner` chain found in Firefox's own stylesheet says nothing about
+    the DOM actually rendered. A variant scoped that way matched nothing and the
+    shortcut titles came back (measured 2026-08-21). #root exists in both.       */
 @-moz-document url("about:home"),
 url("about:newtab") {
-    .outer-wrapper .top-site-outer {
-        vertical-align: middle !important;
-      }
-    .outer-wrapper  .top-site-inner .title{
+     #root .top-site-inner .title{
         display: none !important;
-    }
+     }
 
-    .outer-wrapper .top-site-outer .top-site-inner .tile{
-        border-bottom-left-radius: 10px !important;
-        border-bottom-right-radius: 10px !important;
-        border-radius: 10px !important;
-        border-bottom: 0 !important;
-    }
-     #root .outer-wrapper .top-sites-list .top-site-outer {
+
+     #root .top-sites-list .top-site-outer {
         padding: 8px 0 16px 0 !important;
-    }
+     }
 }
