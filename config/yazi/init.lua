@@ -99,3 +99,41 @@ require("sduf"):setup({
 -- setup() yalnizca durum cubugu yazicisini kaydeder ve ilk hesaplamaya kadar
 -- bos doner; bildirim sonduktan sonra sayiyi gorunur tutan sey budur.
 require("what-size"):setup()
+
+-- Kopya/tasima bitince bildirim -- eklenti degil, iki DDS aboneligi.
+-- Bosluk suydu: yazi bir yapistirmanin BITTIGINI hicbir yerde soylemiyordu;
+-- durum cubugundaki `progress` ve `w` (tasks:show) surerken bilgi veriyor,
+-- bitince sessizce kayboluyor. Olculdu 2026-08-21, yazi 26.5.6:
+--   kopyala-yapistir -> "duplicate", kes-yapistir -> "move" (ayni govde)
+--   govde: { items = { { from = Url, to = Url }, ... } } -- to.name / to.parent
+--   TOPLU: uc dosyalik tek yapistirma TEK mesaj verdi, dosya basina degil
+--   gecikme: hedef dosya dolduktan +0,47..0,51 sn sonra (dort kosunun dordu)
+--   BASARISIZ yapistirmada (yazma izni olmayan hedef) 30 sn boyunca HIC
+--   ATESLEMEDI -- yani olay "denendi" degil "oldu" demek; bildirimi dogru
+--   kilan sey bu.
+-- Konu listesinde tamamlanma adi tasiyan bir konu YOK; bu ikisi tamamlanmada
+-- atesledigi ISIMLERINDEN degil olculerek bulundu.
+--
+-- SINIR -- "bitti" ne kadar dogru: olay, yazi'nin write() cagrilari donunce
+-- atesler; verinin diske inmesi ayri bir sorudur. Yalani bagli tutan sey
+-- cekirdek tarafi (bdi max_bytes + strict_limit -- archsetup'in
+-- dirty-writeback gorevi). Olculdu, USB hedefte iki kosu: olaydan sonra
+-- kalan is `sync -f` ile 45 ms ve 24 ms -- yani "bitti" burada gercekten
+-- bitti demek. Sinirsiz kirli sayfayla ayni bogazin ne oldugu
+-- pars/soru-cevap/soru-2026-08-17-usb-writeback.md icinde.
+local function paste_done(title, items)
+	local n = #items
+	if n == 0 then
+		return
+	end
+	local what = n == 1 and tostring(items[1].to.name) or string.format("%d items", n)
+	ya.notify({
+		title = title,
+		content = what .. " → " .. tostring(items[1].to.parent),
+		timeout = 4,
+		level = "info",
+	})
+end
+
+ps.sub("duplicate", function(body) paste_done("Copied", body.items) end)
+ps.sub("move", function(body) paste_done("Moved", body.items) end)
