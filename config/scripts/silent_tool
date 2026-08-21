@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # --- Ayarlar ---
-THEME_DIR="/usr/share/sddm/themes/silent"
+# Sınanabilirlik için değiştirilebilir; varsayılan kurulu tema.
+THEME_DIR="${SILENT_THEME_DIR:-/usr/share/sddm/themes/silent}"
 TEMP_DIR="/tmp/sddm_silent_v9_2"
 FIRST_BACKUP="/usr/share/sddm/themes/silent_original_backup"
 
@@ -12,51 +13,118 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+# Betiğin gerçekten düzenlediği dosyalar; durum denetiminin kapsamı da budur.
+# Tema kökünü taramak yanlış cevap verir: docs/options.json ve
+# components/Config.qml aynı İngilizce dizeleri "varsayılan değer" olarak
+# belgeliyor, yani kök taraması yama yerindeyken bile eşleşme bulur
+# (ölçüldü 2026-08-21: 3 sahte eşleşme, ikisi bu iki dosyada).
+QML_FILES=(LoginScreen MenuArea UserSelector)
+EN_QML='"(Login|Password|Caps Lock is on|Login failed|Enter your user!|Change keyboard layout|Change session|Power options|Toggle virtual keyboard|Close user selection|Select user)"'
+EN_CONF='en_US|Logging in|Press any key'
+
 # --- Fonksiyonlar ---
+
+die() {
+  echo -e "${RED}HATA: $1${NC}" >&2
+  exit 1
+}
 
 show_help() {
   echo -e "${BLUE}====================================================${NC}"
-  echo -e "${BLUE}   SilentSDDM Yönetim ve Onarım Paneli v9.2         ${NC}"
+  echo -e "${BLUE}   SilentSDDM Yönetim ve Onarım Paneli v9.3         ${NC}"
   echo -e "${BLUE}====================================================${NC}"
   echo -e "${YELLOW}Kullanım:${NC} $0 [SEÇENEK]"
   echo ""
   echo -e "${GREEN}  -t, --translate${NC}   Türkçeleştirme, Klavye Yaması ve Onarım yapar."
   echo -e "${GREEN}  -r, --restore${NC}     İlk orijinal yedeğe geri döner."
-  echo -e "${GREEN}  -s, --scan${NC}        Mevcut temadaki metinleri tarar."
+  echo -e "${GREEN}  -s, --status${NC}      Yamanın yerinde olup olmadığını söyler."
+  echo -e "                    Çıkış kodu: ${GREEN}0${NC}=yerinde  ${RED}1${NC}=geri alınmış  ${RED}2${NC}=bozuk"
   echo -e "${GREEN}  --test${NC}            Temayı test modunda açar (sudo gerekmez)."
   echo ""
+  echo -e "${YELLOW}Not:${NC} Düzenlenen dosyalar ${BLUE}sddm-silent-theme${NC} paketine ait; paket"
+  echo -e "     yükseltilince yama sessizce geri alınır. Yükseltme sonrası ${GREEN}-s${NC} sorar,"
+  echo -e "     ${GREEN}-t${NC} yeniden uygular (tekrar çalıştırmak güvenli)."
   echo -e "${BLUE}====================================================${NC}"
 }
 
-restore_original() {
-  if [ ! -d "$FIRST_BACKUP" ]; then
-    echo -e "${RED}HATA: Orijinal yedek bulunamadı.${NC}"
-    exit 1
+# Yamanın yerinde olup olmadığını yazdırır ve çıkış koduyla söyler:
+#   0 = yerinde, 1 = geri alınmış / eksik, 2 = bozuk
+check_status() {
+  local rc=0 n f miss=""
+
+  [ -d "$THEME_DIR" ] || die "Tema dizini bulunamadı: $THEME_DIR"
+
+  echo -e "${YELLOW}--- Yama Durumu ---${NC}"
+
+  # 1) Klavye yaması. Sayı da ölçülür, çünkü enjeksiyon çapası
+  #    (`id: loginScreen` / `id: root`) eşleşen HER satırın ardına ekliyor:
+  #    ikinci bir çapa çift blok demektir, o da QML'i kırar ve greeter açılmaz.
+  n=$(grep -c 'VirtualKeyboardSettings.locale' "$THEME_DIR/components/LoginScreen.qml" 2>/dev/null)
+  n=${n:-0}
+  if [ "$n" -eq 1 ]; then
+    echo -e "${GREEN}  ✔${NC} Klavye yaması: yerinde"
+  elif [ "$n" -eq 0 ]; then
+    echo -e "${RED}  ✘${NC} Klavye yaması: yok"
+    rc=1
+  else
+    echo -e "${RED}  ‼${NC} Klavye yaması: $n kez enjekte edilmiş — QML bozuk"
+    rc=2
   fi
+
+  # 2) Arayüz metinleri: betiğin düzenlediği üç bileşende İngilizce kalan var mı
+  for f in "${QML_FILES[@]}"; do
+    n=$(grep -cE "$EN_QML" "$THEME_DIR/components/$f.qml" 2>/dev/null)
+    n=${n:-0}
+    [ "$n" -gt 0 ] && miss="$miss $f.qml($n)"
+  done
+  if [ -z "$miss" ]; then
+    echo -e "${GREEN}  ✔${NC} Arayüz metinleri: Türkçe"
+  else
+    echo -e "${RED}  ✘${NC} Arayüz metinleri: İngilizce kalan →$miss"
+    [ "$rc" -eq 0 ] && rc=1
+  fi
+
+  # 3) Yapılandırma dosyaları (configs/ düz, alt dizin yok)
+  n=$(grep -lE "$EN_CONF" "$THEME_DIR"/configs/*.conf 2>/dev/null | wc -l)
+  if [ "$n" -eq 0 ]; then
+    echo -e "${GREEN}  ✔${NC} Yapılandırma (.conf): tr_TR"
+  else
+    echo -e "${RED}  ✘${NC} Yapılandırma (.conf): $n dosyada İngilizce değer var"
+    [ "$rc" -eq 0 ] && rc=1
+  fi
+
+  echo ""
+  case "$rc" in
+  0) echo -e "${GREEN}SONUÇ: Yama yerinde.${NC}" ;;
+  1) echo -e "${RED}SONUÇ: Yama geri alınmış.${NC} Uygulamak için: $0 -t" ;;
+  2) echo -e "${RED}SONUÇ: Yama bozuk.${NC} Onarmak için: $0 -r && $0 -t" ;;
+  esac
+  return $rc
+}
+
+restore_original() {
+  [ -d "$FIRST_BACKUP" ] || die "Orijinal yedek bulunamadı: $FIRST_BACKUP"
   echo -e "${YELLOW}Orijinal dosyalar geri yükleniyor...${NC}"
-  sudo rm -rf "$THEME_DIR"
-  sudo cp -r "$FIRST_BACKUP" "$THEME_DIR"
+  sudo rm -rf "$THEME_DIR" || die "Tema dizini silinemedi; hiçbir şey değişmedi."
+  # Buradan sonrası pencere: dizin silindi, yerine konmadı.
+  sudo cp -r "$FIRST_BACKUP" "$THEME_DIR" ||
+    die "Yedek geri kopyalanamadı ve TEMA DİZİNİ ŞU AN YOK. Elle: sudo cp -r $FIRST_BACKUP $THEME_DIR"
   echo -e "${GREEN}✔ Tema orijinal haline döndürüldü.${NC}"
 }
 
 run_test() {
-  if [ -f "$THEME_DIR/test.sh" ]; then
-    echo -e "${BLUE}--- Tema Test Ekranı Açılıyor ---${NC}"
-    (cd "$THEME_DIR" && ./test.sh)
-  else
-    echo -e "${RED}HATA: $THEME_DIR/test.sh bulunamadı!${NC}"
-  fi
+  [ -f "$THEME_DIR/test.sh" ] || die "$THEME_DIR/test.sh bulunamadı!"
+  echo -e "${BLUE}--- Tema Test Ekranı Açılıyor ---${NC}"
+  (cd "$THEME_DIR" && ./test.sh)
 }
 
 translate_theme() {
   echo -e "${BLUE}--- İşlem Başlatılıyor ---${NC}"
-  [ ! -d "$THEME_DIR" ] && {
-    echo -e "${RED}HATA: Tema dizini bulunamadı!${NC}"
-    exit 1
-  }
+  [ -d "$THEME_DIR" ] || die "Tema dizini bulunamadı: $THEME_DIR"
 
   # 1. Hazırlık (Geçici Dizin)
-  rm -rf "$TEMP_DIR" && cp -r "$THEME_DIR" "$TEMP_DIR"
+  rm -rf "$TEMP_DIR" || die "Geçici dizin temizlenemedi: $TEMP_DIR"
+  cp -r "$THEME_DIR" "$TEMP_DIR" || die "Tema geçici dizine kopyalanamadı."
 
   # 2. LoginScreen.qml: Klavye Yaması Enjeksiyonu
   echo -e "${YELLOW}-> Klavye ayarları ve arayüz metinleri işleniyor...${NC}"
@@ -69,31 +137,32 @@ translate_theme() {
         if (showKeyboard) {\
             VirtualKeyboardSettings.locale = Languages.getKBCodeFor("tr");\
         }\
-    }' "$TEMP_DIR/components/LoginScreen.qml"
+    }' "$TEMP_DIR/components/LoginScreen.qml" || die "Klavye bloğu enjekte edilemedi."
     echo -e "${BLUE}[EKLEME]: Sanal klavye Türkçe yerelleştirmesi eklendi.${NC}"
   fi
 
   # 3. LoginScreen.qml: Metin Çevirileri
-  sed -i '/userName/s/"Password"/"Kullanıcı Adı"/' "$TEMP_DIR/components/LoginScreen.qml"
+  sed -i '/userName/s/"Password"/"Kullanıcı Adı"/' "$TEMP_DIR/components/LoginScreen.qml" ||
+    die "LoginScreen.qml düzenlenemedi."
   sed -i -e 's/"Password"/"Şifre"/g' \
     -e 's/"Login"/"Giriş Yap"/g' \
     -e 's/"Caps Lock is on"/"Caps Lock Açık"/g' \
     -e 's/"Login failed"/"Giriş Başarısız"/g' \
     -e 's/"Enter your user!"/"Kullanıcı adınızı girin!"/g' \
-    "$TEMP_DIR/components/LoginScreen.qml"
+    "$TEMP_DIR/components/LoginScreen.qml" || die "LoginScreen.qml düzenlenemedi."
 
   # 4. MenuArea.qml: Tooltip Çevirileri
   sed -i -e 's/"Change keyboard layout"/"Klavye düzenini değiştir"/g' \
     -e 's/"Change session"/"Oturumu değiştir"/g' \
     -e 's/"Power options"/"Güç seçenekleri"/g' \
     -e 's/"Toggle virtual keyboard"/"Sanal klavyeyi aç\/kapat"/g' \
-    "$TEMP_DIR/components/MenuArea.qml"
+    "$TEMP_DIR/components/MenuArea.qml" || die "MenuArea.qml düzenlenemedi."
 
   # 5. UserSelector.qml: Kullanıcı Seçimi Çevirileri
   sed -i -e 's/"Close user selection"/"Kullanıcı seçimini kapat"/g' \
     -e 's/"Select user"/"Kullanıcı seç"/g' \
     -e 's/`Select user ${model.name}`/`Kullanıcı seç: ${model.name}`/g' \
-    "$TEMP_DIR/components/UserSelector.qml"
+    "$TEMP_DIR/components/UserSelector.qml" || die "UserSelector.qml düzenlenemedi."
 
   # 6. .conf Dosyaları: Zincirleme Değişim
   echo -e "${YELLOW}-> Yapılandırma dosyaları güncelleniyor (.conf)...${NC}"
@@ -101,10 +170,9 @@ translate_theme() {
     if [ -f "$conf" ]; then
       sed -i \
         -e 's/en_US/tr_TR/g' \
-        -e 's/en-US/tr_TR/g' \
         -e 's/Logging in/Giriş yapılıyor.../g' \
         -e 's/Press any key/Bir tuşa basın/g' \
-        "$conf"
+        "$conf" || die "$(basename "$conf") düzenlenemedi."
     fi
   done
 
@@ -113,15 +181,30 @@ translate_theme() {
 
   # İlk yedek yoksa oluştur
   if [ ! -d "$FIRST_BACKUP" ]; then
-    sudo cp -r "$THEME_DIR" "$FIRST_BACKUP"
+    sudo cp -r "$THEME_DIR" "$FIRST_BACKUP" ||
+      die "Orijinal yedek alınamadı; tema DEĞİŞMEDİ."
     echo -e "${BLUE}[YEDEK]: Orijinal yapı $FIRST_BACKUP adresine saklandı.${NC}"
   fi
 
-  # Dosyaları asıl dizine kopyala
-  sudo cp -rf "$TEMP_DIR/." "$THEME_DIR/"
+  # Dosyaları asıl dizine kopyala. Düşerse (sudo reddi ya da 60 sn zaman aşımı)
+  # buradan öteye geçilmez: eskiden bu satır sessizce düşüyor, betik yine
+  # "İŞLEM TAMAMLANDI" basıyor ve 0 ile çıkıyordu.
+  if ! sudo cp -rf "$TEMP_DIR/." "$THEME_DIR/"; then
+    rm -rf "$TEMP_DIR"
+    die "Değişiklikler yazılamadı (sudo reddedildi ya da zaman aşımına uğradı). Tema DEĞİŞMEDİ."
+  fi
 
   # Geçici dosyaları temizle
   rm -rf "$TEMP_DIR"
+
+  # 8. Doğrulama: sonuç varsayılmaz, sorulur.
+  echo ""
+  check_status
+  local st=$?
+  [ "$st" -eq 0 ] || {
+    echo -e "${RED}Yazma bitti ama doğrulama geçmedi.${NC}" >&2
+    exit "$st"
+  }
 
   echo -e "${GREEN}✔ İŞLEM TAMAMLANDI!${NC}"
   echo -e "${YELLOW}Test etmek için:${NC} $0 --test"
@@ -131,10 +214,7 @@ translate_theme() {
 case "$1" in
 -t | --translate) translate_theme ;;
 -r | --restore) restore_original ;;
--s | --scan)
-  echo -e "${YELLOW}--- Mevcut Temadaki Metin Durumu ---${NC}"
-  grep -rE '"(Login|Password|Caps Lock is on|Login failed|Enter your user!|Change keyboard layout|Change session|Power options|Toggle virtual keyboard|Close user selection|Select user|Logging in|Press any key)"' "$THEME_DIR" --exclude-dir={backgrounds,icons,fonts}
-  ;;
+-s | --status | --scan) check_status ;;
 --test) run_test ;;
 -h | --help | *) show_help ;;
 esac
