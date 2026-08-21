@@ -16,7 +16,7 @@ edilemez, ya da başka bir işletim sistemine aittir.
 | `home/` | `~` | **Otomatik** — archsetup |
 | `local/share/` | `~/.local/share` | **Otomatik** — archsetup (`applications`, `icons`, `color-schemes`) |
 | `sddm/` | `/etc/sddm.conf` + greeter'ın `~/.local/share/icons` | **Elle / root** — archsetup'ın ayrı SDDM görevi yazar; buradakiler referans kopyadır |
-| `browser/` | Firefox / Zen profil dizini | **Elle** — profil klasörünün adı rastgele, sabit hedef yok |
+| `browser/` | Firefox / Zen profil dizini | **Elle, makine başına bir kez** — profil klasörünün adı rastgele, sabit hedef yok |
 | `claude/` | `~/.claude` | **Elle** — kendi betiği var: `claude/install.sh` (geri yön: `save.sh`) |
 | `windows/` | Windows | **Elle** — PowerShell profili ve Scoop kurulum betiği, başka işletim sistemi |
 | `docs/` | — | Kurulacak bir şey değil, belge |
@@ -25,8 +25,18 @@ Otomatik olan üç bölüm archsetup'ın dotfiles ekranından seçilir; symlink 
 kopya modu vardır. `local/` bir seviye aşağıdan (`local/share`) eşlenir:
 doğrudan eşlenseydi `~/.local/share`'in **tamamı** üç klasörle değiştirilirdi.
 
-`browser/` altındaki `chrome/` klasörleri userChrome/userContent parçalarıdır;
-hedef profil `about:profiles` ile bulunup elle kopyalanır.
+`browser/` altındaki `chrome/` klasörleri userChrome/userContent parçalarıdır.
+Hedef profil `about:profiles` ile bulunur, sonra profildeki `chrome/` **kopya
+değil symlink** yapılır — kopyalandığında iki ağaç bir sonraki mod güncellemesinde
+sessizce ayrışıyor (ölçüldü 2026-08-21: bir dosya eksik, biri farklı):
+
+```sh
+P=~/.config/mozilla/firefox/<profil>          # about:profiles
+rm -rf "$P/chrome" && ln -s ~/.dotfiles/browser/firefox/chrome "$P/chrome"
+```
+
+`ln -sfn` ile yapılmaz: hedef **gerçek dizinken** bağ onun *içine* düşer.
+Otomatikleşmemesinin tek sebebi profil adının rastgele olması.
 
 ## Makineye özgü ayarlar
 

@@ -29,7 +29,11 @@
 @import url("icons_in_main_menu.css");
 @import url("ublock-icon-change.css");
 @import url("selected_tabs_static_width.css");
-@import url("autohide_tab_and_bookmarks_bars.css");
+/* @import url("autohide_tab_and_bookmarks_bars.css"); */
+/* Disabled 2026-08-21: the file was never present in the profile, so this
+   import had always been skipped silently. Symlinking the profile chrome dir
+   to the repo would have switched tab/bookmark autohide on for the first
+   time. Uncomment to enable. */
 @import url("url_bar_no_border.css");
 @import url("search_bar_transparent_background.css");
 @import url("cleaner_extensions_menu.css");
