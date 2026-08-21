@@ -103,14 +103,32 @@ fi
 # --- Çalışılan proje (pars çalışma alanı) ---
 # Bir oturum tek bir pars alt klasörüne aittir, ama cwd genelde kökte kalır ve
 # statusline girdisinde "proje" diye bir alan yok. Sıra:
-#   1) cwd zaten bir alt klasörde ise o,
-#   2) menüde (AskUserQuestion) verilen SON cevap — oturum ortasında /menu ile
-#      proje değişirse de doğru kalsın diye sonuncusu,
-#   3) transcript'te EN ÇOK geçen pars/<klasör>/ yolu (menü kullanılmadıysa).
-# 2 her zaman 3'ü ezer, 3 de "en son" değil "en çok" bakar: başka bir klasörün
-# NOTLAR.md'sini okumak serbest, o yüzden son geçen yol seçili proje olmayabilir.
-# Ölçülen örnek: baştan sona archsetup olan bir oturumda (205 geçiş) en son
-# geçen yol dotfiles'tı (31 geçiş).
+#   1) cwd zaten bir alt klasördeyse o,
+#   2) transcript'teki AÇIK SEÇİM — `/menu <ad>`, ya da argümansız `/menu` +
+#      kullanıcının yazdığı numara; ikisinden dosyada SONRA geçen kazanır,
+#   3) transcript'te İLK geçen pars/<klasör>/ yolu (menü hiç kullanılmadıysa).
+#
+# 2 ve 3 2026-08-21'de değişti; ikisi de ölçülerek (445 transcript; yer doğrusu
+# = oturumun hangi projenin NOTLAR.md / arsiv-*.md dosyasını YAZDIĞI — başka
+# projeninkine yazmak zaten yasak olduğu için bu sinyal sezgisellerden bağımsız;
+# 214 oturumda tek proje çıkıyor):
+#   - Eski 2. öncelik `AskUserQuestion` cevabıydı ve ÖLÜYDÜ: /menu artık o aracı
+#     kullanmıyor (CLAUDE.md, "AKIŞ — oturum başlangıcı"). Ölçüldü: 445
+#     oturumun yalnız 8'inde geçerli bir sonuç veriyor, yani pratikte her oturum
+#     doğrudan 3. önceliğe düşüyordu.
+#   - Eski 3. öncelik "EN ÇOK geçen" yoldu ve YAPIŞKAN DEĞİLDİ: sayaç her
+#     render'da baştan hesaplanıyor, başka projenin NOTLAR.md'sini okumak da
+#     serbest — okunan klasör oturum ortasında öne geçip adı sessizce
+#     değiştiriyordu. Bildirilen arıza buydu.
+# Oturum içinde ad değiştiren oturum 18 -> 1 (%8,4 -> %0,5), toplam ad değişimi
+# 25 -> 1; kalan tek oturum kullanıcının ikinci kez /menu yapması. Takasın
+# bedeli de yazılı: son değer doğruluğu 210 -> 207. Kaybedilen 7 oturumun 3'ünde
+# kullanıcı açık seçim yapmış ve iş sonra başka klasöre kaymış (orada iki cevap
+# da savunulabilir), 3'ü yedek yolun bedeli, 1'i artık silinmiş bir klasör.
+# Kazanılan 4 oturumun dördü de bildirilen arızanın ta kendisiydi. Hız ölçüldü
+# (7 MB'lık en büyük transcript, GNU grep, çıktı boruya): 72 ms -> 48 ms.
+# Türetim -> pars/claude-cli-ayarlari/arsiv-2026-08.md § 2026-08-21;
+# kurulum ve bu makinede yeniden ölçümü -> pars/dotfiles/arsiv-2026-08.md.
 PARS="$HOME/Belgeler/pars"
 TRANSCRIPT=$(echo "$input" | jq -r '.transcript_path // empty')
 PROJ=""
@@ -131,16 +149,61 @@ case "$CWD" in
 esac
 
 if [ -z "$PROJ" ] && [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-  # İki sinyal de tek grep'te toplanır: dosya bir kez okunur (7 MB'lık
-  # transcript'te ~40 ms), gerisi bellekte. Menü cevabı transcript'in başında
-  # olduğu için "sondan tara, ilk isabette dur" numarası zaten işe yaramıyordu.
-  # Menü cevabı, tool_result metninde  ...\"=\"<cevap>\"  biçiminde geçer.
-  SIG=$(grep -oaE '\\"=\\"[a-z0-9][a-z0-9-]*|pars/[a-z0-9][a-z0-9-]*/' "$TRANSCRIPT" 2>/dev/null)
-  # tac: birden çok menü cevabı varsa (oturum ortasında /menu) sonuncusu geçerli.
-  PROJ=$(printf '%s\n' "$SIG" | grep '^\\' | sed 's/.*"//' | tac | first_valid)
+  # Geçerli klasör listesi bir kez, fork'suz kuruluyor. (awk içinde
+  # system("test -d ...") ad başına bir kabuk açıyordu; transcript'te geçen her
+  # ayrı geçersiz ad — scratchpad yolundaki oturum uuid'leri — bir fork demek,
+  # tek başına 175 ms.)
+  DIRS=""
+  for d in "$PARS"/*/; do d=${d%/}; DIRS="$DIRS,${d##*/},"; done
+
+  # 2) AÇIK SEÇİM. Satır seçimi sabit dizgiyle: aynı işi yapan tek geçişli -oE
+  # deseni 7 MB'lık transcript'te 173 ms sürüyor (alternasyon süperadditif,
+  # parçalar tek tek 1-4 ms), bu 11 ms. Menü başlığı için iki çapa birden
+  # veriliyor — hook metni değişirse biri sağ kalsın.
+  PROJ=$(grep -naF -e '<command-args>' -e '"role":"user","content":"' \
+                   -e 'kaynak=' -e 'alanındaki projeler' "$TRANSCRIPT" 2>/dev/null |
+  awk -v dirs="$DIRS" '
+    function valid(n) { return (n != "" && index(dirs, "," n ",") > 0) }
+    {
+      # Menü listesi: " 6) dotfiles" -> map[6]="dotfiles". Liste tek bir kayıtta
+      # geldiği için harita satır başına sıfırlanıyor; bayat girdi kalmıyor.
+      s = $0; built = 0
+      while (match(s, /[0-9]+\) [a-z0-9-]+/)) {
+        t = substr(s, RSTART, RLENGTH); s = substr(s, RSTART + RLENGTH)
+        num = t; sub(/\).*/, "", num)
+        nm  = t; sub(/^[0-9]+\) /, "", nm)
+        if (valid(nm)) { if (!built) { delete map; built = 1 }; map[num] = nm }
+      }
+      # Buradan sonrası yalnız KULLANICININ kendi kaydı; iki koşul da şart.
+      # Asistan kaydı çalıştırdığım komut metnini taşır, araç çıktısı da
+      # "type":"user" kaydıdır ama "toolUseResult" alanı vardır. Bu ayrım
+      # olmadan transcript grepleyen oturum kendi çıktısını seçim sinyali sayar
+      # (ölçüldü: hem türetme hem kurulum oturumu kendini "archsetup"
+      # gösteriyordu) — pgrep -f in kendi kabuğunu bulmasıyla aynı sınıf.
+      if (!index($0, "\"type\":\"user\"") || index($0, "toolUseResult")) next
+      if (match($0, /<command-args>[a-z0-9-]*<\/command-args>/)) {
+        t = substr($0, RSTART + 14, RLENGTH - 29)
+        if (valid(t)) sel = t
+      }
+      if (match($0, /"role":"user","content":"[^"]*"/)) {
+        t = substr($0, RSTART + 25, RLENGTH - 26)
+        # Numara BİR KEZ tüketilir: menüden sonraki ilk sayı cevabı seçimdir,
+        # oturumun ilerisindeki alâkasız bir sayı değil. Ölçüldü — tüketmeyen
+        # sürüm, menüye "3" (doğru cevap) dendikten sonra gelen bir "1"i seçim
+        # sanıp adı archsetup yapıyordu; tüketen sürüm o oturumu kazanıyor ve
+        # başka hiçbir oturumun cevabını değiştirmiyor.
+        if (t ~ /^[0-9]+$/) { if (t in map) { sel = map[t]; delete map } }
+        else if (valid(t)) sel = t
+      }
+    }
+    END { print sel }')
+
+  # 3) YEDEK: transcript'te geçen İLK geçerli yol — "en çok geçen" değil, çünkü
+  # aranan şeyin kendisi yapışkanlık. first_valid ilk isabette dönünce boru
+  # kapanıyor ve grep SIGPIPE ile erken çıkıyor: tam tarama 34 ms, böyle 19 ms.
   if [ -z "$PROJ" ]; then
-    PROJ=$(printf '%s\n' "$SIG" | grep '^pars/' | sed 's|^pars/||; s|/$||' \
-           | sort | uniq -c | sort -rn | sed 's/^ *[0-9]* *//' | first_valid)
+    PROJ=$(grep -oaE 'pars/[a-z0-9][a-z0-9-]*/' "$TRANSCRIPT" 2>/dev/null |
+           sed 's|^pars/||; s|/$||' | first_valid)
   fi
 fi
 
