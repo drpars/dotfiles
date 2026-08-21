@@ -34,12 +34,29 @@ NC='\033[0m'
 #    password=[Parola], userName=[Kullanıcı adı], loginFailed=[Giriş başarısız],
 #    capslockWarning=[Uyarı, Caps Lock AÇIK! ]; LANG=C ile hepsi İngilizce.
 #    Yani ekrandaki metni yerel belirliyor, bu betik değil.
-#    UYARI: `textConstants.promptUser` tr.qm'de ÇEVRİLMEMİŞ ama DOLU
-#    ("Enter your username"), yani o uyarı ekranda İngilizce çıkar ve buradan
-#    düzeltilemez — düzeltmesi SDDM'in çevirisine aittir.
+#    `textConstants.promptUser` tr.qm'de ÇEVRİLMEMİŞ ama DOLU
+#    ("Enter your username"). Bu METİN ÇEVRİLMİYOR ve çevrilmesi de GEREKMİYOR:
+#    onu basan dal, kullanıcı listesi boş değilken ULAŞILMAZ (ölçüldü
+#    2026-08-21). login() `foundUsers ? userName : userInput.text` yazıyor;
+#    userName, UserSelector'ın onCurrentIndexChanged'i sayesinde LoginScreen'in
+#    Component.onCompleted'ından ÖNCE doluyor, ve üç login() çağrısının üçü de
+#    aynı ifadeyi kullanıyor. Boş kullanıcı modelinde dal açılır — ama o ekranda
+#    zaten textConstants YEDEĞİ HİÇ OLMAYAN bir cümle var (LoginScreen.qml
+#    noUsersMessage: "SDDM could not find any user..."), yani promptUser'ı tek
+#    başına çevirmek o ekranı Türkçe yapmaz.
 #
 # Geriye kalan gerçekten etkili .qml işi: LoginScreen'in klavye bloğu ve
 # MenuArea/UserSelector'ın tooltip'leri (textConstants yedeği YOK, ölçüldü).
+#
+# Temada textConstants yedeği HİÇ OLMAYAN iki İngilizce cümle var; ikisi de
+# ARIZA dalında ve bu makinede ULAŞILMAZ, o yüzden bilerek çevrilmiyor:
+#   - LoginScreen.qml  noUsersMessage   → koşul: userModel boş (burada 1 kullanıcı)
+#   - LayoutSelector.qml noLayoutMessage → koşul: keyboard.layouts boş
+# İkincisinin koşulu DisplayServer'a bağlı (ölçüldü 2026-08-21): QPA=xcb ile
+# 2 düzen geliyor (Turkish, English (US)) ve mesaj gizli; QPA=offscreen ile 0
+# geliyor ve mesaj görünür olurdu. /etc/sddm.conf DisplayServer'ı ayarlamıyor,
+# paket varsayılanı x11. DisplayServer=wayland'a geçilirse bu cümle EKRANA
+# ÇIKAR — o zaman çevirisi silent_tool'un işi olur.
 
 # Etkili tooltip çevirileri olan dosyalar; durum denetiminin kapsamı da budur.
 # Tema kökünü taramak yanlış cevap verir: docs/options.json ve
