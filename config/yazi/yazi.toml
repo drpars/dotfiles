@@ -245,22 +245,22 @@ sort_sensitive = false
 sort_reverse 	 = false
 sort_translit  = false
 
+# `id` alani BILEREK yok, ve bu asagidaki mime-ext bloklari icin de gecerli:
+# eklenti README'leri "Yazi > v26.1.22 ise kaldir" diyor, kurulu surum sarti
+# asiyor. Surum `yazi --version` ile sorulur, buraya yazilmaz.
 [[plugin.prepend_fetchers]]
-id    = "git" # Remove if Yazi > v26.1.22
 url   = "*"
 run   = "git"
 group = "git"
 
 [[plugin.prepend_fetchers]]
-id    = "git" # Remove if Yazi > v26.1.22
 url   = "*/"
 run   = "git"
 group = "git"
 
 # mime-ext: MIME turunu file(1) yerine uzanti veritabanindan bulur (hiz).
-# `id` alani BILEREK yok -- README "Yazi > v26.1.22 ise kaldir" diyor, bu
-# makinede 26.5.6 kurulu. Dogruluk odununu init.lua kapatiyor:
-# fallback_file1 = true, yani veritabaninda olmayan uzanti file(1)'e duser.
+# Dogruluk odununu init.lua kapatiyor: fallback_file1 = true, yani
+# veritabaninda olmayan uzanti file(1)'e duser.
 [[plugin.prepend_fetchers]]
 url   = "local://*"
 run   = "mime-ext.local"
