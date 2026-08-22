@@ -304,11 +304,25 @@
     "format": "{ifname}",
     "format-disabled": "󰖪",
     "format-wifi": "",
-    "format-ethernet": "{ipaddr}/{cidr} 󰊗",
+    // Bar ethernet'te YALNIZ GLİF taşır; adres tooltip'e indi (2026-08-22).
+    // Glif U+F0200 = nf-md-ethernet (RJ45 jakı). Buradaki eski değer U+F0297
+    // bir OYUN KOLU glifiydi ve fontta VARDI — "fc-list ':charset=' bulur"
+    // testi glifin fontta olduğunu söyler, DOĞRU glif olduğunu söylemez.
+    // Ayırt eden ölçüm: pango-view ile render edip bakmak (waybar'la aynı
+    // Pango/fontconfig yığını) → NOTLAR.md, Tuzaklar.
+    "format-ethernet": "󰈀",
     "format-disconnected": "",
-    "tooltip-format": "{ifname} via {gwaddr} 󰊗",
-    "tooltip-format-wifi": "{ifname}\n\n{essid}\t{signalStrength}%\t{ipaddr}\nDown: {bandwidthDownBits}\tUp: {bandwidthUpBits}",
-    "tooltip-format-ethernet": "{ifname} ",
+    // Genel `tooltip-format` fiilen YALNIZ `linked` durumunu kapsıyor
+    // (network.cpp:352-354 linked/ethernet/wifi verir, öbür üçünün kendi
+    // tooltip'i yazılı). U+F0C1 = zincir; oradaki oyun kolu da temizlendi.
+    "tooltip-format": "{ifname} via {gwaddr} ",
+    // İki tooltip aynı iskelette: arayüz → adres → ağ geçidi → bant genişliği.
+    // {ipaddr}/{cidr}/{gwaddr} bar metniyle AYNI fmt store'dan geliyor
+    // (network.cpp:479 ↔ :492), yani duruma bakmadan ikisinde de dolu;
+    // {cidr} netlink RTM_NEWADDR'in ifa_prefixlen'i (:743), arayüz türünden
+    // bağımsız. Adres modemin DHCP'sinden gelendir — ayrı bir kaynak yok.
+    "tooltip-format-wifi": "{ifname}\n\n{essid}\t{signalStrength}%\nIP: {ipaddr}/{cidr}\nAğ Geçidi: {gwaddr}\nDown: {bandwidthDownBits}\tUp: {bandwidthUpBits}",
+    "tooltip-format-ethernet": "{ifname}\n\nIP: {ipaddr}/{cidr}\nAğ Geçidi: {gwaddr}\nDown: {bandwidthDownBits}\tUp: {bandwidthUpBits}",
     "tooltip-format-disconnected": "Bağlantı Yok",
     "tooltip-format-disabled": "Kablosuz kapalı (rfkill)",
     "max-length": 50,
