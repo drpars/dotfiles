@@ -2,10 +2,11 @@
 """Waybar peripheral battery module.
 
 Reports the Razer peripheral (via the openrazer daemon) and the Logitech mouse
-(via solaar) battery levels. Designed to back a waybar drawer group:
+(via the kernel's hidpp power_supply node) battery levels. Designed to back a
+waybar drawer group:
 
     peripheral-battery.py kbd       -> openrazer device JSON
-    peripheral-battery.py mouse     -> solaar device JSON
+    peripheral-battery.py mouse     -> hidpp power_supply JSON
     peripheral-battery.py summary   -> combined trigger JSON (tooltip = both)
 
 The `kbd` verb and the `custom/keyboard-battery` module name are the openrazer
@@ -15,7 +16,7 @@ name never reaches the bar.
 
 Each call prints a single waybar JSON object: {text, tooltip, class, percentage}.
 
-When a device is not reachable -- no openrazer, no solaar, nothing paired --
+When a device is not reachable -- no openrazer, no hidpp node, nothing paired --
 the object is printed with an empty text, which is waybar's way of hiding a
 custom module. That is what keeps the drawer out of the bar on machines
 without these peripherals, so the same config works everywhere and nothing
@@ -30,12 +31,13 @@ own -- see the `.solo` rule for why structural CSS selectors cannot see sibling
 modules.
 """
 
+import glob
 import json
-import re
-import subprocess
+import os
 import sys
 
-# Device matched by substring against solaar's "Codename" line.
+# Matched as a substring against the power_supply node's own model_name, which
+# reads exactly "G502 X PLUS" on PANTHERA-ARCH.
 MOUSE_CODENAME = "G502 X PLUS"
 
 KBD_GLYPH = "\U000f030c"    # 󰌌  keyboard
@@ -88,23 +90,46 @@ def read_razer():
     return _UNKNOWN, None, None, None
 
 
+# The kernel's hid-logitech-hidpp driver publishes the HID++ battery as an
+# ordinary power_supply device, so the level is a file read rather than a
+# `solaar show` subprocess. Speed is the smaller half of why: measured on
+# PANTHERA-ARCH, solaar takes 2.19-3.04 s and a sysfs read 0.015 ms. The half
+# that matters is contention. All three modules of group/peripherals share one
+# 300 s interval, so they fire together; three concurrent solaar calls lost the
+# race in 5 of 15 measured reads and came back with no battery line at all. A
+# losing module reads that as "no mouse", which flips its sibling's `solo` cap
+# -- and the wrong shape then sits on the bar until the next poll. Reading a
+# file has no such race, so the three modules can no longer disagree about the
+# rendered set.
+#
+# The node index is not stable across reconnects, so the device is found by its
+# own model_name rather than by hidpp_battery_0. No node at all means no mouse,
+# which is exactly what this laptop reports (it has neither the mouse nor the
+# driver's device) -- the same answer solaar used to give by being absent.
+HIDPP_GLOB = "/sys/class/power_supply/hidpp_battery_*"
+
+
+def _attr(path, name):
+    with open(os.path.join(path, name)) as fh:
+        return fh.read().strip()
+
+
 def read_mouse():
     """(name, level, charging) for the Logitech mouse, or (None, None, None)."""
-    try:
-        out = subprocess.run(
-            ["solaar", "show", MOUSE_CODENAME],
-            capture_output=True, text=True, timeout=10,
-        ).stdout
-    except Exception:
-        return None, None, None
-
-    m = re.search(r"Battery:\s*(\d+)%,\s*BatteryStatus\.(\w+)", out)
-    if not m:
-        return MOUSE_CODENAME, None, None
-    level = int(m.group(1))
-    status = m.group(2).upper()
-    charging = "CHARG" in status and "DISCHARG" not in status
-    return MOUSE_CODENAME, level, charging
+    for path in sorted(glob.glob(HIDPP_GLOB)):
+        try:
+            name = _attr(path, "model_name")
+        except OSError:
+            continue
+        if MOUSE_CODENAME not in name:
+            continue
+        try:
+            return name, int(_attr(path, "capacity")), _attr(path, "status") == "Charging"
+        except (OSError, ValueError):
+            # The device is known but its reading is not; a hidden child, not
+            # a missing one. Same shape as the openrazer branch above.
+            return name, None, None
+    return None, None, None
 
 
 # Waybar hides a custom module whose text is empty.
@@ -157,9 +182,9 @@ def main():
     # The tooltip lists the RENDERED SET, same as the caps do: a device whose
     # level is None is a hidden child, so a line for it would describe something
     # the drawer never draws. It would also be wrong about what is missing --
-    # on this laptop solaar is not installed at all, so "Fare: ?" read as a
-    # flat battery when there is no mouse and no solaar. The guard above is what
-    # keeps this list from ever coming out empty.
+    # on this laptop there is no hidpp node at all, so "Fare: ?" read as a flat
+    # battery when there is no mouse to have one. The guard above is what keeps
+    # this list from ever coming out empty.
     lines = [
         f"{glyph}  {name}: {lvl}%" + (" (şarjda)" if chg else "")
         for glyph, name, lvl, chg in (
