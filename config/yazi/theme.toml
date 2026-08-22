@@ -1,3 +1,19 @@
 [flavor]
 dark = "tokyo-night"
 # dark = "catppuccin-mocha"
+
+# git.yazi isaretleri BURAYA yazilir, init.lua'ya degil: plugin degerleri
+# `th.git` uzerinden okuyor ve o tablo theme.toml/flavor.toml'dan doluyor
+# (plugins/git.yazi/README.md, "Advanced"). init.lua'daki `th.git.* = ...`
+# atamalari bu yuzden etkisizdi.
+#
+# 26.8.15'te plugin `modified` durumunu ikiye ayirdi: `unstaged` + `staged`.
+# `modified_sign` artik hicbir yerde okunmuyor.
+[git]
+unknown_sign   = " "
+added_sign     = ""      # U+F0FE  plus-square
+deleted_sign   = ""      # U+F146  minus-square
+unstaged_sign  = "󰝤"      # U+F0764 dolu kare -- eski modified_sign
+staged_sign    = "󰝥"      # U+F0765 ayni ailenin ici bos hali
+untracked_sign = "󰬜"      # U+F0B1C
+clean_sign     = "✔"

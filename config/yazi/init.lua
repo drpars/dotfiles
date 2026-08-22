@@ -27,13 +27,9 @@ require("full-border"):setup({
 })
 
 -- plugins:git
-th.git = th.git or {}
-th.git.unknown_sign = " "
-th.git.added_sign = ""
-th.git.deleted_sign = ""
-th.git.modified_sign = "󰝤"
-th.git.untracked_sign = "󰬜"
-th.git.clean_sign = "✔"
+-- Durum isaretleri (unstaged/staged/untracked...) theme.toml'un [git]
+-- bolumunde; plugin onlari `th.git`'ten okuyor ve o tablo init.lua'dan
+-- degil theme.toml/flavor.toml'dan doluyor.
 require("git"):setup({
 	-- Order of status signs showing in the linemode
 	order = 1500,
