@@ -150,30 +150,42 @@ def _cache_store(level, charging):
             pass
 
 
+# The zero is the driver reporting a timeout, not a battery reading. Read the
+# source: razer_attr_read_charge_level ends in a bare razer_send_payload()
+# whose return value it drops, then prints response.arguments[1]
+# (razermouse_driver.c:1475); the timeout branch of razer_send_payload
+# (:121) leaves that response zeroed. So every failure on this channel reads
+# as 0 -- there is no path that hands back a wrong non-zero level.
+#
 # A zero comes in two lengths and this loop only covers the short one. Read
 # back to back while the device is awake, razerkbd gives one or two zeros and
 # then the real value inside ~12 ms, and catching that is worth the wait: the
 # three modules fire together, and a module that gives up hides its child while
 # its sibling still shows one -- the cap mismatch this file already fixed once.
+# One step covers a 12 ms settle four times over, which is why there is only one.
 #
-# The long kind is not a cold cache at all, it is a device that has stopped
-# answering. Measured after 180 s of silence with the cache cleared, three
-# concurrent modules spent the whole budget and still read 0, three trials out
-# of three; razermouse likewise stayed silent through eight reads (~290 ms) in
-# one trial of four. No bounded wait can promise to outlast that, and this loop
-# does not pretend to -- it is the cache below that carries the display through,
-# and the only case neither covers is a device asleep before it was ever read
-# once. The budget is spent only when the answer is 0.
-RETRY_BUDGET = 0.25
+# The long kind is not a cold cache, it is a device that has stopped answering,
+# and more steps do not reach it. Every razermouse timeout the kernel logged
+# over the driver's whole life on this laptop was counted (8737 of them,
+# 2026-08-15 install to 2026-08-22): the quiet runs in episodes of median 39 s,
+# p90 53 min, longest 3.4 h, and inside one of those every poll fails -- 1259
+# consecutive at the longest. A five-step budget was tried and measured to buy
+# nothing there: in the 24 minutes it was live, the bar entered it five times
+# and all five spent it in full, 18 reads across the three modules and ~0.85 s
+# of USB traffic to a sleeping mouse, with no partial win anywhere in the log
+# (no burst between 2 and 17 reads exists). The cache below is what carries the
+# display through; the only case neither covers is a device asleep before it
+# was ever read once. A step is spent only when the answer is 0.
 RETRY_STEP = 0.05
+RETRY_STEPS = 1
 
 
 def _razer_raw(path):
     raw = int(_attr(path, "charge_level"))
-    waited = 0.0
-    while not raw and waited < RETRY_BUDGET:
+    for _ in range(RETRY_STEPS):
+        if raw:
+            break
         time.sleep(RETRY_STEP)
-        waited += RETRY_STEP
         raw = int(_attr(path, "charge_level"))
     return raw
 
