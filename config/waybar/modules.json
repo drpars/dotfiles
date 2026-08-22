@@ -316,13 +316,24 @@
     // (network.cpp:352-354 linked/ethernet/wifi verir, öbür üçünün kendi
     // tooltip'i yazılı). U+F0C1 = zincir; oradaki oyun kolu da temizlendi.
     "tooltip-format": "{ifname} via {gwaddr} ",
+    // Down/Up AYRI SATIRDA, tek satırda değil (2026-08-22). Sebep ölçüldü:
+    // tek satırda tooltip kutusu sayılar büyüyüp küçüldükçe 157-212 px arası
+    // geziniyordu. Karakterle doldurmak (pow_format'ın `{:>}` / `{:=}` biçimi)
+    // ÇÖZMÜYOR — iki bağımsız sebeple: (a) bu font orantılı, boşluk 3 px ama
+    // rakam 8 px, yani sabit karakter sayısı sabit piksel demek değil;
+    // (b) `>` genişliği zaten bir TAVAN değil TABAN: auto ölçekte alan 6-10
+    // karakter arası değişiyor ve `1000.0kb/s` 10 karakterle 9'luk dolguyu
+    // taşıyor. Ayrı satırda en geniş bant satırı 111 px'de kalıyor ve kutunun
+    // genişliğini `Ağ Geçidi: <gw>` satırı (135 px) çapalıyor → ölçülen
+    // değişim 0 px. Çapanın koşulu yazılı: ağ geçidi satırı bant satırından
+    // geniş kaldığı sürece sabit. → NOTLAR.md
     // İki tooltip aynı iskelette: arayüz → adres → ağ geçidi → bant genişliği.
     // {ipaddr}/{cidr}/{gwaddr} bar metniyle AYNI fmt store'dan geliyor
     // (network.cpp:479 ↔ :492), yani duruma bakmadan ikisinde de dolu;
     // {cidr} netlink RTM_NEWADDR'in ifa_prefixlen'i (:743), arayüz türünden
     // bağımsız. Adres modemin DHCP'sinden gelendir — ayrı bir kaynak yok.
-    "tooltip-format-wifi": "{ifname}\n\n{essid}\t{signalStrength}%\nIP: {ipaddr}/{cidr}\nAğ Geçidi: {gwaddr}\nDown: {bandwidthDownBits}\tUp: {bandwidthUpBits}",
-    "tooltip-format-ethernet": "{ifname}\n\nIP: {ipaddr}/{cidr}\nAğ Geçidi: {gwaddr}\nDown: {bandwidthDownBits}\tUp: {bandwidthUpBits}",
+    "tooltip-format-wifi": "{ifname}\n\n{essid}\t{signalStrength}%\nIP: {ipaddr}/{cidr}\nAğ Geçidi: {gwaddr}\nDown: {bandwidthDownBits}\nUp: {bandwidthUpBits}",
+    "tooltip-format-ethernet": "{ifname}\n\nIP: {ipaddr}/{cidr}\nAğ Geçidi: {gwaddr}\nDown: {bandwidthDownBits}\nUp: {bandwidthUpBits}",
     "tooltip-format-disconnected": "Bağlantı Yok",
     "tooltip-format-disabled": "Kablosuz kapalı (rfkill)",
     "max-length": 50,
