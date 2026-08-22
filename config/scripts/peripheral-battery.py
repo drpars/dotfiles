@@ -7,13 +7,18 @@ the kernel; see each reader for which node and why it beat the userspace path.
 Designed to back a waybar drawer group:
 
     peripheral-battery.py kbd       -> razer* driver attribute JSON
-    peripheral-battery.py mouse     -> hidpp power_supply JSON
+    peripheral-battery.py mouse     -> kernel power_supply JSON
     peripheral-battery.py summary   -> combined trigger JSON (tooltip = both)
 
-The `kbd` verb and the `custom/keyboard-battery` module name are the Razer
-*slot*, not a claim about the device in it: this laptop's Razer device is a
-mouse. The glyph follows the driver bound to it (razermouse / razerkbd), so the
-slot name never reaches the bar.
+Both verb names are *channel* slots, not claims about the device in them. `kbd`
+is whatever openrazer's out-of-tree driver has claimed -- on this laptop that is
+a mouse -- and `mouse` is whatever the kernel itself exports as a peripheral
+battery. Each slot works out its own glyph, so neither verb reaches the bar.
+
+The slot COUNT is fixed at two on purpose. waybar reads its module set from
+modules.json once at startup, so a device-driven set would mean regenerating
+that file and restarting the bar, and that chain has taken the bar down twice
+in this repo. Two channels cover what these machines have.
 
 Each call prints a single waybar JSON object: {text, tooltip, class, percentage}.
 
@@ -38,10 +43,6 @@ import os
 import sys
 import time
 
-# Matched as a substring against the power_supply node's own model_name, which
-# reads exactly "G502 X PLUS" on PANTHERA-ARCH.
-MOUSE_CODENAME = "G502 X PLUS"
-
 KBD_GLYPH = "\U000f030c"    # 󰌌  keyboard
 MOUSE_GLYPH = "\U000f037d"  # 󰍽  mouse
 
@@ -57,6 +58,15 @@ _UNKNOWN = "\U000f0091"    # 󰂑
 # two glyphs are verified present in the bar font, so anything else falls back
 # to the unknown-battery glyph rather than to a guessed codepoint or -- worse --
 # to a glyph that names the wrong device.
+#
+# The driver name is brand-specific and it stays, because nothing generic gets
+# this right. Four standard channels were read on both machines (2026-08-22) and
+# all four call the battery-carrying interface of the DeathStalker KEYBOARD a
+# mouse: udev ID_INPUT_*, the raw capabilities bitmaps, the USB boot protocol
+# (bInterfaceProtocol=02), and the interface's own HID report descriptor
+# (top-level usage Generic Desktop/Mouse). openrazer hangs charge_level on the
+# interface that carries its vendor reports, and on both machines that interface
+# declares a mouse collection. Measurement -> ../../pars notes, arsiv-2026-08 (58).
 RAZER_GLYPHS = {"keyboard": KBD_GLYPH, "mouse": MOUSE_GLYPH}
 RAZER_DRIVERS = {"razermouse": "mouse", "razerkbd": "keyboard"}
 
@@ -203,10 +213,10 @@ def read_razer():
     return _UNKNOWN, None, None, None, None
 
 
-# The kernel's hid-logitech-hidpp driver publishes the HID++ battery as an
-# ordinary power_supply device, so the level is a file read rather than a
-# `solaar show` subprocess. Speed is the smaller half of why: measured on
-# PANTHERA-ARCH, solaar takes 2.19-3.04 s and a sysfs read 0.015 ms. The half
+# The kernel publishes a peripheral battery as an ordinary power_supply device,
+# so the level is a file read rather than a `solaar show` subprocess. Speed is
+# the smaller half of why: measured on PANTHERA-ARCH, solaar takes 2.19-3.04 s
+# and a sysfs read 0.015 ms. The half
 # that matters is contention. All three modules of group/peripherals share one
 # 300 s interval, so they fire together; three concurrent solaar calls lost the
 # race in 5 of 15 measured reads and came back with no battery line at all. A
@@ -215,11 +225,18 @@ def read_razer():
 # file has no such race, so the three modules can no longer disagree about the
 # rendered set.
 #
-# The node index is not stable across reconnects, so the device is found by its
-# own model_name rather than by hidpp_battery_0. No node at all means no mouse,
-# which is exactly what this laptop reports (it has neither the mouse nor the
-# driver's device) -- the same answer solaar used to give by being absent.
-HIDPP_GLOB = "/sys/class/power_supply/hidpp_battery_*"
+# The node is found by what it IS, not by what it is called: type=Battery plus
+# scope=Device is the kernel's own marker for "this battery belongs to a
+# peripheral, not to the machine". Measured on both machines -- the desktop's
+# hidpp_battery_0 is the only node that matches, and the laptop's BAT0 and ADP0
+# have no scope file at all (absent, not "System"), so they are skipped by the
+# read failing rather than by a name test. That is what un-nails this slot from
+# one model: it used to match the substring "G502 X PLUS" against model_name, so
+# any other mouse simply went missing from the bar.
+#
+# No matching node means no such peripheral, which is exactly what this laptop
+# reports -- the same answer solaar used to give by being absent.
+PSU_GLOB = "/sys/class/power_supply/*"
 
 
 def _attr(path, name):
@@ -227,22 +244,50 @@ def _attr(path, name):
         return fh.read().strip()
 
 
+# With the model nailed down no glyph question arose; a generic slot has to ask
+# one. udev's own mouse test is "has REL_X and REL_Y", and that is a file read
+# here rather than a udevadm subprocess: bits 0 and 1 of capabilities/rel.
+# Measured on the G502 (rel=1943, both bits set) and against a plain keyboard
+# (AT Translated Set 2, rel=0). Only the mouse branch has a real peripheral
+# behind it -- no wireless keyboard was on this channel to measure -- so a
+# device with keys and no rel axes gets the keyboard glyph as an inference, and
+# anything with neither falls back to unknown rather than to a guessed glyph.
+def _class_glyph(psu_path):
+    for inp in sorted(glob.glob(os.path.join(psu_path, "device", "input", "input*"))):
+        try:
+            rel = int(_attr(inp, "capabilities/rel").split()[-1], 16)
+            key = int(_attr(inp, "capabilities/key").split()[-1], 16)
+        except (OSError, ValueError, IndexError):
+            continue
+        if rel & 0x3:
+            return MOUSE_GLYPH
+        if key:
+            return KBD_GLYPH
+    return _UNKNOWN
+
+
 def read_mouse():
-    """(name, level, charging) for the Logitech mouse, or (None, None, None)."""
-    for path in sorted(glob.glob(HIDPP_GLOB)):
+    """(glyph, name, level, charging) for the kernel-side peripheral battery."""
+    for path in sorted(glob.glob(PSU_GLOB)):
+        try:
+            if _attr(path, "type") != "Battery" or _attr(path, "scope") != "Device":
+                continue
+        except OSError:
+            # A system battery has no scope file at all; that is the skip.
+            continue
         try:
             name = _attr(path, "model_name")
         except OSError:
-            continue
-        if MOUSE_CODENAME not in name:
-            continue
+            name = os.path.basename(path)
+        glyph = _class_glyph(path)
         try:
-            return name, int(_attr(path, "capacity")), _attr(path, "status") == "Charging"
+            return (glyph, name, int(_attr(path, "capacity")),
+                    _attr(path, "status") == "Charging")
         except (OSError, ValueError):
             # The device is known but its reading is not; a hidden child, not
             # a missing one. Same shape as the openrazer branch above.
-            return name, None, None
-    return None, None, None
+            return glyph, name, None, None
+    return _UNKNOWN, None, None, None
 
 
 # Waybar hides a custom module whose text is empty.
@@ -275,18 +320,18 @@ def main():
         # Both devices are read even though only one is reported: the caps are a
         # property of the rendered set, not of the device (see module docstring).
         k_glyph, k_name, k_lvl, k_chg, k_note = read_razer()
-        m_name, m_lvl, m_chg = read_mouse()
+        m_glyph, m_name, m_lvl, m_chg = read_mouse()
         solo = (k_lvl is None) != (m_lvl is None)
         if what == "kbd":
             print(json.dumps(device_obj(k_glyph, k_name, k_lvl, k_chg, solo, k_note)))
         else:
-            print(json.dumps(device_obj(MOUSE_GLYPH, m_name, m_lvl, m_chg, solo)))
+            print(json.dumps(device_obj(m_glyph, m_name, m_lvl, m_chg, solo)))
         return
 
     # summary: one trigger icon driven by the lower of the two levels, with a
     # tooltip listing both peripherals.
     k_glyph, k_name, k_lvl, k_chg, k_note = read_razer()
-    m_name, m_lvl, m_chg = read_mouse()
+    m_glyph, m_name, m_lvl, m_chg = read_mouse()
 
     # Hiçbiri okunamıyorsa bu makinede bu çevre birimleri yok: gizlen.
     if k_lvl is None and m_lvl is None:
@@ -296,15 +341,15 @@ def main():
     # The tooltip lists the RENDERED SET, same as the caps do: a device whose
     # level is None is a hidden child, so a line for it would describe something
     # the drawer never draws. It would also be wrong about what is missing --
-    # on this laptop there is no hidpp node at all, so "Fare: ?" read as a flat
-    # battery when there is no mouse to have one. The guard above is what keeps
+    # this laptop exports no peripheral battery at all, so "Fare: ?" read as a
+    # flat battery when there is no mouse to have one. The guard above is what keeps
     # this list from ever coming out empty.
     lines = [
         f"{glyph}  {name}: {lvl}%" + (" (şarjda)" if chg else "")
                                    + (f" ({note})" if note else "")
         for glyph, name, lvl, chg, note in (
             (k_glyph, k_name, k_lvl, k_chg, k_note),
-            (MOUSE_GLYPH, m_name, m_lvl, m_chg, None),
+            (m_glyph, m_name, m_lvl, m_chg, None),
         )
         if lvl is not None
     ]
