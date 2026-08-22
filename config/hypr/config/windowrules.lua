@@ -2,51 +2,48 @@
 -- PENCERE KURALLARI
 -- =======================================================
 
--- ── Kuralsiz float'lar: ekranin calisilan yerine oturmasinlar ──
+-- ── Kuralsiz float'lar: KURAL YOK, ve bu bir karar ──
 -- HEDEF SINIF (v0.56.2 KAYNAGINDAN okundu, wiki degil --
 -- XWaylandManager.cpp `shouldBeFloated`): Wayland tarafinda kendiliginden
 -- float olan pencere ya xdg_toplevel PARENT'i olandir (yani bir dialog),
 -- ya da SABIT BOYUT ilan edendir (minSize != 0 ve minSize == maxSize).
--- Sikayetin kaynagi bu iki sinif.
 --
--- `xwayland = false` ZORUNLU, susleme degil: X11 tarafinda ayni fonksiyon
--- _NET_WM_WINDOW_TYPE_{TOOLTIP,MENU,DROPDOWN_MENU,POPUP_MENU,DOCK} atomlarini
--- da float sayiyor. Bu kosul kaldirilirsa bir X11 uygulamasinin acilir menusu
--- tiklanan yerden sag alt koseye firlar.
+-- 2026-08-22'de bu iki sinifi sag alt koseye tasiyan bir kural vardi
+-- (`move = { "max(0, monitor_w - window_w - 20)", ... }`); KALDIRILDI.
+-- Kullanici merkezi istiyor ve Hyprland zaten merkeze koyuyor. Ayni GTK
+-- sondasiyla uc hal OLCULDU (500x400 pencere, ekran 2560x1440, waybar 40):
+--   A kose kurali     : at=(2040,1020)
+--   B `center = true` : at=(1030,540)
+--   C kural yok       : at=(1030,540)   <-- YURURLUKTE
 --
--- SIRA ONEMLI:
---   * WindowRuleApplicator.cpp: `move` efekti `center`i siler, `center` da
---     `position`i siler -- karsilikli dislayan, SON uygulanan kazanir.
---   * Isimsiz kurallar yukaridan asagi islenir (isimli olanlar hepsinden once).
---     Bu blok EN USTTE durdugu icin asagidaki zenity/Tk/tui-popup kurallarinin
---     `center = true`si onu ezer -- ozel kurallarin ortalamasi BOZULMAZ.
---     OLCULDU: zenity at=[1124,628], yani (2560-312)/2 ve 40+(1400-225)/2.
+-- B ile C sabit-boyut penceresinde AYNI; ayrildiklari yer DIALOG dali.
+-- Olculdu (dialog 600x400, parent at x=11 w=1263):
+--   B -> at=(980,540)   ekranin merkezi
+--   C -> at=(343,540)   PARENT'in merkezi (11 + 1263/2 - 300)
+-- Yani `center = true` no-op DEGIL: dialogu ait oldugu pencereden koparip
+-- ekran merkezine ceker. Kural yokken dialog parent'inin ustunde kalir --
+-- istenen bu, ve bu yuzden bos birakmak `center = true` yazmaktan iyidir.
 --
--- KENDI kurallarimizla float edilenler bu kuralin DISINDA kalir, ve bu
--- ordan degil mekanizmadan geliyor: WindowRule.cpp:404 `float` prop'unu
+-- KOSE KURALI GERI EKLENECEKSE once notu oku: `move` yalnizca MAP aninda
+-- kosuyor; sonrasinda istemci kendini yeniden boyutlarsa Hyprland kurali
+-- yeniden kosturmuyor, pencerenin MERKEZINI koruyor. Kuculen istemci ice
+-- kayar (swappy: 20 px yerine 71 px), BUYUYEN istemci disari tasar ve
+-- `max(0, ...)` kelepcesi tutmaz -- olculdu: 500x400 -> 1500x1050'de
+-- ekranin 480x305 px disina cikti. `general:resize_corner` bu isi
+-- gormuyor (olculerek elendi: etkilesimli boyutlamaya ozel).
+--
+-- SIRA: isimsiz kurallar yukaridan asagi islenir, isimli olanlar hepsinden
+-- once. `move` efekti `center`i siler, `center` da `position`i -- karsilikli
+-- dislayan, SON uygulanan kazanir (WindowRuleApplicator.cpp).
+--
+-- `float = true` ile eslesme denenirse: WindowRule.cpp:404 prop'u
 -- `w->m_isFloating` uzerinden esliyor, efektler ise sonra uygulaniyor
--- (Window.cpp:2191). Yani imv/mpv/Calculator eslesme aninda hala tiled.
--- Olculdu: imv kural sona tasindiginda bile ortada kaldi.
+-- (Window.cpp:2191) -- yani KENDI kurallarimizla float ettiklerimiz
+-- (imv/mpv/Calculator) eslesme aninda hala tiled ve kapsam disinda kalir.
 --
--- Hedef sag alt kose: ust taraf waybar'in (40 px rezerve) ve bildirimlerin,
--- merkez de zaten sikayetin kendisi.
--- `max(...)` kelepcedir: pencere ekrandan buyukse baslangic eksiye dusmesin.
--- Motor muParser (helpers/math/Expression.cpp).
--- IFADELER TABLO BICIMINDE VERILIR. Dize biciminde (`move = "a b"`)
--- parseExpressionVec2 ILK BOSLUKTAN boler, yani ifade ici bosluk kirilir.
-hl.window_rule({
-    match = { float = true, xwayland = false },
-    move  = { "max(0, monitor_w - window_w - 20)", "max(40, monitor_h - window_h - 20)" },
-})
-
--- NOT -- `modal = true` diye bir muafiyet DENENDI ve KALDIRILDI, cunku
--- olculdugunde olu cikti: Window.cpp:1681 `isModal()` yalnizca
--- `m_xwaylandSurface->m_modal`e bakiyor, yani native Wayland uygulamasinin
--- modal'i modal sayilmiyor. Yukaridaki kural zaten `xwayland = false`
--- dedigi icin muafiyetin eslesebilecegi tek kume de disarida kaliyor.
--- ACIK RISK: parola isteyen kutu (polkit) da koseye gider. Onu merkezde
--- tutmak icin sinifi gerekiyor, ve sinif UYDURULMAZ -- pencere ekrandayken
--- `hyprctl clients` ile olculur.
+-- `modal = true` diye bir muafiyet DENENDI ve OLU cikti: Window.cpp:1681
+-- `isModal()` yalnizca `m_xwaylandSurface->m_modal`e bakiyor, yani native
+-- Wayland uygulamasinin modal'i modal sayilmiyor.
 
 -- Hesap makinesi
 hl.window_rule({
