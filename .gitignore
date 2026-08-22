@@ -40,3 +40,9 @@ config/looking-glass/presets/
 # Betikler yerinde derlenince (py_compile, import) olusuyor. Uretilen
 # bytecode, depoya girmez -- bir kez calisma agacina dustu.
 config/scripts/__pycache__/
+
+# ~/.config/systemd bu depoya symlink oldugu icin archsetup'in audio_dsp
+# gorevi unit dosyasini buraya kuruyor (core/audio_dsp.py:79, kaynak
+# data/audio/ee-port-watch.service). Icerigin sahibi archsetup; buradaki
+# kopya her kosuda uzerine yazilir, versiyonlanmaz.
+config/systemd/user/ee-port-watch.service
