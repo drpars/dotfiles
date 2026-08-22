@@ -140,9 +140,31 @@ def _cache_store(level, charging):
             pass
 
 
+# How long a cold read stays 0 differs by driver, and that sets both halves of
+# the answer below. razerkbd hands out one or two zeros and then the real value
+# within about 12 ms, so a short retry catches it -- which matters, because the
+# three modules fire together and the one that gives up first hides its child
+# while its sibling shows one, and that is the cap mismatch this file already
+# fixed once. razermouse instead went quiet for ~290 ms in one of four trials,
+# which no bounded retry can promise to outlast; that is the cache's job, not
+# this loop's. The budget is spent only when the answer is 0.
+RETRY_BUDGET = 0.25
+RETRY_STEP = 0.05
+
+
+def _razer_raw(path):
+    raw = int(_attr(path, "charge_level"))
+    waited = 0.0
+    while not raw and waited < RETRY_BUDGET:
+        time.sleep(RETRY_STEP)
+        waited += RETRY_STEP
+        raw = int(_attr(path, "charge_level"))
+    return raw
+
+
 def _razer_level(path):
     """(percentage, charging, age_seconds) -- age is None for a fresh reading."""
-    raw = int(_attr(path, "charge_level"))
+    raw = _razer_raw(path)
     if raw:
         level = round(raw / 255 * 100)
         charging = _attr(path, "charge_status") == "1"
