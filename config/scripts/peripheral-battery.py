@@ -140,14 +140,20 @@ def _cache_store(level, charging):
             pass
 
 
-# How long a cold read stays 0 differs by driver, and that sets both halves of
-# the answer below. razerkbd hands out one or two zeros and then the real value
-# within about 12 ms, so a short retry catches it -- which matters, because the
-# three modules fire together and the one that gives up first hides its child
-# while its sibling shows one, and that is the cap mismatch this file already
-# fixed once. razermouse instead went quiet for ~290 ms in one of four trials,
-# which no bounded retry can promise to outlast; that is the cache's job, not
-# this loop's. The budget is spent only when the answer is 0.
+# A zero comes in two lengths and this loop only covers the short one. Read
+# back to back while the device is awake, razerkbd gives one or two zeros and
+# then the real value inside ~12 ms, and catching that is worth the wait: the
+# three modules fire together, and a module that gives up hides its child while
+# its sibling still shows one -- the cap mismatch this file already fixed once.
+#
+# The long kind is not a cold cache at all, it is a device that has stopped
+# answering. Measured after 180 s of silence with the cache cleared, three
+# concurrent modules spent the whole budget and still read 0, three trials out
+# of three; razermouse likewise stayed silent through eight reads (~290 ms) in
+# one trial of four. No bounded wait can promise to outlast that, and this loop
+# does not pretend to -- it is the cache below that carries the display through,
+# and the only case neither covers is a device asleep before it was ever read
+# once. The budget is spent only when the answer is 0.
 RETRY_BUDGET = 0.25
 RETRY_STEP = 0.05
 
