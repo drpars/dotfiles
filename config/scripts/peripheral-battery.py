@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 """Waybar peripheral battery module.
 
-Reports the Razer peripheral (via the openrazer daemon) and the Logitech mouse
-(via the kernel's hidpp power_supply node) battery levels. Designed to back a
-waybar drawer group:
+Reports the Razer peripheral and the Logitech mouse battery levels. Both come
+straight from sysfs, so no daemon and no python binding sit between the bar and
+the kernel; see each reader for which node and why it beat the userspace path.
+Designed to back a waybar drawer group:
 
-    peripheral-battery.py kbd       -> openrazer device JSON
+    peripheral-battery.py kbd       -> razer* driver attribute JSON
     peripheral-battery.py mouse     -> hidpp power_supply JSON
     peripheral-battery.py summary   -> combined trigger JSON (tooltip = both)
 
-The `kbd` verb and the `custom/keyboard-battery` module name are the openrazer
+The `kbd` verb and the `custom/keyboard-battery` module name are the Razer
 *slot*, not a claim about the device in it: this laptop's Razer device is a
-mouse. The glyph follows what openrazer reports the device to be, so the slot
-name never reaches the bar.
+mouse. The glyph follows the driver bound to it (razermouse / razerkbd), so the
+slot name never reaches the bar.
 
 Each call prints a single waybar JSON object: {text, tooltip, class, percentage}.
 
-When a device is not reachable -- no openrazer, no hidpp node, nothing paired --
+When a device is not reachable -- no razer node, no hidpp node, nothing paired --
 the object is printed with an empty text, which is waybar's way of hiding a
 custom module. That is what keeps the drawer out of the bar on machines
 without these peripherals, so the same config works everywhere and nothing
@@ -35,6 +36,7 @@ import glob
 import json
 import os
 import sys
+import time
 
 # Matched as a substring against the power_supply node's own model_name, which
 # reads exactly "G502 X PLUS" on PANTHERA-ARCH.
@@ -50,11 +52,13 @@ _BATT = ["\U000f007a", "\U000f007a", "\U000f007b", "\U000f007c", "\U000f007d",
 _CHARGING = "\U000f0084"   # 󰂄
 _UNKNOWN = "\U000f0091"    # 󰂑
 
-# openrazer's DeviceManager reports a device class (measured on this laptop:
-# type == "mouse"); only these two glyphs are verified present in the bar font,
-# so anything else falls back to the unknown-battery glyph rather than to a
-# guessed codepoint or -- worse -- to a glyph that names the wrong device.
+# The device class comes from the driver bound to the HID device, which is the
+# class itself: razermouse on this laptop, razerkbd on the desktop. Only these
+# two glyphs are verified present in the bar font, so anything else falls back
+# to the unknown-battery glyph rather than to a guessed codepoint or -- worse --
+# to a glyph that names the wrong device.
 RAZER_GLYPHS = {"keyboard": KBD_GLYPH, "mouse": MOUSE_GLYPH}
+RAZER_DRIVERS = {"razermouse": "mouse", "razerkbd": "keyboard"}
 
 
 def batt_glyph(level, charging):
@@ -77,17 +81,98 @@ def level_class(level, charging):
     return "normal"
 
 
-def read_razer():
-    """(glyph, name, level, charging) for the Razer device, or (…, None, None)."""
+# openrazer's out-of-tree driver claims these devices, so unlike the Logitech
+# mouse they get no power_supply node; the driver publishes its own attributes
+# on the HID device instead. Reading them needs neither the daemon nor
+# python-openrazer, which is the point: measured with the daemon stopped and
+# its PID gone from /proc, charge_level returned the same 184 thirty times out
+# of thirty, at the same 72 ms, and the read did not DBus-activate the daemon
+# back. That closes the failure this file already paid for once -- the python
+# binding was swept as an orphan and the whole bar section went dark in silence.
+#
+# The attributes are root:openrazer 0440, so the user must be in the openrazer
+# group; the package's own scriptlet creates it and both machines are in it.
+# device_type carries the same friendly name the daemon reports, verbatim.
+RAZER_GLOB = "/sys/bus/hid/devices/*"
+
+
+# charge_level reads 0 when the device does not answer, and that is not a
+# battery reading -- rendering it would put a red 0% on the bar for a device
+# that is merely quiet. How long it lasts was measured on both machines, after
+# 150 s of no reads, sampling every 20 ms:
+#
+#   razerkbd  (desktop) 4 trials: two clean, two with a single 0 then the value
+#   razermouse (laptop) 4 trials: three clean, one where ALL EIGHT reads were 0
+#                                 -- about 290 ms of nothing but zeros
+#
+# So neither "read twice" nor a short retry loop covers it; both were tried and
+# both were refuted by the numbers above. The daemon hid this by polling on its
+# own and keeping the value warm, which is exactly the job that has to move here
+# now that it is out of the path: remember the last real reading and serve it
+# while the device is quiet. The tooltip says when it is doing that, so a value
+# on the bar is never silently older than it looks.
+CACHE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"),
+                     "waybar-razer-battery.json")
+
+
+def _cache_load():
     try:
-        from openrazer.client import DeviceManager
-        for d in DeviceManager().devices:
-            if d.has("battery"):
-                glyph = RAZER_GLYPHS.get(getattr(d, "type", None), _UNKNOWN)
-                return glyph, d.name, int(d.battery_level), bool(d.is_charging)
-    except Exception:
-        pass
-    return _UNKNOWN, None, None, None
+        with open(CACHE) as fh:
+            d = json.load(fh)
+        return int(d["level"]), bool(d["charging"]), float(d["ts"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None, None, None
+
+
+def _cache_store(level, charging):
+    # All three modules share one interval and fire together, so the write has
+    # to be atomic or a reader can catch a half-written file. Unique temp name
+    # per process, then rename.
+    tmp = "%s.%d" % (CACHE, os.getpid())
+    try:
+        with open(tmp, "w") as fh:
+            json.dump({"level": level, "charging": charging, "ts": time.time()}, fh)
+        os.replace(tmp, CACHE)
+    except OSError:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+
+def _razer_level(path):
+    """(percentage, charging, age_seconds) -- age is None for a fresh reading."""
+    raw = int(_attr(path, "charge_level"))
+    if raw:
+        level = round(raw / 255 * 100)
+        charging = _attr(path, "charge_status") == "1"
+        _cache_store(level, charging)
+        return level, charging, None
+    level, charging, ts = _cache_load()
+    if level is None:
+        return None, None, None
+    return level, charging, time.time() - ts
+
+
+def read_razer():
+    """(glyph, name, level, charging, note) -- note flags a cache-served value."""
+    for path in sorted(glob.glob(RAZER_GLOB)):
+        if not os.path.exists(os.path.join(path, "charge_level")):
+            continue
+        try:
+            driver = os.path.basename(os.path.realpath(os.path.join(path, "driver")))
+            glyph = RAZER_GLYPHS.get(RAZER_DRIVERS.get(driver), _UNKNOWN)
+            name = _attr(path, "device_type")
+        except OSError:
+            return _UNKNOWN, None, None, None, None
+        try:
+            level, charging, age = _razer_level(path)
+        except (OSError, ValueError):
+            # Device known, reading not: a hidden child, not a missing one.
+            return glyph, name, None, None, None
+        note = None if age is None else "uyanmadı, %d dk önce" % (age // 60)
+        return glyph, name, level, charging, note
+    return _UNKNOWN, None, None, None, None
 
 
 # The kernel's hid-logitech-hidpp driver publishes the HID++ battery as an
@@ -136,7 +221,7 @@ def read_mouse():
 HIDDEN = {"text": ""}
 
 
-def device_obj(glyph, name, level, charging, solo=False):
+def device_obj(glyph, name, level, charging, solo=False, note=None):
     if level is None:
         return HIDDEN
     pct = f"{level}%"
@@ -148,7 +233,8 @@ def device_obj(glyph, name, level, charging, solo=False):
     return {
         "text": f"{glyph} {pct}",
         "tooltip": f"{name or 'cihaz yok'}: {pct}"
-                   + (" (şarjda)" if charging else ""),
+                   + (" (şarjda)" if charging else "")
+                   + (f" ({note})" if note else ""),
         "class": classes,
         "percentage": level if level is not None else 0,
     }
@@ -160,18 +246,18 @@ def main():
     if what in ("kbd", "mouse"):
         # Both devices are read even though only one is reported: the caps are a
         # property of the rendered set, not of the device (see module docstring).
-        k_glyph, k_name, k_lvl, k_chg = read_razer()
+        k_glyph, k_name, k_lvl, k_chg, k_note = read_razer()
         m_name, m_lvl, m_chg = read_mouse()
         solo = (k_lvl is None) != (m_lvl is None)
         if what == "kbd":
-            print(json.dumps(device_obj(k_glyph, k_name, k_lvl, k_chg, solo)))
+            print(json.dumps(device_obj(k_glyph, k_name, k_lvl, k_chg, solo, k_note)))
         else:
             print(json.dumps(device_obj(MOUSE_GLYPH, m_name, m_lvl, m_chg, solo)))
         return
 
     # summary: one trigger icon driven by the lower of the two levels, with a
     # tooltip listing both peripherals.
-    k_glyph, k_name, k_lvl, k_chg = read_razer()
+    k_glyph, k_name, k_lvl, k_chg, k_note = read_razer()
     m_name, m_lvl, m_chg = read_mouse()
 
     # Hiçbiri okunamıyorsa bu makinede bu çevre birimleri yok: gizlen.
@@ -187,9 +273,10 @@ def main():
     # this list from ever coming out empty.
     lines = [
         f"{glyph}  {name}: {lvl}%" + (" (şarjda)" if chg else "")
-        for glyph, name, lvl, chg in (
-            (k_glyph, k_name, k_lvl, k_chg),
-            (MOUSE_GLYPH, m_name, m_lvl, m_chg),
+                                   + (f" ({note})" if note else "")
+        for glyph, name, lvl, chg, note in (
+            (k_glyph, k_name, k_lvl, k_chg, k_note),
+            (MOUSE_GLYPH, m_name, m_lvl, m_chg, None),
         )
         if lvl is not None
     ]
