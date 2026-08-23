@@ -6,6 +6,83 @@ function y() {
 		builtin cd -- "$cwd"
 	fi
 	rm -f -- "$tmp"
+	_yazi_pkg_check
+}
+
+# Eklentiler geride mi -- gunde bir, yazi KAPANDIKTAN sonra, SALT-OKUMA.
+#
+# Neden burasi: gercek tetik yazi'nin PAKET SURUMU, ve seyrek atesliyor.
+# Olculdu (pacman.log tek dosya, 2026-07-28 kurulumundan beri, rotasyon yok):
+# icinde toplam IKI yazi satiri var -- installed 26.5.6-4 (07-29), upgraded
+# 26.8.15-1 (08-22 16:58). Olay ayda bir; `y` gunde defalarca kosuyor, aradaki
+# farki gunluk damga kapatiyor. Cagri yazi KAPANDIKTAN sonra, cunku eklenti
+# kodu zaten bir sonraki acilista yukleniyor -- acilisi geciktirmesinin karsiligi yok.
+#
+# Neden `ya pkg upgrade` DEGIL: (a) komut package.toml'u ve eklenti agacini
+# YERINDE yeniden yazar, ve ikisi de sürümlenen dosya -- sonraki oturumun
+# `git status --short`'u kimsenin dokunmadigi kirli dosyalar gorur; (b) kosan
+# eklenti kodunu gozden gecirmeden degistirir. Burada yalnizca SORULUYOR:
+# yukseltmeyi kullanici baslatir, diff'i okur, commit eder.
+#
+# Neden aracin kendisi degil: `ya pkg` alt komutlari add/delete/install/list/
+# upgrade -- check ya da dry-run YOK, ve `ya pkg list` yalnizca YEREL rev
+# basiyor (olculdu: cagri package.toml'un sha256'sini degistirmiyor, cikti da
+# uzak sutunu tasimiyor). Yani "lazim mi" sorusunun aracin icinde cevabi yok;
+# dedektor `git ls-remote <depo> HEAD`.
+#
+# Depo adi kurali olculdu: `use` icinde ":" varsa monorepo (yazi-rs/plugins),
+# yoksa depo adinin sonuna ".yazi" gelir (KKV9/compress -> compress.yazi).
+# 15 girdi -> 8 benzersiz depo; sekizi de rc=0 ve gercek SHA dondurdu.
+#
+# TUZAK: `ls-remote --heads` KULLANILMAZ. Tum dallari alfabetik listeler ve
+# ilk satir varsayilan dal DEGILDIR; bu okuma bir kez "compress geride"
+# dedirtti, degildi. Sorulan sey HEAD.
+#
+# Maliyet olculdu: 8 depo paralel ~0,7-1,0 s, gunde BIR kez; damga tazeyken
+# 7 ms. Ag yoksa sessiz gecer ve damga YAZILMAZ -- ertesi kosu yeniden dener.
+# Damga ~/.local/state altinda, ~/.config/yazi'da DEGIL: orasi depo, damga
+# her gun bir diff satiri olurdu.
+function _yazi_pkg_check() {
+	local pt="${XDG_CONFIG_HOME:-$HOME/.config}/yazi/package.toml"
+	local stamp="${XDG_STATE_HOME:-$HOME/.local/state}/yazi/.pkg-check"
+	local today=${(%):-%D{%F}}
+	[[ -r $pt ]] || return 0
+	[[ -f $stamp && $(<$stamp) == $today ]] && return 0
+
+	local -A want
+	local line use rev repo
+	while IFS= read -r line; do
+		case $line in
+			(use\ =\ *) use=${${line#*\"}%\"} ;;
+			(rev\ =\ *) rev=${${line#*\"}%\"}
+				[[ $use == *:* ]] && repo=${use%%:*} || repo=$use.yazi
+				want[$repo]=$rev ;;
+		esac
+	done < $pt
+	(( ${#want} )) || return 0
+
+	local tmp=${$(mktemp -d):-}
+	[[ -n $tmp ]] || return 0
+	for repo in ${(k)want}; do
+		( local out=$(GIT_TERMINAL_PROMPT=0 git ls-remote "https://github.com/$repo" HEAD 2>/dev/null)
+		  print -r -- "$repo ${out[1,7]}" > $tmp/${repo//\//_} ) &
+	done
+	wait
+
+	local -a behind
+	local answered=0 f h
+	for f in $tmp/*(N); do
+		read -r repo h < $f
+		[[ -n $h ]] || continue
+		(( answered++ ))
+		[[ $h == ${want[$repo]} ]] || behind+=( ${repo%.yazi} )
+	done
+	rm -rf $tmp
+	(( answered )) || return 0
+	mkdir -p ${stamp:h} && print -r -- $today > $stamp
+
+	(( ${#behind} )) && print -P -- "%F{#e0af68}yazi eklentileri geride%f: ${(j:, :)behind} — %F{#7aa2f7}ya pkg upgrade%f"
+	return 0
 }
 
 # ~/.ssh altindaki tum ozel anahtarlari agent'a yukler.
