@@ -101,10 +101,21 @@ hl.bind(M .. " + T", hl.dsp.exec_cmd(
     _G.scriptsDir .. "/scratchtoggle terminal scratch-term " ..
     _G.terminal .. " --class=scratch-term"))
 
+-- Hesap makinesi. Motor qalculate-gtk ile ayni (libqalculate); qalc o motorun
+-- terminal kapisi ve `libqalculate` bagimliligiyla zaten kurulu geliyor.
+-- Sarmalayici betik GEREKMIYOR: `notlar` betigi, scratchtoggle komutu
+-- `hl.exec_cmd("$*")` ile calistirdigi icin tirnakli argumanin duzlesmesinden
+-- dogmustu; qalc ciplak cagriliyor, tirnakli argumani yok.
+-- `--class` SART -- gerekcesi SUPER+T'nin yukarisinda.
+hl.bind(M .. " + C", hl.dsp.exec_cmd(
+    _G.scriptsDir .. "/scratchtoggle hesap scratch-calc " ..
+    _G.terminal .. " --class=scratch-calc qalc"))
+
 -- Herhangi bir pencereyi scratchpad'e gonder (dagitimin ornegindeki desen).
 hl.bind(M .. " + SHIFT + N", hl.dsp.window.move({ workspace = "special:notlar" }))
 hl.bind(M .. " + SHIFT + W", hl.dsp.window.move({ workspace = "special:whatsapp" }))
 hl.bind(M .. " + SHIFT + T", hl.dsp.window.move({ workspace = "special:terminal" }))
+hl.bind(M .. " + SHIFT + C", hl.dsp.window.move({ workspace = "special:hesap" }))
 
 -- ── Fare ───────────────────────────────────────────
 hl.bind(M .. " + mouse:272",           hl.dsp.window.drag(),   { mouse = true })

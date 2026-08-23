@@ -115,6 +115,24 @@ hl.window_rule({
     workspace = "special:terminal silent",
 })
 
+-- Hesap makinesi: kitty + qalc, kendi sinifiyla.
+-- Motor qalculate-gtk ile AYNI (libqalculate); degisen yalnizca kapi. Sinif
+-- burada da secilebiliyor -- qalculate-gtk secilemezdi: GTK app_id'sini cagri
+-- basina veremezsin, kural rofi'den acilan pencereyi de yutardi (ayni sinif
+-- tuzak yukarida Chrome'da OLCULDU).
+-- float/center/size YAZILMIYOR ve bu bir karar: dwindle:special_scale_factor
+-- 0.8 oldugu icin special alanda tek basina duran pencere zaten ortalanmis
+-- panel olarak ciziliyor. OLCULDU (2026-08-24, eDP-1 2560x1440, reserved ust
+-- 40): at=(265,189) size=2030x1102 -- sol/sag bosluk 265/265, ust/alt 149/149,
+-- yani iki eksende de tam merkez; olcek 0,793 x 0,787 (fark gaps + border).
+-- floating=false: pencere TILED, "float gibi gorunmesini" veren sey scale
+-- faktoru. Ucluyu ayrica yazmak ayni sonucu ikinci bir yerden tarif etmek
+-- olurdu -- ve iki tarif birlikte guncellenmez.
+hl.window_rule({
+    match     = { class = "scratch-calc" },
+    workspace = "special:hesap silent",
+})
+
 -- ── Waybar tiklamasiyla acilan TUI pencereleri ─────
 -- Bunlar scratchpad DEGIL: special workspace de toggle da yok. Istenen sey
 -- yalnizca "hep ayni geometride acilsin"di ve onu veren sey special alan degil
