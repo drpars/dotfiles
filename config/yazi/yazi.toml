@@ -4,7 +4,7 @@
 # Gerekce ve olculen kurallar keymap.toml'un basinda.
 #
 # Cikarilan bloklarin tamami gomulu varsayilanla BIREBIR AYNIYDI (olculdu,
-# tomllib ile eleman eleman): [preview], [opener], [open], [tasks], [input],
+# tomllib ile eleman eleman): [preview], [opener], [tasks], [input],
 # [confirm], [pick], [which], ve [plugin]'in fetchers/spotters/preloaders/
 # previewers listeleri. Tam kopyayi tutmanin bedeli uc kez odendi.
 #
@@ -14,6 +14,30 @@
 #  * `[plugin] previewers` icinde `trash/**` EKSIKTI; varsayilanda var,
 #    yani cop icerigi onizlenemiyordu.
 #  * `fetchers` girdileri bayat `id = "mime"` alanini tasiyordu.
+
+# [open]: cop icindeki KLASOR icin tek delta satiri -- bu dosyadaki tek
+# `[open]` farki, gerisi gomulu varsayilan.
+#
+# Olculen mekanizma (yazi 26.8.15, ikilideki gomulu Lua): `mime.dir` fetcher'i
+# SEMAYA bakip mime uretiyor -- `folder/trash` (cop), `folder/local` (yerel),
+# `folder/remote` (sftp). Yani cop klasorunun mime'i `trash/**` DEGIL, ve
+# varsayilan `{ mime = "trash/**" }` kurali onu tanimi geregi hic goremez.
+# Ustelik varsayilan kural listesinin BASINDA `{ url = "*/" }` duruyor, yani
+# klasor zaten URL ile eslesip mime'a sira birakmiyor. Ikisi birlikte demek
+# ki: care fetcher tarafinda DEGIL, kural listenin onune gecmekte.
+#
+# `use` bilerek dosya kuralinin ("trash/**") kopyasi: ayni liste olunca
+# karisik secimde (klasor + dosya) menu artik kesisime dusmuyor -- olculdu,
+# kuralsiz halde menu tek basina "Open"a iniyordu.
+#
+# DIKKAT -- `folder/trash` HICBIR YERDE BELGELENMIYOR: ne yazi docs'ta, ne
+# CHANGELOG'da, ne de bir issue'da geciyor; tek kaynak ikilinin kendi Lua'si.
+# Yani yukari akim onu sessizce degistirebilir. yazi surumu atladiginda tek
+# sondaj: cop icindeki bir klasorde `O` -> "Restore selected files" cikiyor mu.
+[open]
+prepend_rules = [
+	{ mime = "folder/trash", use = [ "open", "trash" ] },
+]
 
 [mgr]
 # Varsayilan [ "click", "scroll", "drag" ] -- surukleme bilerek kapali.

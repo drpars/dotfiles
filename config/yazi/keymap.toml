@@ -26,7 +26,12 @@ prepend_keymap = [
 	# Navigation
 	# smart-enter: dizinse gir, dosyaysa ac. <Right> duz `enter` kaliyor --
 	# eklenti bozulursa gezinmenin calisan bir yolu kalir.
+	# <Enter> de buraya bagli (kullanici karari): varsayilani duz `open`, yani
+	# dizin uzerinde `[open]` kuralini ateslerdi -- olculdu, `$EDITOR` aciliyordu
+	# (cop klasorunde de, yerel klasorde de). Gezinme tusu olarak beklenen sey
+	# girmek; `open --interactive` yine <S-Enter>'da.
 	{ on = "l", run = "plugin smart-enter", desc = "Enter the child directory, or open the file" },
+	{ on = "<Enter>", run = "plugin smart-enter", desc = "Enter the child directory, or open the file" },
 
 	# Archive (compress.yazi)
 	# Uzanti hedef bicimi belirler: "ad" birakilirsa .zip, "ad.7z" yazilirsa
