@@ -49,16 +49,20 @@ prepend_keymap = [
 	# sorulur, boylece makine ve locale farki fark etmez.
 	# `cd $(...)` yazi tarafindan cozulmedigi icin kabuk uzerinden gidiliyor.
 	{ on = [ "g", "d" ], run = 'shell "ya emit cd $(xdg-user-dir DOWNLOAD)"', desc = "Go to the XDG download directory" },
-	# Ayni sebeple: duz `cd /run/media/$(whoami)` olculdu ve /run/media'ya
-	# iniyordu (bir seviye yukari), cunku $(...) cozulmuyor.
-	{ on = [ "g", "m" ], run = 'shell "ya emit cd /run/media/$(whoami)"', desc = "Goto Media directory" },
-	# `g b` = Belgeler, `g r` = Resimler -- kisayol harfleri TURKCE dizin
-	# adlarindan geliyor, `desc` ise ingilizce (bu depoda dil kurali boyle).
-	# Ikisi de varsayilanda BOSTU: gomulu keymap'te bagli olan g zincirleri
+	# `g m` (removable media) KALDIRILDI 2026-08-24, kullanici karari: artik
+	# tercih edilmiyor. Notu icin: bagin "bozuk" sanilmasi olcum artefaktiydi
+	# -- takili aygit yokken /run/media/<user> var olmuyor, ve yazi var
+	# OLMAYAN hedefe cd'de var olan en yakin UST dizine dusuyor (olculdu).
+	# `g D` = Documents, `g p` = Pictures. Harfler ingilizce XDG adlarindan
+	# geliyor, dizinin yerel adindan degil -- yol gibi, kisayol da makineden
+	# bagimsiz kalsin diye. `g D`, `g d` (downloads) ile ayni harfin buyugu:
+	# zincirler buyuk/kucuk harfe DUYARLI (ayni ayrim `d`/`D` ve `o`/`O`'da
+	# zaten kullaniliyor), ve ikisi de surulerek dogrulandi.
+	# Ikisi de varsayilanda BOSTU: gomulu keymap'te bagli g zincirleri
 	# yalnizca <Space>, c, d, f, g, h, t (olculdu, 2026-08-24).
 	# Yol yazilmiyor, XDG veritabani soruluyor -- ayni gerekce: `g d` ustte.
-	{ on = [ "g", "b" ], run = 'shell "ya emit cd $(xdg-user-dir DOCUMENTS)"', desc = "Go to the XDG documents directory" },
-	{ on = [ "g", "r" ], run = 'shell "ya emit cd $(xdg-user-dir PICTURES)"', desc = "Go to the XDG pictures directory" },
+	{ on = [ "g", "D" ], run = 'shell "ya emit cd $(xdg-user-dir DOCUMENTS)"', desc = "Go to the XDG documents directory" },
+	{ on = [ "g", "p" ], run = 'shell "ya emit cd $(xdg-user-dir PICTURES)"', desc = "Go to the XDG pictures directory" },
 
 	# Tabs
 	# Tek tuslu `t`: varsayilan `t t`/`t r` zincirlerini kapatir -- olculdu,
