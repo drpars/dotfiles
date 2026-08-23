@@ -1,36 +1,59 @@
 #!/usr/bin/env bash
+# waybar custom/weather -- wttr.in'den tek satirlik durum + tooltip.
+#
+# SOZLESME: sonuc alinamazsa cikti {"text":"drpars","tooltip":"drpars"}.
+# Bu satir onceki surumde de YAZILIYDI ama pratikte ULASILAMAZDI, cunku hata
+# dali yalnizca CURL'UN KENDISI dustugunde kosuyordu. Dort dal olculdu
+# (2026-08-24, izole HTTP sunucusuyla) ve dordu de bara cop basiyordu:
+#   - HTTP 503        : `curl -s` rc=0 doner -> "Service Temporarily Unavailable"
+#                       hava durumu sanilip basiliyordu
+#   - wttr.in kotasi  : "Sorry, we are running out of queries..." HTTP 200 ile
+#                       gelir ve icinde ne "unknown" ne "error" gecer
+#   - govdede " varsa : printf ile kurulan JSON BOZULUR; waybar ayristiramaz ve
+#                       modul tumden kaybolur -- "drpars" degil, HICBIR SEY
+#   - bos govde       : {"text":""} -> bos modul
+#
+# Iki degisiklik bu dordunu birden kapatiyor:
+#  1) POZITIF dogrulama. Kara liste ("unknown|error") yalnizca akla geleni
+#     yakalar; wttr.in'in her yeni hata metni yeniden sizar. Onun yerine
+#     yanitin hava durumu OLDUGU aranir: icinde rakam+derece gecmeli.
+#     Iki canli bicimde de olculdu ("+19°C", "Cankiri: ... 🌡️+19°C ...").
+#     Desen bilerek gevsek -- wttr.in sureti degisirse gecerli veriyi
+#     reddedip surekli "drpars" yazmasin diye.
+#  2) JSON'u `jq` kuruyor, `printf` degil: tirnak ve ters bolu kacisi artik
+#     bizim isimiz degil.
+#
+# `-f` SART: `-s` tek basina 4xx/5xx'i basari sayar. Ikisi birlikte gider.
+set -u
 
-location="$1"
+location="${1:-}"
 max_retries=5
 timeout=10
 retry_delay=2
+fallback="drpars"
+
+emit() { jq -nc --arg t "$1" --arg tt "$2" '{text:$t, tooltip:$tt}'; }
+fail() { emit "$fallback" "$fallback"; exit 0; }
+
+# Hava durumu mu, hata metni mi? Bayt duzeyinde de calisir, yani waybar'a
+# bos bir LANG ile gelinse de hukum degismez.
+is_weather() { [[ "$1" =~ [0-9]° ]]; }
+
+fetch() { curl -sf -m "$timeout" "https://wttr.in/${location}?format=$1"; }
+
+[ -n "$location" ] || fail
 
 for ((i = 1; i <= max_retries; i++)); do
-  # Fetch weather status with timeout
-  if ! text=$(curl -s -m "$timeout" "https://wttr.in/$location?format=1"); then
-    sleep "$retry_delay"
-    continue
-  fi
+  text=$(fetch 1)          || { sleep "$retry_delay"; continue; }
+  is_weather "$text"       || { sleep "$retry_delay"; continue; }
 
-  # Check for content errors
-  if echo "$text" | grep -iqE "unknown|error"; then
-    text=$(whoami)
-  fi
+  # Tooltip ikincil: alinamazsa isi bozmaz, metnin kendisine duser. Yoksa
+  # gecerli bir sicaklik olcumu tooltip yuzunden "drpars"a cevrilirdi.
+  tooltip=$(fetch 4) && is_weather "$tooltip" || tooltip="$text"
 
-  # Fetch detailed tooltip
-  if ! tooltip=$(curl -s -m "$timeout" "https://wttr.in/$location?format=4"); then
-    sleep "$retry_delay"
-    continue
-  fi
-
-  # Clean up whitespace
-  text=$(echo "$text" | sed -E 's/\s+/ /g')
-  tooltip=$(echo "$tooltip" | sed -E 's/\s+/ /g')
-
-  # Output successful result
-  printf '{"text":"%s", "tooltip":"%s"}\n' "$text" "$tooltip"
+  emit "$(echo "$text" | sed -E 's/\s+/ /g')" \
+       "$(echo "$tooltip" | sed -E 's/\s+/ /g')"
   exit 0
 done
 
-# Output error if all retries failed
-echo '{"text":"drpars", "tooltip":"drpars"}'
+fail
