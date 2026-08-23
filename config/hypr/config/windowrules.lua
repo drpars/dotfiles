@@ -94,6 +94,14 @@ hl.window_rule({
 hl.window_rule({
     match     = { class = "scratch-notes" },
     workspace = "special:notlar silent",
+    -- Notlar da dar, ama hesaptan GENIS: metin yaziliyor, sayi degil.
+    -- 1600 = ekranin %62,5'i; sol/sag 480/480 (olculdu -- ayni kural ayni
+    -- monitorde scratch-calc sinifiyla 1600'e kurulup dogrulandi, cunku bu
+    -- pencerede kullanicinin nvim'i acikti ve yeniden map edilmedi).
+    -- Kural MAP aninda kosar: bu pencere yeni boyu bir sonraki acilista alir.
+    float     = true,
+    center    = true,
+    size      = { 1600, 1102 },
 })
 
 -- WhatsApp Web.
@@ -131,6 +139,21 @@ hl.window_rule({
 hl.window_rule({
     match     = { class = "scratch-calc" },
     workspace = "special:hesap silent",
+    -- Kullanici bu ikisini (notlar + hesap) yatayda dar istedi, whatsapp ve
+    -- terminal genis kalsin. special_scale_factor GLOBAL -- tek bir alani
+    -- daraltamaz, o yuzden daralan pencereler float'a alindi.
+    -- OLCULDU (2026-08-24): istenen boy AYNEN geliyor -- scale faktoru float
+    -- pencereyi fazladan kucultmuyor. 1102 yukseklikle sinandiginda dikey konum
+    -- tiled hale BIREBIR esit cikti (ust/alt 149/149), yani `center` tiled
+    -- yerlesimin merkeziyle ayni yeri veriyor; notlar kurali o boyda kaldi.
+    -- Hesap = 1100x700: notlarin aksine tam boy DEGIL, cunku goz atilan bir
+    -- panel. Anlamli olcu piksel degil HUCRE: bu boyda kitty 33 satir x 119
+    -- sutun aliyor (olculdu -- ayni kurali alan bir kitty `stty size`'i dosyaya
+    -- yazdi), yani qalc'in ~8 hesaplik gecmisi ekranda kaliyor.
+    -- Geometri: at=(730,390), sol/sag 730/730, ust/alt 350/350.
+    float     = true,
+    center    = true,
+    size      = { 1100, 700 },
 })
 
 -- ── Waybar tiklamasiyla acilan TUI pencereleri ─────
