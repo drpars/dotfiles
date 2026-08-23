@@ -139,7 +139,7 @@ keymap = [
   # Goto (Dizinlere Hızlı Gitme)
   { on = [ "g", "h" ], run = "cd ~", desc = "Go home" },
   { on = [ "g", "c" ], run = "cd ~/.config", desc = "Goto ~/.config" },
-  { on = [ "g", "t" ], run = "cd ~/.local/share/Trash/files", desc = "Goto trash" },
+  { on = [ "g", "t" ], run = "plugin trash", desc = "Go to trash bin" },
   { on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Jump interactively" },
 	{ on = [ "g", "f" ],       run = "follow",           desc = "Follow hovered symlink" },
   { on = [ "g", "m" ], run = "cd /run/media/$(whoami)", desc = "Goto Media directory" },
@@ -169,14 +169,6 @@ keymap = [
 	# Help
 	{ on = "~",    run = "help", desc = "Open help" },
 	{ on = "<F1>", run = "help", desc = "Open help" },
-
-  # ÖZEL ATAMALAR 
-  # (RECYCLE BIN - ÇÖP KUTUSU)
-  { on = [ "R", "o" ], run = "plugin recycle-bin -- open", desc = "Open Trash" },
-  { on = [ "R", "e" ], run = "plugin recycle-bin -- empty", desc = "Empty Trash" },
-  { on = [ "R", "D" ], run = "plugin recycle-bin -- emptyDays", desc = "Empty by days deleted" },
-  { on = [ "R", "d" ], run = "plugin recycle-bin -- delete", desc = "Delete from Trash" },
-  { on = [ "R", "r" ], run = "plugin recycle-bin -- restore", desc = "Restore from Trash" },
 
   # Mount
   { on = "M", run = "plugin mount", desc = "Mount/Unmount filesystems" },

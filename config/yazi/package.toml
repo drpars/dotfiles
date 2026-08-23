@@ -29,11 +29,6 @@ rev = "044c3cc"
 hash = "5bb0bfab901d3601c370eafdd66edd31"
 
 [[plugin.deps]]
-use = "uhs-robert/recycle-bin"
-rev = "fe48a02"
-hash = "edd449b02a169bd8fee052be96a31823"
-
-[[plugin.deps]]
 use = "yazi-rs/plugins:piper"
 rev = "044c3cc"
 hash = "45a533508a9840cc5a10cf6129f63e6a"
