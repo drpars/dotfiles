@@ -95,13 +95,16 @@ hl.window_rule({
     match     = { class = "scratch-notes" },
     workspace = "special:notlar silent",
     -- Notlar da dar, ama hesaptan GENIS: metin yaziliyor, sayi degil.
-    -- 1600 = ekranin %62,5'i; sol/sag 480/480 (olculdu -- ayni kural ayni
-    -- monitorde scratch-calc sinifiyla 1600'e kurulup dogrulandi, cunku bu
-    -- pencerede kullanicinin nvim'i acikti ve yeniden map edilmedi).
-    -- Kural MAP aninda kosar: bu pencere yeni boyu bir sonraki acilista alir.
+    -- 1400x1102 = ekranin %54,7'si; at=(580,189), sol/sag 580/580.
+    -- Anlamli olcu piksel degil SUTUN, ve iki nokta olculdu (tek kullanimlik
+    -- bir sinifla, kullanicinin acik nvim'ine dokunmadan): 1100 px -> 119
+    -- sutun, 1400 px -> 152 sutun. Cozum: hucre 9,091 px, kenar dolgusu
+    -- 9,1 px/yan. Baska bir genislik istenirse sutun sayisi buradan cikar --
+    -- yeniden olcmeye gerek yok, ama FONT DEGISIRSE bu cozum bayatlar.
+    -- Kural MAP aninda kosar: acik pencere yeni boyu bir sonraki acilista alir.
     float     = true,
     center    = true,
-    size      = { 1600, 1102 },
+    size      = { 1400, 1102 },
 })
 
 -- WhatsApp Web.
