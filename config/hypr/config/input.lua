@@ -77,3 +77,32 @@ hl.gesture({
 	scale = 3.0,
 	action = "close",
 })
+
+-- Üç parmak yukarı → uygulama başlatıcı (`Super + R`'nin aynısı).
+--
+-- Komut `_G.menu` üzerinden alınıyor, yani tuş ile hareket **tek kaynaktan**
+-- besleniyor (helpers.lua). `-replace` orada zaten var: hareket yanlışlıkla
+-- tekrarlanırsa rofi örneği yığılmaz, mevcut olanın yerine geçer.
+--
+-- `action` fonksiyon olarak veriliyor. Stub imzası `string|function`
+-- (`HL.GestureSpec`, /usr/share/hypr/stubs/hl.meta.lua) — `hl.bind`'ınki ise
+-- `HL.Dispatcher|function`, yani ayrım bilerek konmuş. `hl.dsp.exec_cmd(...)`
+-- userdata'sı da ayrıştırıcıdan **sessizce geçiyor** (ölçüldü) ama imzada yok;
+-- temiz geçmek çalıştığı anlamına gelmediği için imzadaki form seçildi.
+--
+-- Gövde `hl.exec_cmd` — üst düzey çağrı, süreci gerçekten doğuruyor (ölçüldü:
+-- REPL'den `touch` koştu). `hl.dsp.exec_cmd` bunun yerine geçmez: o bir
+-- tanımlayıcı (userdata) döndürür, çağrıldığı yerde çalıştırmaz.
+--
+-- Hüküm kanalı `hyprctl configerrors`; `pcall` AYIRT ETMİYOR — uydurma bir
+-- eylem adı bile `true, nil` döndürüyor, hata yalnız configerrors'ta görünüyor
+-- (`unknown action "zzznosuch"`, pozitif kontrolle doğrulandı).
+--
+-- `scale` yukarıdaki `down` hareketiyle aynı sebeple: eşik delta cinsinden ve
+-- bu panelde dikey yol yatayın %59'u.
+hl.gesture({
+	fingers = 3,
+	direction = "up",
+	scale = 3.0,
+	action = function() hl.exec_cmd(_G.menu) end,
+})
