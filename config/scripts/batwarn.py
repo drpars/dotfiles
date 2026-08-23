@@ -69,9 +69,16 @@ URGENCY_NORMAL, URGENCY_CRITICAL = 1, 2
 MESSAGES = {
     LOW: ("Pil azalıyor", "", URGENCY_NORMAL, 20000),
     CRITICAL: ("Pil kritik", " Fişe takın.", URGENCY_CRITICAL, 0),
-    # UPower runs CriticalPowerAction itself at this level; with
-    # AllowRiskyCriticalPowerAction=false its Auto resolves to hybrid-sleep.
-    # Never seen fire on this machine, so the text promises sleep, not a method.
+    # UPower runs CriticalPowerAction itself at this level. Measured 2026-08-23,
+    # and both halves of what used to stand here were wrong. Auto does not
+    # resolve to hybrid-sleep: GetCriticalAction() answers "Sleep", which is
+    # logind's Sleep(), which takes the first supported entry of
+    # SleepOperation= -- unset here, so the documented default order applies and
+    # suspend-then-hibernate wins. And it has fired on this machine, in a test
+    # that raised PercentageAction above the current charge: upowerd asked
+    # logind, the machine spent 163 s hibernated and came back with boot_id
+    # unchanged. The text still promises sleep rather than a method, because the
+    # method is three defaults deep and any of them can change without saying so.
     ACTION: ("Pil tükendi", " Sistem birazdan kendini uyutacak.",
              URGENCY_CRITICAL, 0),
 }
