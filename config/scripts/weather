@@ -33,7 +33,14 @@ retry_delay=2
 fallback="drpars"
 
 emit() { jq -nc --arg t "$1" --arg tt "$2" '{text:$t, tooltip:$tt}'; }
-fail() { emit "$fallback" "$fallback"; exit 0; }
+
+# HATA CIKTISI `jq`'YA BAGLI DEGIL, ve bu bilincli. `$fallback` sabit bir
+# tanimlayici -- kacis gerektiren karakteri yok --, o yuzden printf ile
+# kurulmasi ispatlanabilir sekilde guvenli. Bagli olsaydi jq'nun EKSIK oldugu
+# makinede betik hicbir sey basmazdi: olculdu (2026-08-24, jq PATH'te
+# golgelenerek) -- iki dal da 0 bayt. Bu, bu betigin bugun duzeltilen
+# arizasinin ta kendisi olurdu, yalnizca bir kat asagida.
+fail() { printf '{"text":"%s","tooltip":"%s"}\n' "$fallback" "$fallback"; exit 0; }
 
 # Hava durumu mu, hata metni mi? Bayt duzeyinde de calisir, yani waybar'a
 # bos bir LANG ile gelinse de hukum degismez.
@@ -51,8 +58,9 @@ for ((i = 1; i <= max_retries; i++)); do
   # gecerli bir sicaklik olcumu tooltip yuzunden "drpars"a cevrilirdi.
   tooltip=$(fetch 4) && is_weather "$tooltip" || tooltip="$text"
 
+  # jq eksikse emit dusuyor; o zaman bos cikti yerine gorunur bir isaret ver.
   emit "$(echo "$text" | sed -E 's/\s+/ /g')" \
-       "$(echo "$tooltip" | sed -E 's/\s+/ /g')"
+       "$(echo "$tooltip" | sed -E 's/\s+/ /g')" || fail
   exit 0
 done
 
