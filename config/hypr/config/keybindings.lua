@@ -101,8 +101,12 @@ hl.bind(M .. " + T", hl.dsp.exec_cmd(
     _G.scriptsDir .. "/scratchtoggle terminal scratch-term " ..
     _G.terminal .. " --class=scratch-term"))
 
--- Hesap makinesi. Motor qalculate-gtk ile ayni (libqalculate); qalc o motorun
--- terminal kapisi ve `libqalculate` bagimliligiyla zaten kurulu geliyor.
+-- Hesap makinesi. Motor `libqalculate`, `qalc` onun terminal kapisi -- ayri bir
+-- qalc paketi YOK. Paket kendiliginden de GELMIYOR: kimseye bagimlilik degil
+-- (OLCULDU 2026-08-24, bu makine: Install Reason: Explicitly installed,
+-- Required By: None) ve GUI kapisi qalculate-gtk kurulu degil -- kullanici
+-- kaldirdi. Acikca kurulmayan makinede bu baglama BOS bir terminal acar ve
+-- hicbir yerde hata cikmaz; paket listesini tutmak archsetup'in isi.
 -- Sarmalayici betik GEREKMIYOR: `notlar` betigi, scratchtoggle komutu
 -- `hl.exec_cmd("$*")` ile calistirdigi icin tirnakli argumanin duzlesmesinden
 -- dogmustu; qalc ciplak cagriliyor, tirnakli argumani yok.

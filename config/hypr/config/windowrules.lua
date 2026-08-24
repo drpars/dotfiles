@@ -127,7 +127,9 @@ hl.window_rule({
 })
 
 -- Hesap makinesi: kitty + qalc, kendi sinifiyla.
--- Motor qalculate-gtk ile AYNI (libqalculate); degisen yalnizca kapi. Sinif
+-- Motor qalculate-gtk ile AYNI (libqalculate); degisen yalnizca kapi. O paket
+-- bu makinede KURULU DEGIL (2026-08-24, kullanici kaldirdi): karsilastirma kapi
+-- secimini gerekcelendiriyor, kurulu bir GUI'yi tarif etmiyor. Sinif
 -- burada da secilebiliyor -- qalculate-gtk secilemezdi: GTK app_id'sini cagri
 -- basina veremezsin, kural rofi'den acilan pencereyi de yutardi (ayni sinif
 -- tuzak yukarida Chrome'da OLCULDU).
