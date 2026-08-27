@@ -131,8 +131,8 @@ interior.element=button
 indicator.size=9
 text.normal.color=#c0caf5
 text.focus.color=#c0caf5
-text.press.color=#15161E
-text.toggle.color=#15161E
+text.press.color=#c0caf5
+text.toggle.color=#c0caf5
 text.shadow=0
 text.margin=1
 text.iconspacing=4
@@ -340,8 +340,8 @@ text.margin.left=4
 text.margin.right=4
 text.normal.color=#c0caf5
 text.focus.color=#c0caf5
-text.press.color=#15161E
-text.toggle.color=#15161E
+text.press.color=#c0caf5
+text.toggle.color=#c0caf5
 frame.expansion=0
 
 [Splitter]

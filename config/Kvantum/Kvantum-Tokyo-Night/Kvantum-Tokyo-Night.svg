@@ -2248,7 +2248,7 @@
          id="expand-lineedit-normal" />
     </g>
     <path
-       style="fill:#c0caf5;fill-opacity:1"
+       style="fill:#33467c;fill-opacity:1"
        id="button-pressed"
        d="m 129,52 0,-32 -32,0 0,32 32,0 z" />
     <path
@@ -2479,11 +2479,11 @@
        d="m 28.75,41.2516 c -4.125,-5.1e-5 -7.50003,3.37497 -7.5,7.5 h 2.5 c 0,-3.125 1.875,-5 5,-5 z" />
   </g>
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="button-pressed-left"
      d="M 97,51.999803 97,20 l -6,0 0,32 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="button-pressed-topleft"
      d="m 97,14 c -3.3,-4.1e-05 -6.00002,2.69998 -6,6 h 6 z " />
   <use
@@ -2494,9 +2494,9 @@
      xlink:href="#button-pressed-topleft"
      id="button-pressed-topright"
      transform="matrix(-1,0,0,1,226,0)"
-     style="fill:#c0caf5;fill-opacity:1" />
+     style="fill:#33467c;fill-opacity:1" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="button-pressed-top"
      d="M 97.0002,20 129,20 l 0,-6 -32,0 z" />
   <use
@@ -2507,7 +2507,7 @@
      xlink:href="#button-pressed-topleft"
      id="button-pressed-bottomright"
      transform="matrix(-1,0,0,-1,226,72)"
-     style="fill:#c0caf5;fill-opacity:1" />
+     style="fill:#33467c;fill-opacity:1" />
   <use
      width="100%"
      x="0"
@@ -2516,29 +2516,29 @@
      xlink:href="#button-pressed-topleft"
      id="button-pressed-bottomleft"
      transform="matrix(0,-1,1,0,77,149)"
-     style="fill:#c0caf5;fill-opacity:1" />
+     style="fill:#33467c;fill-opacity:1" />
   <g
      style="stroke:none;fill-rule:evenodd;fill:#c0caf5;fill-opacity:1"
      id="g422">
     <path
        id="button-pressed-right"
        d="M 135,51.999803 135,20 l -6,0 0,32 z"
-       style="fill:#c0caf5;fill-opacity:1" />
+       style="fill:#33467c;fill-opacity:1" />
     <path
        id="button-pressed-bottom"
        d="M 128.9998,52 97,52 l 0,6 32,0 z"
-       style="fill:#c0caf5;fill-opacity:1" />
+       style="fill:#33467c;fill-opacity:1" />
     <path
        id="button-toggled"
        d="m 173.0001,52 0,-32 -32,0 0,32 32,0 z"
-       style="fill:#c0caf5;fill-opacity:1" />
+       style="fill:#33467c;fill-opacity:1" />
     <path
        id="button-toggled-left"
        d="m 141.0001,51.9998 0,-31.9998 -6,0 0,32 z "
-       style="fill:#c0caf5;fill-opacity:1" />
+       style="fill:#33467c;fill-opacity:1" />
   </g>
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="button-toggled-topleft"
      d="m 141.0001,14 c -3.3,-4.1e-05 -6.00002,2.69998 -6,6 h 6 z " />
   <g
@@ -2547,15 +2547,15 @@
     <path
        id="button-toggled-top"
        d="M 141.0002,20 173,20 l 0,-6 -32,0 z"
-       style="fill:#c0caf5;fill-opacity:1" />
+       style="fill:#33467c;fill-opacity:1" />
     <path
        id="button-toggled-right"
        d="m 179.0001,51.9998 0,-31.9998 -6,0 0,32 z "
-       style="fill:#c0caf5;fill-opacity:1" />
+       style="fill:#33467c;fill-opacity:1" />
     <path
        id="button-toggled-bottom"
        d="m 172.9999,52 -31.9998,0 0,6 32,0 z"
-       style="fill:#c0caf5;fill-opacity:1" />
+       style="fill:#33467c;fill-opacity:1" />
   </g>
   <use
      width="100%"
@@ -2565,7 +2565,7 @@
      xlink:href="#button-toggled-topleft"
      id="button-toggled-bottomleft"
      transform="matrix(0,-1,1,0,121.0001,193.0001)"
-     style="fill:#c0caf5;fill-opacity:1" />
+     style="fill:#33467c;fill-opacity:1" />
   <use
      width="100%"
      x="0"
@@ -2574,7 +2574,7 @@
      xlink:href="#button-toggled-topleft"
      id="button-toggled-bottomright"
      transform="matrix(-1.0827346,0,0,-1,325.16579,72)"
-     style="fill:#c0caf5;fill-opacity:1" />
+     style="fill:#33467c;fill-opacity:1" />
   <use
      width="100%"
      x="0"
@@ -2583,7 +2583,7 @@
      xlink:href="#button-toggled-topleft"
      id="button-toggled-topright"
      transform="matrix(-1,0,0,1,314.0002,0)"
-     style="fill:#c0caf5;fill-opacity:1" />
+     style="fill:#33467c;fill-opacity:1" />
   <g
      style="stroke:none"
      id="g437">
