@@ -4,17 +4,33 @@
   ./tokyonight-uret.py            # uc dosyayi da yerinde gunceller
 
 CIKTILAR
-  TokyoNight.colors  KDE colorscheme formati. qt6ct-kde (AUR) okur; okurken
+  ../../../local/share/color-schemes/TokyoNight.colors
+                     KDE colorscheme formati. qt6ct-kde (AUR) okur; okurken
                      ayrica KDE_COLOR_SCHEME_PATH'i kurar, yani KDE/Kirigami/QML
-                     tarafi da bu dosyadan beslenir.
+                     tarafi da bu dosyadan beslenir. KDE'nin kendi kesif dizini
+                     oldugu icin tek ev burasi -- depo bir ara ayni paletin DORT
+                     birebir kopyasini tasiyordu (config/qt6ct/colors/'da iki,
+                     burada iki; sha256 hepsinde 420b7f01...) ve hangisinin
+                     okundugu ancak biri degistirilince goruldu.
   TokyoNight.conf    qt6ct'nin KENDI formati. extra depodaki duz qt6ct de okur.
                      Ama .colors olmadigi icin KDE_COLOR_SCHEME_PATH SILINIR
                      (yama kosulu: Qt6CT::isKColorScheme() -> ".colors" uzantisi),
                      ve KDE tarafi ../../kdeglobals'a duser.
   ../../kdeglobals   [Colors:*] bolumleri. Yukaridaki dusus hedefi burasi.
 
-NEDEN TEK KAYNAK: ayni palet uc dosyada yaziliysa biri ilerler, ikisi donar ve
-donan taraf donduğunu soylemez. Renk degistirilecsekse YALNIZ burasi duzenlenir.
+NEDEN TEK KAYNAK: ayni palet birden cok dosyada yaziliysa biri ilerler, otekiler
+donar ve donan taraf donduğunu soylemez. Renk degistirilecekse YALNIZ burasi
+duzenlenir, sonra bu betik kosturulur.
+
+TUZAK -- qt6ct.conf'ta color_scheme_path MUTLAK yazilir, "~" ile DEGIL.
+  Olculdu (2026-08-27, qt6ct-kde 0.11-8, bu makine): iki kosu, ikisinde de tam
+  yeniden baslatma (pkill dolphin + systemctl --user restart plasma-dolphin),
+  tek degisken yoldu. Semaya bilerek saf kirmizi bir Highlight konuldu:
+    ~/.config/...       -> kirmizi 0 px, ESKI palet yururlukte (#A4BBEF 8230 px)
+    /home/drpars/...    -> kirmizi geldi
+  Ariza sessiz: hata yok, cikis kodu yok, uygulama temalanmis GORUNUR -- cunku
+  yuklenemeyen yol, kesif dizinindeki ayni adli bayat kopyaya dusuyor. Yani iki
+  kopya varken yanlis yol bile "calisiyor" gibi durur.
 
 SECIM RENGI NEDEN KOYU (olculdu 2026-08-27, bu makine, Darkly + Dolphin 26.08.0)
   Dolphin'in ikon gorunumu secili etiketi HighlightedText ile DEGIL, normal
@@ -149,7 +165,7 @@ def yaz_kdeglobals(p):
     p.write_text(metin.rstrip("\n") + "\n\n" + BASLIK + "\n" + govde)
 
 kok = pathlib.Path(__file__).resolve().parent
-yaz_colors(kok / "TokyoNight.colors")
+yaz_colors(kok.parent.parent.parent / "local/share/color-schemes/TokyoNight.colors")
 yaz_conf(kok / "TokyoNight.conf")
 yaz_kdeglobals(kok.parent.parent / "kdeglobals")
 print("uretildi: TokyoNight.colors, TokyoNight.conf, ../../kdeglobals")
