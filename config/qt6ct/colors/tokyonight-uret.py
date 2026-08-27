@@ -46,6 +46,12 @@ SECIM RENGI NEDEN KOYU (olculdu 2026-08-27, bu makine, Darkly + Dolphin 26.08.0)
   Yururlukteki cift: #33467c / #c0caf5 = 5,65:1.
 
 MENU VURGUSU AYRI BIR ANAHTARDAN GELIYOR (olculdu 2026-08-27, Darkly, bu makine)
+  !! BUGUN UYKUDA (2026-08-28): stil Kvantum ve menu rengini temanin kendi
+  !! SVG'sinden (menuitem-toggled) aliyor; Darkly kaldirildi. Asagidaki
+  !! olcum ve AYKIRI girdisi Darkly'ye geri donulurse yeniden gecerli olur --
+  !! o yuzden silinmedi. Ayrica parantezdeki custom_palette=true kosulu da
+  !! artik gecerli degil: bugun false, ve .conf uzantisiyla
+  !! KDE_COLOR_SCHEME_PATH zaten hic kurulmuyor.
   Darkly'nin sag tik menusundeki vurgulu satir QPalette::Highlight'i KULLANMIYOR;
   rengi [Colors:View] DecorationFocus'tan aliyor. Bolum bolum ikame ile bulundu:
   yedi [Colors:*] bolumunun DecorationFocus'u tek tek saf kirmiziya cevrildi,
@@ -92,6 +98,7 @@ ONPLAN = {
 }
 # Bolume ozgu aykirilar: ONPLAN her bolume aynen uygulanir, buradakiler ezer.
 # View/DecorationFocus -- Darkly'nin MENU vurgusu; ayrintili gerekce yukarida.
+# Darkly kaldirildi (2026-08-28), bu aykiri bugun ETKISIZ; geri donus icin duruyor.
 AYKIRI = {
     "View": {"DecorationFocus": SECIM},
 }
