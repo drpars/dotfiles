@@ -2112,39 +2112,39 @@
        style="fill:#1a1b26;fill-opacity:1" />
   </g>
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled-left"
      d="m 252.5,802.5002 0,32.4998 -7.5,0 0,-32.5 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled-bottomleft"
      d="m 252.5,842.5 -7.5,0 0,-7.5 7.5,0 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled-topleft"
      d="m 245,802.5 0,-7.5 7.5,0 0,7.5 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled-bottom"
      d="m 252.5002,835.0001 32.4998,0 0,7.5 -32.5,0 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled-top"
      d="m 284.9998,802.5001 -32.4998,0 0,-7.5 32.5,0 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled"
      d="m 252.5,835.0001 0,-32.5 32.5,0 0,32.5 -32.5,0 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled-right"
      d="m 284.9998,802.5001 0,32.4998 7.5,0 0,-32.5 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled-bottomright"
      d="m 284.9998,842.4999 7.5002,10e-5 -2e-4,-7.5001 -7.5,0 z" />
   <path
-     style="fill:#c0caf5;fill-rule:evenodd;stroke:none;fill-opacity:1"
+     style="fill:#33467c;fill-rule:evenodd;stroke:none;fill-opacity:1"
      id="menuitem-toggled-topright"
      d="M 292.4998,802.4999 292.5,795 l -7.5002,-10e-5 0,7.5 z" />
   <use
@@ -2152,7 +2152,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled-left"
      id="menuitem-pressed-left"
      transform="translate(-50,0)" />
@@ -2161,7 +2161,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled-bottomleft"
      id="menuitem-pressed-bottomleft"
      transform="translate(-50,0)" />
@@ -2170,7 +2170,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled-topleft"
      id="menuitem-pressed-topleft"
      transform="translate(-50,0)" />
@@ -2179,7 +2179,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled-bottom"
      id="menuitem-pressed-bottom"
      transform="translate(-50,0)" />
@@ -2188,7 +2188,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled-top"
      id="menuitem-pressed-top"
      transform="translate(-50,0)" />
@@ -2197,7 +2197,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled"
      id="menuitem-pressed"
      transform="translate(-50,0)" />
@@ -2206,7 +2206,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled-right"
      id="menuitem-pressed-right"
      transform="translate(-50,0)" />
@@ -2215,7 +2215,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled-bottomright"
      id="menuitem-pressed-bottomright"
      transform="translate(-50,0)" />
@@ -2224,7 +2224,7 @@
      x="0"
      y="0"
      height="100%"
-     style="fill:#c0caf5;fill-opacity:1"
+     style="fill:#33467c;fill-opacity:1"
      xlink:href="#menuitem-toggled-topright"
      id="menuitem-pressed-topright"
      transform="translate(-50,0)" />
