@@ -44,6 +44,27 @@ SECIM RENGI NEDEN KOYU (olculdu 2026-08-27, bu makine, Darkly + Dolphin 26.08.0)
   tamami tarandi, teorik en iyi ortak kontrast 3,50:1. O yuzden tek tutarli
   cozum KOYU zemin + ACIK metin.
   Yururlukteki cift: #33467c / #c0caf5 = 5,65:1.
+
+MENU VURGUSU AYRI BIR ANAHTARDAN GELIYOR (olculdu 2026-08-27, Darkly, bu makine)
+  Darkly'nin sag tik menusundeki vurgulu satir QPalette::Highlight'i KULLANMIYOR;
+  rengi [Colors:View] DecorationFocus'tan aliyor. Bolum bolum ikame ile bulundu:
+  yedi [Colors:*] bolumunun DecorationFocus'u tek tek saf kirmiziya cevrildi,
+  yalnizca View menuyu kirmiziya dondurdu. kdeglobals DEGIL -- oradaki yedi
+  bolumun DecorationFocus/DecorationHover'i birden degistirildiginde menu hic
+  oynamadi (qt6ct custom_palette=true iken KDE_COLOR_SCHEME_PATH bu .colors
+  dosyasini gosteriyor, kdeglobals'a dusulmuyor).
+
+  Onceki deger blue (#7aa2f7) idi ve metin #c0caf5 ile ciziliyor: 1,56:1.
+  Gercek ekran goruntusunde vurgulu satirin 8000 pikselinde kontrasti 1,2'yi
+  gecen TEK BIR govde pikseli yoktu. SECIM'e cevrilince metin govdesi 4,76:1,
+  tepe 5,64:1.
+
+  Yan etki olculdu: gercek Dolphin penceresinde iki kol arasinda 862.629
+  pikselin 0'i farkli; odakli QLineEdit sondasinda da 0. Odak halkasi (#293459)
+  ve liste secimi (#33467c) palet Highlight'indan geliyor, bu anahtardan degil.
+  KAPSAM: Dolphin ana penceresi (ikon gorunumu, bir secim, menu kapali) + sentetik
+  sonda (odakli metin kutusu, liste, kutucuk, dugme, metin alani). Baska
+  uygulamalar ve KDE diyaloglari render EDILMEDI.
 """
 import pathlib, sys
 
@@ -69,6 +90,11 @@ ONPLAN = {
     "ForegroundNeutral": yellow,   "ForegroundPositive": green,
     "DecorationFocus": blue,       "DecorationHover": blue,
 }
+# Bolume ozgu aykirilar: ONPLAN her bolume aynen uygulanir, buradakiler ezer.
+# View/DecorationFocus -- Darkly'nin MENU vurgusu; ayrintili gerekce yukarida.
+AYKIRI = {
+    "View": {"DecorationFocus": SECIM},
+}
 ZEMIN = {                       # bolum: (BackgroundNormal, BackgroundAlternate)
     "Window":        (bg,      bg_dark),
     "View":          (bg,      bg_dark),
@@ -85,6 +111,7 @@ def rgb(h):
 
 def bolum(ad):
     d = dict(ONPLAN)
+    d.update(AYKIRI.get(ad, {}))
     d["BackgroundNormal"], d["BackgroundAlternate"] = ZEMIN[ad]
     return "".join("%s=%s\n" % (k, rgb(d[k])) for k in sorted(d))
 
