@@ -24,9 +24,11 @@ StartupWMClass=chrome-web.whatsapp.com__-Default
 # has_icon=hayir donduruyor, yani tema degisince ikon KIRILIYORDU.
 # `whatsapp` ise HER IKI temada da cozunuyor (Qogir-Dark/scalable/apps/
 # whatsapp.svg ve Papirus-Dark/48x48/categories/whatsapp.svg), o yuzden ad
-# bununla degistirildi. Dogrulama Gtk.IconTheme.has_icon ile yapildi, dosya
-# varligiyla DEGIL -- ve `find` ile yapilan ilk sonda da yaniltmisti, cunku
-# ~/.local/share/icons bir symlink ve find onu -L olmadan izlemiyor.
+# bununla degistirildi -- ve tema Qogir'e geri alinirken de BOYLE BIRAKILDI,
+# cunku `web-whatsapp`e donmek yalnizca kirilgan adi geri getirirdi.
+# Dogrulama Gtk.IconTheme.has_icon ile yapildi, dosya varligiyla DEGIL -- ve
+# `find` ile yapilan ilk sonda da yaniltmisti, cunku ~/.local/share/icons bir
+# symlink ve find onu -L olmadan izlemiyor.
 Icon=whatsapp
 Terminal=false
 Categories=Network;InstantMessaging;

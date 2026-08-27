@@ -2,7 +2,7 @@
 TerminalApplication=kitty
 
 [Icons]
-Theme=Papirus-Dark
+Theme=Qogir-Dark
 
 [KDE]
 ShowDeleteCommand=false
