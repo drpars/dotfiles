@@ -27,7 +27,7 @@ configuration {
 
     modi:            "drun,run,filebrowser,window";
     show-icons:      true;
-    icon-theme:      "Qogir-Dark";
+    icon-theme:      "Papirus-Dark";
 
     /* İkonlar ve Format */
     display-drun:        " ";

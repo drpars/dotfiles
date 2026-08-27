@@ -11,13 +11,20 @@ Comment[tr]=Misafiri baslat ve masaustunu ac (Looking Glass)
 Exec=sh -c "exec ~/.config/scripts/win"
 # LG kurulu olmayan makinede girdi kendiliginden gizlenir.
 TryExec=looking-glass-client
-# Ikon depoya konmadi: ad tema icinde cozunuyor (Qogir-Dark/scalable/apps/
-# windows.svg). Dogrulama Gtk.IconTheme ile yapildi, dosya varligiyla DEGIL --
-# devralma zinciri her ada bir sonuc dondurur, bkz. NOTLAR.md tuzagi. rofi'nin
-# kendi icon-theme'i de Qogir-Dark, yani menude de ayni dosya cizilir.
+# Ikon depoya konmadi: ad tema icinde cozunuyor. Dogrulama Gtk.IconTheme ile
+# yapildi, dosya varligiyla DEGIL -- devralma zinciri her ada bir sonuc
+# dondurur, bkz. NOTLAR.md tuzagi. rofi'nin kendi icon-theme'i de ayni temaya
+# ayarli, yani menude de ayni dosya cizilir.
+# AD TEMAYA BAGLI ve ortak bir ad YOK (olculdu 2026-08-28, Gtk.IconTheme):
+#   Qogir-Dark    -> `windows` VAR, `distributor-logo-windows` yok
+#   Papirus-Dark  -> `windows` yok, `distributor-logo-windows` VAR
+# Bugun tema Papirus-Dark oldugu icin ad `distributor-logo-windows`. Tema
+# Qogir'e geri alinirsa BU SATIR DA geri alinmali; ikisini birden kurtaran tek
+# yol ikonu depoya hicolor altina koymak olurdu (webapp-* girdilerinin yaptigi
+# gibi) -- yapilmadi.
 # Onceki deger looking-glass idi: goruntuleyiciyi adlandiriyordu, oysa girdinin
 # isi misafiri baslatmak -- Name= da "Windows 11" diyor.
-Icon=windows
+Icon=distributor-logo-windows
 Terminal=false
 StartupNotify=false
 StartupWMClass=looking-glass-client

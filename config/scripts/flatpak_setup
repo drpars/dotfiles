@@ -8,7 +8,7 @@
 GTK_TEMA_ADI="Tokyonight-Dark"
 
 # Hyprland'de kullandığınız İkon Tema Adı (Örn: Papirus-Dark)
-IKON_TEMA_ADI="Qogir-Dark"
+IKON_TEMA_ADI="Papirus-Dark"
 
 # QT Tema Motoru/Platformu (qt5ct veya kvantum en yaygın olanlardır)
 # Hyprland için GTK uyumu amacıyla 'qt5ct' kullanılması önerilir.

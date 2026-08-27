@@ -18,9 +18,15 @@ Exec=sh -c "exec google-chrome-stable --app=https://web.whatsapp.com/ --user-dat
 # StartupWMClass o turetilmis ada bakar; --class yazmak calisiyormus izlenimi
 # verirdi.
 StartupWMClass=chrome-web.whatsapp.com__-Default
-# Tema ikonu, depoda dosya yok: Qogir-Dark bu adi kendi cozuyor (olculdu ->
-# /usr/share/icons/Qogir-Dark/scalable/apps/web-whatsapp.svg). Mutlak yol
-# yazilmadigi icin tema degisince ikon da degisir, kirilmaz.
-Icon=web-whatsapp
+# Tema ikonu, depoda dosya yok. Onceki ad `web-whatsapp` idi ve yanindaki not
+# "tema degisince ikon da degisir, kirilmaz" diyordu -- OLCULEREK YANLIS cikti
+# (2026-08-28): o adi yalnizca Qogir cozuyor, Papirus-Dark'ta Gtk.IconTheme
+# has_icon=hayir donduruyor, yani tema degisince ikon KIRILIYORDU.
+# `whatsapp` ise HER IKI temada da cozunuyor (Qogir-Dark/scalable/apps/
+# whatsapp.svg ve Papirus-Dark/48x48/categories/whatsapp.svg), o yuzden ad
+# bununla degistirildi. Dogrulama Gtk.IconTheme.has_icon ile yapildi, dosya
+# varligiyla DEGIL -- ve `find` ile yapilan ilk sonda da yaniltmisti, cunku
+# ~/.local/share/icons bir symlink ve find onu -L olmadan izlemiyor.
+Icon=whatsapp
 Terminal=false
 Categories=Network;InstantMessaging;
