@@ -473,10 +473,15 @@
     // görüyor: 60 → 45 → 72 sürüldü, waybar ikisini de yakaladı (8'er açılış,
     // tam o iki anda) — yani `ddcci` sysfs yazımında udev olayı ÜRETİYOR.
     //
-    // ÖLÇÜLMEYEN: monitörün KENDİ joystick'iyle yapılan değişiklik. Orada sysfs
-    // yazımı olmadığı için udev olayı da beklenmiyor; paneldeki değer o
-    // değişimden sonra bayat kalır. Takas bilerek: OSD'yi geri almanın bedeli
-    // bu, ve bilgisayardan sürmek senkron kalıyor.
+    // FİZİKSEL TEST GEÇTİ: monitörün joystick'le açılan menüsü artık açılıyor
+    // ve AÇIK KALIYOR. Soğuk başlangıç kolu da ölçüldü (waybar elle yeniden
+    // başlatıldı, PID 63987): 14 sn'de 0 `ddcci` açılışı, payda 3780 — yani
+    // davranış reload'a özgü bir yan etki değil, her açılışta böyle.
+    //
+    // BİLİNEN BEDEL, ölçüldü: monitörün KENDİ joystick'iyle değiştirilen
+    // parlaklığı panel İZLEMEZ (72 → 81 sürüldü, modül takip etmedi). Monitörün
+    // içinde olan şeyin sysfs yazımı yok, dolayısıyla udev olayı da yok. Takas
+    // bilerek yapıldı — bilgisayardan sürmek senkron kalıyor, OSD ise yaşıyor.
     "interval": "once",
     "format": "{icon}",
     "format-icons": ["󰃞", "󰃟", "󰃠"],
