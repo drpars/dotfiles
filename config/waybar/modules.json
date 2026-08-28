@@ -464,11 +464,19 @@
     // sınırına kırpılırsa INT_MAX ms ≈ 24,8 gün olur. Yedek tek kelimelik →
     // "interval": 86400 (günde bir yoklama).
     //
-    // ÖLÇÜLMEDİ (masaüstü bu oturumdan erişilebilir değildi): ddcci sürücüsü,
-    // monitörün KENDİ joystick'iyle yapılan değişiklikte udev olayı üretiyor
-    // mu? Üretmiyorsa paneldeki değer o değişiklikten sonra bayat kalır —
-    // panelden ya da Fn'den yapılan değişiklik sysfs'e yazdığı için olayı
-    // üretir ve senkron kalır. Takas bilerek: OSD'yi geri almanın bedeli bu.
+    // MASAÜSTÜNDE DE ÖLÇÜLDÜ (2026-08-28, PANTHERA-ARCH, aynı waybar sürümü;
+    // oraya `ssh panthera` ile ulaşılır). Orada tek backlight aygıtı `ddcci2`,
+    // yani otomatik seçimin başka adayı yok. Canlı panelde, `SIGUSR2` reload'ın
+    // iki yakası: 14 sn'de **66** `ddcci` açılışı (11'erlik 6 küme, 2 sn'de
+    // bir) → **0**; iki kolda da payda dolu (10897 ↔ 2755 izlenen `openat`).
+    // Panel çizilmeye devam ediyor, ve bilgisayardan yapılan değişimi de
+    // görüyor: 60 → 45 → 72 sürüldü, waybar ikisini de yakaladı (8'er açılış,
+    // tam o iki anda) — yani `ddcci` sysfs yazımında udev olayı ÜRETİYOR.
+    //
+    // ÖLÇÜLMEYEN: monitörün KENDİ joystick'iyle yapılan değişiklik. Orada sysfs
+    // yazımı olmadığı için udev olayı da beklenmiyor; paneldeki değer o
+    // değişimden sonra bayat kalır. Takas bilerek: OSD'yi geri almanın bedeli
+    // bu, ve bilgisayardan sürmek senkron kalıyor.
     "interval": "once",
     "format": "{icon}",
     "format-icons": ["󰃞", "󰃟", "󰃠"],
