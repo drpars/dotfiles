@@ -430,6 +430,46 @@
     // bırakıyor (amdgpu'nun PWM eşlemesi tepede sarıyor, gerekçe betikte).
     // waybar'da bunu düzeltecek bir anahtar yok; format {icon} olduğu için
     // fark yalnız tooltip'te görünür ve üç ikonun seçimi etkilenmiyor.
+    //
+    // "interval": "once" — YOKLAMA KAPALI; güncelleme udev olayından gelir.
+    // MASAÜSTÜNDE ödendi: orada otomatik seçim ddcci2'ye düşüyor (DDC/CI
+    // üzerinden monitörün kendisi) ve varsayılan 2 sn'lik yoklama, monitörün
+    // joystick'le açılan kendi menüsünü HEMEN kapatıyordu — parlaklık aylarca
+    // yalnızca host'tan değiştirilebildi. Nedensellik dört kolla ayrıldı;
+    // ayıran kol: "modüller yüklü, cihaz bağlı, YALNIZ waybar durdurulmuş →
+    // OSD açık kalıyor", yani suçlu sürücü değil onu yoklayan panel. Bağımsız
+    // kaynak da aynı şeyi söylüyor: bazı monitörler her DDC/CI komutunda
+    // OSD'yi kapatır.
+    //
+    // MEKANİZMA (waybar kaynağı d561b9d6 = kurulu sürümün commit'i): interval
+    // doğrudan epoll_wait'in timeout'una gidiyor (util/backlight_backend.cpp).
+    // "once" → milliseconds::max() → int'e daralınca -1 → epoll_wait SONSUZA
+    // BLOKE EDER, yani periyodik okuma hiç olmaz; udev olayı gelince döngü
+    // uyanır ve yalnızca o cihazı okur (tam re-enumerate zaten yok).
+    //
+    // ÖLÇÜLDÜ (2026-08-28, bu dizüstü, strace -f -tt -e openat):
+    //   varsayılan kol : 14 sn'de 44 sysfs açılışı, ~2 sn'de bir küme
+    //   "once" kolu    : 8 açılış, HEPSİ başlangıç sayımında; sonraki 11 sn 0
+    // Aynı koşuda tetiklenen iki parlaklık değişiminin TAM saniyesinde 4'er
+    // açılış çıktı, ve panel ekrandan doğrulandı: 58% → 49% → 58% (ilk ve son
+    // ekran görüntüsü bayt bayt aynı). Yani göstermek de sürmek de duruyor.
+    //
+    // "interval": 0 YAZILMAZ, sessizce hiçbir şey yapmaz: ALabel sıfırı
+    // periyodik modüllerde modülün kendi varsayılanına (2 sn) geri düşürüyor,
+    // busy-loop'u önlemek için bilerek.
+    //
+    // KIRILGANLIK + belgeli yedek: "once" bu modülün man sayfasında yazmıyor
+    // (custom/custom-graph/image için belgeli), ALabel'de ayrıştırıldığı için
+    // buraya da geçiyor; -1 daralması kazara. Bozulursa yönü zararsız: int üst
+    // sınırına kırpılırsa INT_MAX ms ≈ 24,8 gün olur. Yedek tek kelimelik →
+    // "interval": 86400 (günde bir yoklama).
+    //
+    // ÖLÇÜLMEDİ (masaüstü bu oturumdan erişilebilir değildi): ddcci sürücüsü,
+    // monitörün KENDİ joystick'iyle yapılan değişiklikte udev olayı üretiyor
+    // mu? Üretmiyorsa paneldeki değer o değişiklikten sonra bayat kalır —
+    // panelden ya da Fn'den yapılan değişiklik sysfs'e yazdığı için olayı
+    // üretir ve senkron kalır. Takas bilerek: OSD'yi geri almanın bedeli bu.
+    "interval": "once",
     "format": "{icon}",
     "format-icons": ["󰃞", "󰃟", "󰃠"],
     "on-click": "$HOME/.config/scripts/brightness up",
