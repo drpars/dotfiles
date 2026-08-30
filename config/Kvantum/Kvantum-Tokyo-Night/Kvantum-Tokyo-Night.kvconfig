@@ -70,7 +70,7 @@ reduce_window_opacity=0
 respect_DE=true
 saturation=1.00
 scrollable_menu=true
-shadowless_popup=false
+shadowless_popup=true
 submenu_delay=250
 tooltip_blur_radius=0
 
@@ -98,7 +98,7 @@ progress.indicator.text.color=#15161E
 [Hacks]
 transparent_ktitle_label=true
 transparent_dolphin_view=false
-transparent_pcmanfm_sidepane=true
+transparent_pcmanfm_sidepane=false
 blur_translucent=false
 transparent_menutitle=true
 respect_darkness=true
