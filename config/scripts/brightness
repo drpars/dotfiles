@@ -23,7 +23,19 @@ target=${2:-screen}
 
 case "$target" in
 screen)
-  dev=()
+  # -c backlight PINS THE CLASS, and that is the whole guard. With no device
+  # and no class, brightnessctl does not stop when the backlight class is
+  # empty -- it falls through to the NEXT class and picks a led. Measured on
+  # panthera (2026-08-31, brightnessctl 0.5) while ddcci was uninstalled:
+  # `brightnessctl -m` returned "phy0-led,leds,1,100%,1", the Wi-Fi LED, and
+  # since it reports max=1 the max>0 guard below sailed straight past it. The
+  # Fn keys were driving that LED: ceiling=1, delta=1, so one press of down
+  # switched it off and the panel announced "Ekran Parlaklığı: 0%".
+  # With the class pinned, the empty case is unambiguous (measured, same box):
+  # stdout empty, rc=1, message on stderr -- so max stays unset and the guard
+  # below holds. hypridle drives brightnessctl directly and is NOT covered by
+  # this; see dotfiles/NOTLAR.md.
+  dev=(-c backlight)
   step=10
   label="Ekran Parlaklığı"
   # THE TOP OF THE ADVERTISED RANGE IS NOT REACHABLE. On linux-zen 7.1.8 the
@@ -68,9 +80,12 @@ esac
 # device,class,current,percent,max -- one call, the two raw numbers we need.
 IFS=, read -r _ _ cur _ max < <(brightnessctl "${dev[@]}" -m 2>/dev/null)
 
-# No backlight at all (the desktop has none): do nothing, quietly, like the
-# kbd guard above. Guarding on the parsed maximum rather than on a sysfs path
-# covers every device brightnessctl might have picked.
+# No backlight at all (the desktop has none while ddcci is out): do nothing,
+# quietly, like the kbd guard above. This tests the parsed maximum rather than
+# a sysfs path so it also covers a device that exists but reads nothing -- but
+# it only works because the CLASS is pinned above. Unpinned it was the bug:
+# every class has some device with max>0, so "nothing to drive" and "wrong
+# thing to drive" produced identical output here.
 [ -n "$max" ] && [ "$max" -gt 0 ] || exit 0
 
 # The ceiling IS this script's 100%. Percentages are taken against it, not
