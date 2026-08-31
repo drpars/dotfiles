@@ -33,8 +33,8 @@ screen)
   # switched it off and the panel announced "Ekran Parlaklığı: 0%".
   # With the class pinned, the empty case is unambiguous (measured, same box):
   # stdout empty, rc=1, message on stderr -- so max stays unset and the guard
-  # below holds. hypridle drives brightnessctl directly and is NOT covered by
-  # this; see dotfiles/NOTLAR.md.
+  # below holds. hypridle calls brightnessctl directly rather than through this
+  # script, so it needed the same flag on its own three call sites (0d3ed59).
   dev=(-c backlight)
   step=10
   label="Ekran Parlaklığı"
