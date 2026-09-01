@@ -196,7 +196,12 @@ function full-update() {
 		# Dosya adlari `print -P` ile basilmaz: icindeki % isareti bicim
 		# dizisi sanilir.
 		print -l -- ${diffs/#/      }
-		print -P "    Birlestirmek icin: ${cmd}sudo -E pacdiff${r}"
+		# `-s` editoru sudoedit ile acar: editor KULLANICI olarak kosar,
+		# root yalnizca geri yazma aninda devreye girer. `sudo -E pacdiff`
+		# degil -- `-E` HOME'u ve EDITOR'u tasidigi icin nvim root olarak
+		# kullanicinin config'ini yukler ve lazy'nin yazdigi her sey root'a
+		# kalir (2026-08-30: ~/.local/share/nvim/lazy altinda 15 dosya).
+		print -P "    Birlestirmek icin: ${cmd}pacdiff -s${r}"
 	else
 		print -P "${ok}==> Yapilandirma temiz${r} ${dim}(birlestirilmemis .pacnew yok)${r}"
 	fi
