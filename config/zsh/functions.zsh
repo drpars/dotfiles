@@ -9,7 +9,14 @@ function y() {
 	_yazi_pkg_check
 }
 
-# Eklentiler geride mi -- gunde bir, yazi KAPANDIKTAN sonra, SALT-OKUMA.
+# Uyari metninin tek sahibi: hem taze olcum hem damgadan yeniden basma buradan
+# gecer, yani bicim iki yerde ayri ayri bakim istemiyor.
+function _yazi_pkg_behind_msg() {
+	print -P -- "%F{#e0af68}yazi eklentileri geride%f: ${(j:, :)@} — %F{#7aa2f7}ya pkg upgrade%f"
+}
+
+# Eklentiler geride mi -- OLCUM gunde bir, UYARI her cikista, yazi KAPANDIKTAN
+# sonra, SALT-OKUMA.
 #
 # Neden burasi: gercek tetik yazi'nin PAKET SURUMU, ve seyrek atesliyor.
 # Olculdu (pacman.log tek dosya, 2026-07-28 kurulumundan beri, rotasyon yok):
@@ -39,7 +46,9 @@ function y() {
 # dedirtti, degildi. Sorulan sey HEAD.
 #
 # Maliyet olculdu: 8 depo paralel ~0,7-1,0 s, gunde BIR kez; damga tazeyken
-# 7 ms. Ag yoksa sessiz gecer ve damga YAZILMAZ -- ertesi kosu yeniden dener.
+# 7 ms -- ve o ucuz yol artik uyariyi da basiyor (damganin 2. satirindan, agi
+# hic acmadan). Ag yoksa sessiz gecer ve damga YAZILMAZ -- ertesi kosu yeniden
+# dener.
 # Damga ~/.local/state altinda, ~/.config/yazi'da DEGIL: orasi depo, damga
 # her gun bir diff satiri olurdu.
 function _yazi_pkg_check() {
@@ -47,7 +56,25 @@ function _yazi_pkg_check() {
 	local stamp="${XDG_STATE_HOME:-$HOME/.local/state}/yazi/.pkg-check"
 	local today=${(%):-%D{%F}}
 	[[ -r $pt ]] || return 0
-	[[ -f $stamp && $(<$stamp) == $today ]] && return 0
+
+	# Damga AGI gunde bire indirir, UYARIYI degil: olcumun sonucu damganin
+	# 2. satirinda duruyor ve taze damgada oradan yeniden basiliyor -- o yol ag
+	# acmaz. Gunluk olan olcumun MALIYETI; hatirlatmanin gunde bir kez gorunmesi
+	# onun yan etkisiydi ve istenmiyordu. Kullanici bildirdi (2026-09-04): uyari
+	# gunun ilk `y`'sinde bir kez cikiyor, o terminal kapaninca gun boyu bir daha
+	# gorunmuyordu -- olculdu, damga o gun 05:25'te yazilmisti.
+	#
+	# Damga bicimi: 1. satir tarih, 2. satir geride kalan depolar (bosluklu).
+	# ESKI TEK SATIRLIK damga uyumlu -- 2. satir yoksa liste bos, yani o gun
+	# sessiz kalir ve ertesi olcumde yeni bicime doner.
+	local -a behind cached
+	[[ -f $stamp ]] && cached=( ${(f)"$(<$stamp)"} )
+
+	if [[ ${cached[1]} == $today ]]; then
+		behind=( ${=cached[2]} )
+		(( ${#behind} )) && _yazi_pkg_behind_msg $behind
+		return 0
+	fi
 
 	local -A want
 	local line use rev repo
@@ -84,7 +111,6 @@ function _yazi_pkg_check() {
 	done
 	wait
 
-	local -a behind
 	local answered=0 f h
 	for f in $tmp/*(N); do
 		read -r repo h < $f
@@ -94,9 +120,9 @@ function _yazi_pkg_check() {
 	done
 	rm -rf $tmp
 	(( answered )) || return 0
-	mkdir -p ${stamp:h} && print -r -- $today > $stamp
+	mkdir -p ${stamp:h} && { print -r -- $today; print -r -- "$behind"; } > $stamp
 
-	(( ${#behind} )) && print -P -- "%F{#e0af68}yazi eklentileri geride%f: ${(j:, :)behind} — %F{#7aa2f7}ya pkg upgrade%f"
+	(( ${#behind} )) && _yazi_pkg_behind_msg $behind
 	return 0
 }
 
