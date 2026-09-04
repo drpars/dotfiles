@@ -129,8 +129,28 @@ function _yazi_pkg_check() {
 		[[ $h == ${want[$repo]} ]] || behind+=( ${repo%.yazi} )
 	done
 	rm -rf $tmp
-	(( answered )) || return 0
-	mkdir -p ${stamp:h} && { print -r -- $today; print -r -- "$behind"; } > $stamp
+
+	# Damga ancak TAM cevapta yazilir. Eksik cevapta yazilan damga, sorulamamis
+	# depolari da "guncel" diye kaydeder ve gun boyu oyle basar -- olculdu
+	# (2026-09-04, (100)): `package.toml`'a var olmayan bir depo konunca uyari
+	# yalnizca oburunu saydi, damga YINE yazildi, hata yok, rc=0. Yani olumsuz
+	# cevap ("geride bir sey yok") kapsamini kaybediyordu.
+	#
+	# ESKI kosul `(( answered ))` idi: EN AZ BIRI cevapladiysa yaziyordu, oysa
+	# yorumun kendi niyeti hepsiydi. Yeni kosul maliyet sinifini DEGISTIRMIYOR
+	# -- ag tumden yokken zaten damga yazilmiyor ve olcum her cikista yeniden
+	# deneniyordu; bu yalnizca ayni davranisi KISMI cevaba da uzatiyor.
+	# Cevapsiz bir depo turu YAVASLATMIYOR (olculdu 2026-09-04, bu makine):
+	# 8 gercek + 1 var olmayan depo -> 592/665/587 ms, yalniz 8 gercek depo ->
+	# 578/605 ms; bacak paralel ve cozunmeyen depo hemen donuyor. Kapsam:
+	# ag CALISIRKEN. Ag tumden kopukken olculmedi -- orada `wait` en yavas
+	# baglantiyi bekler, ve o davranis bu degisiklikten ONCE de aynidir.
+	#
+	# Bilinen geride'ler yine BASILIR: "X geride" eksik cevaptan etkilenmiyor,
+	# kaybolan sey yalnizca "baska bir sey geride degil" hukmu.
+	if (( answered == ${#want} )); then
+		mkdir -p ${stamp:h} && { print -r -- $today; print -r -- "$behind"; } > $stamp
+	fi
 
 	(( ${#behind} )) && _yazi_pkg_behind_msg $behind
 	return 0
