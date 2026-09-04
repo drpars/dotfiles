@@ -63,6 +63,21 @@ function _yazi_pkg_check() {
 
 	local tmp=${$(mktemp -d):-}
 	[[ -n $tmp ]] || return 0
+
+	# Is kontrolu KAPATILIYOR, yoksa asagidaki `( ... ) &` her depo icin
+	# baslarken `[3] <pid>`, biterken `[3] done ( local out= ; ... )` satiri
+	# bastiriyor -- 8 depo = 16 satir, ve hepsi `y`'den CIKISTA dokuluyor.
+	# Gorunmesi gereken tek satir asagidaki "eklentiler geride" uyarisi.
+	# `localoptions` ayari fonksiyon donunce geri aliyor.
+	#
+	# Olculdu (2026-09-04, pty altinda: `script -qec "zsh -f -i <betik>"
+	# /dev/null` -- monitor yalnizca terminal varken aciliyor, tty'siz kabukta
+	# iki kol da sessiz gorunur ve olcum anlamsizlasir): monitor acik kolda
+	# 3 is icin 6 satir gurultu, nomonitor'lu kolda 0. `wait` ve sonuc
+	# toplama etkilenmiyor (8/8 dosya okundu), paralellik duruyor (8 x 0,2 s
+	# uyku toplam 0,211 s).
+	setopt localoptions nomonitor
+
 	for repo in ${(k)want}; do
 		( local out=$(GIT_TERMINAL_PROMPT=0 git ls-remote "https://github.com/$repo" HEAD 2>/dev/null)
 		  print -r -- "$repo ${out[1,7]}" > $tmp/${repo//\//_} ) &
