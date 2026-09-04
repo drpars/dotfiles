@@ -70,7 +70,17 @@ function _yazi_pkg_check() {
 	local -a behind cached
 	[[ -f $stamp ]] && cached=( ${(f)"$(<$stamp)"} )
 
-	if [[ ${cached[1]} == $today ]]; then
+	# Damga package.toml'dan ESKIYSE cevabi bayattir: `ya pkg upgrade` (ve
+	# add/delete/install) dosyayi YERINDE yeniden yazar, yani mtime yukselir ve
+	# damganin 2. satirindaki liste artik gecmisi anlatir. Bu satir olmadan
+	# yukseltmeden SONRA da gun boyu ayni "geride" uyarisi basiliyor -- kullanici
+	# bildirdi (2026-09-04): what-size c1a8cb6 -> 1cb456f yukseltildi, uzak HEAD
+	# ayni SHA'ydi (olculdu), uyari yine ciktu; damga 11:31'de, yukseltme
+	# 11:36'da. Karsilastirma tek stat, catal yok; zsh 5.9.2'de `-nt` alt-saniye
+	# ayirt ediyor (1 ms arayla olculdu) ve damga zaten olcumden ~0,6 s SONRA
+	# yaziliyor, yani sira guvenli. Damga hic yoksa `-nt` yanlis doner ama o dal
+	# zaten asagidaki taze olcume gidiyor (cached bos).
+	if [[ ${cached[1]} == $today && ! $pt -nt $stamp ]]; then
 		behind=( ${=cached[2]} )
 		(( ${#behind} )) && _yazi_pkg_behind_msg $behind
 		return 0
