@@ -78,11 +78,38 @@ hl.gesture({
 	action = "close",
 })
 
--- Üç parmak yukarı → uygulama başlatıcı (`Super + R`'nin aynısı).
+-- Üç parmak yukarı → uygulama başlatıcı AÇ/KAPA (`Super + R` yalnız açar).
 --
 -- Komut `_G.menu` üzerinden alınıyor, yani tuş ile hareket **tek kaynaktan**
 -- besleniyor (helpers.lua). `-replace` orada zaten var: hareket yanlışlıkla
 -- tekrarlanırsa rofi örneği yığılmaz, mevcut olanın yerine geçer.
+--
+-- Öndeki `pkill -x rofi ||` hareketi TOGGLE yapar (2026-09-06, kullanıcı isteği).
+-- Mekanizma çıkış kodudur: rofi kapalıyken `pkill` **1** döner ve `||` menüyü
+-- açar; açıkken **0** döner, rofi ölür ve `||`'ın sağ yanı hiç koşmaz (ikisi de
+-- ölçüldü). Yani tuş ile hareket artık tek kaynaktan beslenmiyor — `_G.menu`
+-- ortak, öneki yalnız hareket taşıyor.
+--
+-- `-x` SÜS DEĞİL, iki ayrı sebeple zorunlu:
+--   (a) `-f` bu satırı vurur. `pkill -f rofi` deseni komut satırının HER
+--       yerinde arar ve komut metninin tamamı onu koşturan kabuğun
+--       cmdline'ındadır — kabuk kendini öldürür, `||` hiç değerlendirilmez.
+--       `-x` ise `comm`'a bakar (ölçüldü: rofi'nin comm'u tam olarak `rofi`,
+--       çağıran kabuk sağ kaldı).
+--   (b) `-x` olmadan `pkill rofi` desen eşleşmesidir, tam ad değil.
+--
+-- KAPSAM: `comm` tabanlı olduğu için hareket AÇIK OLAN HER rofi'yi kapatır —
+-- `Alt+Ctrl+V` (cliphist) ve `Alt+A` (alias) örnekleri de aynı ikiliyi
+-- çağırıyor, comm'ları aynı (ölçüldü: dmenu örneği de kapandı). Toggle'ın
+-- istenen okuması bu; mod başına ayrım gerekirse ölçüt `comm` değil cmdline
+-- olur ve o zaman (a) yüzünden `pkill -f` yerine `pgrep -f` + `kill <pid>`
+-- gerekir.
+--
+-- ÖLÇÜLMEYEN: hareketin rofi AÇIKKEN ateşleyip ateşlemediği. Toggle'ın komut
+-- yarısı `hyprctl eval "hl.exec_cmd(...)"` ile iki yönde de doğrulandı, ama
+-- touchpad hareketi betikten üretilemiyor — rofi klavyeyi layer-shell ile
+-- grab ediyor ve hareketleri compositor'ın kendisi işliyor, yani ateşlemesi
+-- BEKLENİR; sınayan tek şey gerçek bir kaydırmadır.
 --
 -- `action` fonksiyon olarak veriliyor. Stub imzası `string|function`
 -- (`HL.GestureSpec`, /usr/share/hypr/stubs/hl.meta.lua) — `hl.bind`'ınki ise
@@ -104,5 +131,5 @@ hl.gesture({
 	fingers = 3,
 	direction = "up",
 	scale = 3.0,
-	action = function() hl.exec_cmd(_G.menu) end,
+	action = function() hl.exec_cmd("pkill -x rofi || " .. _G.menu) end,
 })
