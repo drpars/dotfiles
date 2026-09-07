@@ -25,9 +25,10 @@ dosyayı okuyamıyor (`sudo -u greeter test -r …` → rc=1). Hedefler `/etc`
 altında gerçek dosya olmak zorunda.
 
 Kopya olmanın bedeli ayrışmadır ve bu depoda bir kez ödendi: canlı
-`/etc/sddm.conf`, `sddm/sddm.conf`'tan üç ortam değişkeni kadar ayrılmıştı ve
-kimse fark etmedi. Karşılığı `./install.sh check` — canlı dosyalarla repoyu
-karşılaştırır, farkı `diff` olarak basar.
+`/etc/sddm.conf`, o zamanki `sddm/` bölümünün sürümlenen kopyasından üç ortam
+değişkeni kadar ayrılmıştı ve kimse fark etmedi (bölüm 2026-09-07'de silindi,
+`2dbb06f` sonrası; geçmişte duruyor). Karşılığı `./install.sh check` — canlı
+dosyalarla repoyu karşılaştırır, farkı `diff` olarak basar.
 
 ## Ölçülmüş tuzaklar
 
