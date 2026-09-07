@@ -1,10 +1,17 @@
 # /etc/tuigreet/config.toml -- greetd-tuigreet 0.11.1
 #
-# WHY A FILE INSTEAD OF FLAGS: with a config file in play, tuigreet silently
-# drops the command line. Measured 2026-09-07: `--config <file> --time` leaves
-# show_time = false and exits 0; the same happens to --cmd, --remember and
-# --theme. So every option has to live here, and /etc/greetd/config.toml must
-# not carry any tuigreet flag besides --config.
+# WHY A FILE INSTEAD OF FLAGS: once `--config <file>` is on the command line,
+# tuigreet drops the rest of it without a word. Measured 2026-09-07:
+# `--config <file> --time` leaves show_time = false, `-w 100` leaves width = 80,
+# and `--session-wrapper X` never reaches the dump at all -- every one exit 0.
+# So every option has to live here.
+#
+# THE TRIGGER IS THE FLAG, NOT THE FILE. Without `--config`, tuigreet still
+# reads this file (it is the default path) but the command line WINS: measured
+# the same day against these very values, `-w 100` gave 100 and `--title` gave
+# true where the file says 80 and false. The two spellings are therefore not
+# interchangeable, and /etc/greetd/config.toml must keep `--config` -- that is
+# what makes this file the single source -- and must carry no other flag.
 #
 # HOW TO REGENERATE A SKELETON: `tuigreet <flags> --dump-config` prints the
 # exact TOML for a set of flags. Note that --dump-config only proves the file
@@ -15,8 +22,45 @@
 debug = false
 
 [session]
-# F2 lists /usr/share/wayland-sessions (hyprland.desktop, hyprland-uwsm.desktop)
+# F3 lists /usr/share/wayland-sessions (hyprland.desktop, hyprland-uwsm.desktop);
+# F2 edits the command. Not a guess -- `[keybindings]` in --dump-config says
+# `command = 2` and `sessions = 3`, and the status bar renders it that way.
+#
+# WHY systemd-cat: the compositor's own stdout lands on the console in the gap
+# between the greeter exiting and the compositor taking the display, and it is
+# visible. Measured 2026-09-07 by reading /dev/vcs1 back after a login: the
+# ASCII "Welcome to Hyprland!" banner, ~20 DEBUG lines, then xkbcomp's keymap
+# warnings. Hyprland does stop on its own -- "Disabling stdout logs
+# (debug.enable_stdout_logs = 0)" is in that very dump -- but only once it has
+# parsed the config, and the banner comes before that.
+#
+# systemd-cat execs the command with stdout and stderr pointed at the journal:
+# measured, no extra process survives (the child's PPID stays the caller) and
+# nothing reaches the terminal. The text leaves the screen without being lost
+# -- `journalctl -t wayland-session` has it.
+#
+# WHY THE WRAPPER AND NOT `command`: the wrapper covers BOTH launch paths, so
+# `command` stays readable -- and it has to stay readable, because tuigreet
+# prints it in the status bar as "KOMUT <command>" in a ~17-column field, where
+# a wrapper shows up as `/usr/bin/systemd-` and says nothing.
+#
+# Both paths were read in the source at tag 0.11.1 (crates/tuigreet/src/ipc.rs,
+# the function that builds the command greetd is handed). The arm for a session
+# picked from the F3 list wraps every non-X11 session; the `_` arm wraps
+# `command` itself -- and `_` is everything else, because Session::get_selected
+# returns Some only for a list-picked session. So a command typed at F2 gets
+# wrapped too: there is no escape hatch at the greeter, recovery is Ctrl+Alt+F2.
+# The `_` arm is this machine's path today -- /var/cache/tuigreet has a
+# `lastuser` and no `lastsession`. That tag is the installed binary:
+# the package is 0.11.1-2 and the tag's workspace version string is "0.11.0",
+# which is exactly what `tuigreet --version` reports here.
+#
+# ONE COST, from that same source: on the `_` arm the wrapper REPLACES the env
+# that `environments` would have added ("assume that it is able to set up the
+# required environment"). `environments` is empty below, so nothing is lost --
+# but anything added there later would be silently dropped at login.
 command = "start-hyprland"
+session_wrapper = "/usr/bin/systemd-cat -t wayland-session"
 
 [display]
 show_time = true

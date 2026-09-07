@@ -39,11 +39,17 @@ koşusunda `show_time` hâlâ `false`, çıkış kodu 0. Aynısı `--cmd`,
 `/etc/greetd/config.toml` içinde `--config`'ten başka bayrak **olmamalı**;
 oraya eklenen bir bayrak hata vermeden yok sayılır.
 
-Bu tuzak `--config` yazılmasa da kurulur: `/etc/tuigreet/config.toml`
-tuigreet'in **varsayılan** yolu ve dosya kurulduktan sonra bayraksız
-`tuigreet --dump-config` da onu okuyor (ölçüldü). Yani dosyanın **var olması**
-komut satırını etkisizleştirmeye yetiyor. Komuttaki `--config` bu yüzden
-gereksiz değil, bağımlılığı **görünür** kılıyor.
+**Tuzağın ölçütü dosya değil, bayrak** — burada bir kez tersi yazıldı ve
+2026-09-07'de ölçülerek düzeltildi. `--config` **yazılmazsa**
+`/etc/tuigreet/config.toml` yine okunuyor (tuigreet'in varsayılan yolu, o kadarı
+doğruydu) ama komut satırı **kazanıyor**: bu dosyanın kendi değerlerine karşı
+`-w 100` → `width = 100` ve `--title` → `show_title = true`, dosya 80 ve false
+derken. `--config` **verilince** aynı bayraklar düşüyor (80 ve false kalıyor,
+`--session-wrapper X` dump'a hiç girmiyor).
+
+Yani iki yazım biçimi birbirinin yerine geçmiyor: `--config` bağımlılığı
+görünür kılan bir süs değil, dosyayı **tek kaynak** yapan mekanizmanın kendisi.
+Onsuz, komut satırına sızan her bayrak yürürlüğe girer.
 
 **`--dump-config` doğrulama değil.** Yalnız TOML olarak ayrıştığını gösteriyor:
 `border = "zzznosuch"` ve `--background zzz` rc=0 ile geçip dump'a olduğu gibi
@@ -55,11 +61,19 @@ tuigreet --mock --config /etc/tuigreet/config.toml
 
 `--mock` greetd socket'ine hiç dokunmuyor, kimlik akışını taklit ediyor. Boru
 altında koşturulacaksa pty şart ve **boyut verilmeli** — boyutsuz pty'de
-ratatui 0×0 alanla panikliyor:
+ratatui 0×0 alanla panikliyor. **Üçüncü şart stdin:** `script`'in kendi stdin'i
+kapalıysa (araç kabuğunda öyle) oturum anında bitiyor ve akış **12 bayt**
+kalıyor — yalnız alt-ekran dizisi, tek satır çizilmeden, hata da yok. Yani
+"çizmedi" ile "çizemedi" aynı görünüyor. stdin'i açık tutan biçim (ölçüldü
+2026-09-07):
 
 ```sh
-script -qec "stty rows 30 cols 100; tuigreet --mock --config …" /dev/null
+timeout 12 sh -c 'sleep 4 | script -qec "stty rows 28 cols 100; \
+    tuigreet --mock --config …" /dev/null'
 ```
+
+Normal bitiş `rc=124`'tür (`timeout` kesti); ekran içeriği çıktının içinde,
+kaçış dizileri ayıklanarak okunur.
 
 **Hex renk konsolda çürüyor.** tuigreet hex'i doğru yapıyor — gerçek
 `38;2;R;G;B` basıyor —, kıran şey Linux VT'si. Ölçüm (tty6'ya yaz,
@@ -79,13 +93,31 @@ konsolu boyar. Geri alma `setvtrgb vga`; birimin `ExecStop`'u bunu yapıyor.
 değiştirmedi (`KDGETPALETTE` ile okundu, fark yok). Çalışan kanal ioctl, yani
 `setvtrgb`.
 
+**Giriş ile compositor arasındaki metin oturumun kendi stdout'u.** greeter
+kapandıktan sonra, compositor ekranı devralana kadar geçen boşlukta konsolda
+yazı görünüyordu. Kaynağı tahmin edilmedi, okundu: girişten sonra `/dev/vcs1`
+(VT'nin metin tamponu) geri okundu ve içinde Hyprland'in ASCII `Welcome to
+Hyprland!` banner'ı, ~20 `DEBUG` satırı ve xkbcomp'un keymap uyarıları vardı.
+Aynı dökümde Hyprland'in kendi satırı da duruyor — *"Disabling stdout logs
+(debug.enable_stdout_logs = 0)"* —, yani susuyor ama ancak config'i
+ayrıştırdıktan sonra; banner ondan önce basılıyor. Çare `[session]
+session_wrapper` → `tuigreet.toml`; gerekçesi ve iki koşu yolu orada yazılı.
+
 ## Bir sonraki açılışta bakılacak
 
-Birimin sıralaması (`Before=greetd.service`) mekanizmadan yazıldı; paletin
-greeter **çizerken** yürürlükte olduğu henüz bir açılışta doğrulanmadı.
-Doğrulanmazsa çare adresi belli: `vt.default_red/grn/blu=` çekirdek
-parametreleri (modül parametreleri var, `/proc/cmdline`'da yok) — ama o UKI
-dokunmak demek.
+**Sarmalayıcı işini yaptı mı** — giriş ile compositor arasında yazı kalmadı mı.
+`session_wrapper`'ın iki yolu da kapsadığı kaynaktan okundu (0.11.1 etiketi,
+`ipc.rs`), ama bu makinede bir girişte sınanmadı. Kayıt yerinde kalıyor:
+`journalctl -t wayland-session` banner'ı taşıyorsa sarmalayıcı koşmuş demektir,
+boşsa koşmamıştır — ekrana bakmadan da ayırt edilir.
+
+**Bozarsa kurtarma greeter'ın içinde DEĞİL.** Sarmalayıcıdan kaçan bir yol
+yok: `Session::get_selected` yalnız **listeden** seçilen oturumda `Some`
+dönüyor, `F2` ile elle yazılan komut da varsayılan komut da `_` koluna düşüyor
+ve orada sarmalanıyor — yani greeter'da komutu düzeltmek sarmalayıcıyı
+atlatmaz. Kalan yol `Ctrl+Alt+F2`: greetd yalnız `getty@tty1` ile çakışıyor,
+öbür VT'lerde metin girişi açık; oradan `session_wrapper` satırı silinir ya da
+`install.sh`'ın bıraktığı `.bak-*` geri konur.
 
 ## Bu bölümde olmayan
 
