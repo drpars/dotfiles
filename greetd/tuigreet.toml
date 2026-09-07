@@ -9,9 +9,14 @@
 # THE TRIGGER IS THE FLAG, NOT THE FILE. Without `--config`, tuigreet still
 # reads this file (it is the default path) but the command line WINS: measured
 # the same day against these very values, `-w 100` gave 100 and `--title` gave
-# true where the file says 80 and false. The two spellings are therefore not
-# interchangeable, and /etc/greetd/config.toml must keep `--config` -- that is
-# what makes this file the single source -- and must carry no other flag.
+# true where the file says 80 and false. That arm does not ignore the file, it
+# MERGES -- in the same run that took width from `-w 100`, show_time and
+# command came from here. Reading a file and overriding a flag are two
+# different things, and the earlier note here confused them.
+#
+# The two spellings are therefore not interchangeable, and
+# /etc/greetd/config.toml must keep `--config` -- that is what makes this file
+# the single source -- and must carry no other flag.
 #
 # HOW TO REGENERATE A SKELETON: `tuigreet <flags> --dump-config` prints the
 # exact TOML for a set of flags. Note that --dump-config only proves the file

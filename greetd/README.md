@@ -47,6 +47,13 @@ doğruydu) ama komut satırı **kazanıyor**: bu dosyanın kendi değerlerine ka
 derken. `--config` **verilince** aynı bayraklar düşüyor (80 ve false kalıyor,
 `--session-wrapper X` dump'a hiç girmiyor).
 
+**`--config`'siz kol yok saymıyor, BİRLEŞTİRİYOR:** dosya, komut satırının
+**değinmediği** alanları doldurmayı sürdürüyor. Aynı koşuda ölçüldü —
+`-w 100` `width`'i 100 yaparken `show_time = true` ve
+`command = "start-hyprland"` dosyadan geldi. Yani öncül ("bayraksız
+`--dump-config` dosyayı okuyor") doğru; ondan *"demek ki komut satırını
+etkisizleştiriyor"* çıkarmak yanlıştı — okumak ile üstüne yazmak ayrı şeyler.
+
 Yani iki yazım biçimi birbirinin yerine geçmiyor: `--config` bağımlılığı
 görünür kılan bir süs değil, dosyayı **tek kaynak** yapan mekanizmanın kendisi.
 Onsuz, komut satırına sızan her bayrak yürürlüğe girer.
