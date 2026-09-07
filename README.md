@@ -4,7 +4,7 @@ Arch Linux + Hyprland kurulumunun yapılandırma dosyaları. Depo `~/.dotfiles`
 altında durur; ev dizinindeki dosyalar buraya **symlink**'tir, yani
 `~/.zshrc` düzenlenmez — `home/.zshrc` düzenlenir.
 
-Kurulumun tamamı **tek komutla** olmaz ve bu bilerek böyledir: sekiz üst
+Kurulumun tamamı **tek komutla** olmaz ve bu bilerek böyledir: dokuz üst
 klasörün üçü otomatik yerleştirilir, kalanı ya root ister, ya hedefi tahmin
 edilemez, ya da başka bir işletim sistemine aittir.
 
@@ -15,6 +15,7 @@ edilemez, ya da başka bir işletim sistemine aittir.
 | `config/` | `~/.config` | **Otomatik** — [archsetup](https://github.com/drpars/archsetup), öge öge seçilir |
 | `home/` | `~` | **Otomatik** — archsetup |
 | `local/share/` | `~/.local/share` | **Otomatik** — archsetup (`applications`, `icons`, `color-schemes`) |
+| `greetd/` | `/etc/greetd`, `/etc/tuigreet`, `/etc/systemd/system` | **Elle / root** — kendi betiği var: `greetd/install.sh` (ayrışma denetimi: `install.sh check`) |
 | `sddm/` | `/etc/sddm.conf` + greeter'ın `~/.local/share/icons` | **Elle / root** — archsetup'ın ayrı SDDM görevi yazar; buradakiler referans kopyadır |
 | `browser/` | Firefox / Zen profil dizini | **Elle, makine başına bir kez** — profil klasörünün adı rastgele, sabit hedef yok |
 | `claude/` | `~/.claude` | **Elle** — kendi betiği var: `claude/install.sh` (geri yön: `save.sh`) |

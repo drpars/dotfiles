@@ -1,0 +1,18 @@
+# /etc/greetd/config.toml
+#
+# tuigreet is a TTY greeter: no X server, no EGL/GLX/VA-API, no QML. It has no
+# code path that opens /dev/nvidia*, which is the point on this machine -- the
+# SDDM greeter was a victim of the nvidia GSP-init deadlock (C class,
+# g14-boot-hatalari/NOTLAR.md), not its cause.
+
+[terminal]
+# greetd.service already has Conflicts=getty@tty1, so vt 1 is free for us.
+vt = 1
+
+[default_session]
+# NO TUIGREET FLAGS HERE. Once --config is present, tuigreet ignores the rest
+# of the command line without a word (measured 2026-09-07: `--config <file>
+# --time` still reports show_time = false, exit 0). Everything -- session
+# command, clock, remembering, asterisks, colours -- lives in the file.
+command = "tuigreet --config /etc/tuigreet/config.toml"
+user = "greeter"

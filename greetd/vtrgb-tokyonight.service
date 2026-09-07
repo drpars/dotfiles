@@ -1,0 +1,18 @@
+[Unit]
+Description=Tokyonight palette for the Linux virtual consoles
+Documentation=man:setvtrgb(8) man:console_codes(4)
+# The palette must already be in place when greetd draws the greeter on vt1.
+After=systemd-vconsole-setup.service
+Before=greetd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# The kernel applies the colour map to every virtual console, not just the one
+# named here (measured 2026-09-07: `-C /dev/tty6` also repainted tty2). The
+# device is still required because there is no controlling tty in a unit.
+ExecStart=/usr/bin/setvtrgb -C /dev/tty1 /etc/vtrgb-tokyonight
+ExecStop=/usr/bin/setvtrgb -C /dev/tty1 vga
+
+[Install]
+WantedBy=multi-user.target

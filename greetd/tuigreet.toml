@@ -1,0 +1,89 @@
+# /etc/tuigreet/config.toml -- greetd-tuigreet 0.11.1
+#
+# WHY A FILE INSTEAD OF FLAGS: with a config file in play, tuigreet silently
+# drops the command line. Measured 2026-09-07: `--config <file> --time` leaves
+# show_time = false and exits 0; the same happens to --cmd, --remember and
+# --theme. So every option has to live here, and /etc/greetd/config.toml must
+# not carry any tuigreet flag besides --config.
+#
+# HOW TO REGENERATE A SKELETON: `tuigreet <flags> --dump-config` prints the
+# exact TOML for a set of flags. Note that --dump-config only proves the file
+# parses as TOML -- it echoes `border = "zzznosuch"` back happily, exit 0. The
+# only real check is rendering: `tuigreet --mock --config <file>`.
+
+[general]
+debug = false
+
+[session]
+# F2 lists /usr/share/wayland-sessions (hyprland.desktop, hyprland-uwsm.desktop)
+command = "start-hyprland"
+
+[display]
+show_time = true
+show_title = false
+issue = false
+battery = false
+align_greeting = "center"
+# greeting = "..."          # mutually exclusive with `issue`
+# custom_title = "..."      # needs show_title = true
+
+[remember]
+username = true
+session = true
+user_session = false
+
+[secret]
+# The `--asterisks` equivalent; sddm gave the same feedback.
+mode = "characters"
+characters = "*"
+
+[layout]
+width = 80
+window_padding = 0
+container_padding = 1
+prompt_padding = 1
+
+# COLOURS: palette indices, not hex.
+#
+# tuigreet does emit real 24-bit SGR for hex values, but this greeter draws on
+# the Linux virtual console, and the kernel collapses 24-bit colour onto the 16
+# console slots. Measured 2026-09-07 on this machine (write to /dev/tty6, read
+# the attribute back from /dev/vcsa6): ten tokyonight hex values came out as
+# six distinct slots -- #a9b1d6, #c0caf5, #bb9af7 and #9ece6a all landed on the
+# same one. Green buttons, purple actions and plain text would be one colour.
+#
+# So the colours come from the palette instead: vtrgb-tokyonight.service paints
+# the 16 console slots with the tokyonight values, and the indices below pick
+# among them. Slot -> colour is in ../greetd/vtrgb-tokyonight, in file order.
+#
+# A bare number parses as a palette index; names work too (measured: black=0,
+# green=2, blue=4, magenta=5, cyan=6, gray=7, darkgray=8, white=15). Numbers
+# are used here because an unknown name is accepted without complaint.
+[theme]
+container = "0"   # #1a1b26  prompt box background, same as the screen
+border    = "8"   # #414868  box outline
+title     = "4"   # #7aa2f7  container title (only with show_title)
+greet     = "6"   # #7dcfff  greeting line
+time      = "7"   # #a9b1d6  clock, drawn outside the box
+prompt    = "4"   # #7aa2f7  field labels ("Kullanıcı adı:")
+input     = "15"  # #c0caf5  what you type
+text      = "15"  # #c0caf5  general text
+action    = "7"   # #a9b1d6  status bar labels ("Oturum seç", "Güç")
+button    = "5"   # #bb9af7  status bar key chips ("F2", "F3", "ESC")
+
+# Background animation: "none", "doom" or "matrix". The help text only lists
+# doom and none, but the binary accepts matrix (measured). Both take their
+# colours as #RRGGBB, which runs into the same collapse described above, so
+# they will look tokyonight-adjacent rather than exact.
+[background]
+kind = "none"
+
+[background.matrix]
+head_color = "#c0caf5"
+bright_color = "#7aa2f7"
+dim_color = "#414868"
+
+[background.doom]
+top_color = "#f7768e"
+middle_color = "#e0af68"
+bottom_color = "#1a1b26"
