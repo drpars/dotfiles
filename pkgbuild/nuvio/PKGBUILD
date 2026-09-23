@@ -1,0 +1,84 @@
+# Nuvio Desktop — upstream .deb'ini yerelde Arch paketine çeviren PKGBUILD.
+# AUR'a girmez; tek kopyası budur.
+#
+# GÜNCELLEME / KURULUM — `nuvio-update` (config/scripts/, PATH'te). pacman bu
+# paketi hiçbir depoda görmez: `pacman -Syu` ona dokunmaz, yeni sürümü haber de
+# vermez. Betik akışın tamamını yürütür: sürümü sorar, varlıkları listeleyip
+# **hangisi olduğunu SORAR**, özeti bulur, aşağıdaki üç satırı (_tag, _asset,
+# sha256sums) günceller, **diff'i gösterir**, onay alıp derler ve kurar.
+# `nuvio-update --check` hiçbir şeyi değiştirmez. Bu dosyayı elle düzenlemek
+# hâlâ geçerli — betik yalnız aynı işi yapıyor.
+#
+# ELLE DERLEME. Derleme artıkları depoya düşmesin diye dizinler dışarı alınır.
+# `makepkg -p` betiği çalışılan dizinin İÇİNDE istiyor (mutlak yol rc=12 ile
+# reddedilir, ölçüldü) — çare kopya değil symlink:
+#
+#   B=~/.cache/nuvio-build; mkdir -p "$B"; cd "$B"
+#   ln -sfn ~/.dotfiles/pkgbuild/nuvio/PKGBUILD ./PKGBUILD
+#   export BUILDDIR="$B" SRCDEST="$B" PKGDEST="$B" LOGDEST="$B"
+#   makepkg -si
+#
+# Dizin kalıcı tutulursa kaynak önbelleğe girer: aynı sürümün ikinci derlemesi
+# .deb'i yeniden indirmiyor ("bulundu", 1,4 s). Bedeli ~549 MB; temizlik
+# `rm -rf ~/.cache/nuvio-build`.
+#
+# NOT: SHA256SUMS.txt her sürümde yayımlanmıyor — 0.1.23 ve 0.1.21'de var,
+# 0.1.24, 0.1.22 ve 0.1.19'da YOK. Betik o dalda .deb'i indirip özeti kendisi
+# hesaplar; bu upstream'e karşı bir bütünlük kanıtı DEĞİL (indirdiğini
+# doğruluyor), yalnız sonraki değişime karşı koruma.
+#
+# KALDIRMA — önce ne gideceği okunur, çünkü `-Rs` paketten fazlasını alabilir:
+#
+#   pacman -Rs --print nuvio-desktop-local    # -n/--nosave ile birleşmez
+#
+# Ölçüldü (2026-09-16, bu makine): `-Rs` webkit2gtk-4.1'i ve dört bağımlılığını
+# da alıyordu (xdg-dbus-proxy, woff2, libmanette, enchant) — webkit bağımlılık
+# olarak kuruluydu ve Nuvio'dan önce yetimdi, kurulum onu sahiplendi. Yalnız
+# paketi kaldırmak için `pacman -R`. Bu liste makinenin durumuna bağlı, o yüzden
+# yazılı olan sayı değil sondanın kendisi.
+#
+# ÖLÇÜLDÜ (2026-09-16, 0.1.23-alpha): .deb'in Depends satırı range isteğiyle
+# okundu; aşağıdaki depends o satırın Arch karşılığı. Yük /opt/nuvio altında
+# (Installed-Size: 244267 KB), başlatıcı /opt/nuvio/bin/Nuvio.
+
+# İKİ SÜRÜM DİZESİ, ve ayrı olmaları zorunlu — ölçüldü (2026-09-16): GitHub
+# etiketi `0.1.24-alpha-beta` iken varlıklar `…-0.1.24-alpha.deb` adıyla duruyor.
+# Tek değişkenle kurulan URL 404 alır. _tag yolu, _asset dosya adını verir.
+_tag=0.1.25-alpha
+_asset=0.1.25-alpha
+pkgname=nuvio-desktop-local
+pkgver=${_asset//-/}
+pkgrel=1
+pkgdesc="Nuvio Desktop — upstream .deb repackaged locally (alpha software)"
+arch=('x86_64')
+url="https://github.com/NuvioMedia/NuvioDesktop"
+license=('GPL-3.0-only')
+depends=('mpv' 'webkit2gtk-4.1' 'gtk3' 'alsa-lib' 'libglvnd'
+         'libx11' 'libxext' 'libxi' 'libxtst' 'libxrender' 'libxcomposite'
+         'gst-plugins-good' 'gst-libav' 'glib-networking' 'xdg-utils')
+provides=('nuvio')
+conflicts=('nuvio' 'nuvio-desktop' 'nuvio-desktop-bin' 'nuvio-linux-bin')
+options=('!strip' '!debug')
+source=("nuvio-${_tag}.deb::${url}/releases/download/${_tag}/Nuvio-Linux-${CARCH}-${_asset}.deb")
+noextract=("nuvio-${_tag}.deb")
+sha256sums=('436e3a336201f346e6120b2154fe8989ea0d9729103ebb9b7f16ec221657b777')
+
+package() {
+  # .deb bir ar arşivi; bsdtar ikisini de okur. Sıkıştırma biçimi upstream
+  # değiştirirse diye üye adı desenle veriliyor (bugün data.tar.zst).
+  bsdtar -O -xf "nuvio-${_tag}.deb" 'data.tar*' | bsdtar -C "$pkgdir" -xf -
+
+  install -dm755 "$pkgdir/usr/bin"
+  ln -s /opt/nuvio/bin/Nuvio "$pkgdir/usr/bin/nuvio"
+
+  # jpackage .desktop'ı /usr/share/applications'a koymuyor; .deb'in postinst'i
+  # onu xdg-desktop-menu ile kuruyordu. Paket yolunu kendi sahiplensin.
+  install -Dm644 "$pkgdir/opt/nuvio/lib/nuvio-Nuvio.desktop" \
+                 "$pkgdir/usr/share/applications/nuvio.desktop"
+  # Upstream "Categories=Nuvio" yazıyor — kayıtlı bir freedesktop kategorisi
+  # değil, bazı menüler girdiyi o yüzden düşürüyor. .deb'in Section'ı AudioVideo.
+  sed -i 's|^Categories=.*|Categories=AudioVideo;Video;Player;|' \
+    "$pkgdir/usr/share/applications/nuvio.desktop"
+  install -Dm644 "$pkgdir/opt/nuvio/lib/Nuvio.png" \
+                 "$pkgdir/usr/share/pixmaps/nuvio.png"
+}

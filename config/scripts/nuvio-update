@@ -1,0 +1,209 @@
+#!/usr/bin/env bash
+# Nuvio Desktop guncelleme akisi: yeni surumu bul, varligi SOR, ozeti cikar,
+# pkgbuild/nuvio/PKGBUILD'i guncelle, diff'i goster, onay alip derle ve kur.
+#
+#   nuvio-update                 # en yeni surum, tam akis
+#   nuvio-update 0.1.23-alpha    # belirli bir etiket
+#   nuvio-update --check         # hicbir seyi degistirme, sadece bas
+#
+# IKI ONAY KAPISI VAR ve ikisi de bilerek:
+#   1. Hangi varlik? — makinenin guvenilmez oldugu tek adim. Olculdu
+#      (2026-09-16): GitHub etiketi `0.1.24-alpha-beta` iken varliklar
+#      `…-0.1.24-alpha.deb` adini tasiyor. Etiketten dosya adi tureten her kural
+#      o surumde 404 alir, ve ikisinin uyusacaginin garantisi yok.
+#   2. Diff dogru mu? — PKGBUILD surumlenen bir dosya; degisiklik derlemeden
+#      once gorunur olur, ve geri almak tek komuttur.
+#
+# `pacman --noconfirm` KULLANILMIYOR: kurulum onayini pacman'in kendisi sorar.
+# PKGBUILD'in yeri: betigin GERCEK yolundan (symlink cozulerek) depo koku,
+# oradan pkgbuild/nuvio/PKGBUILD; NUVIO_PKGBUILD ile degistirilebilir.
+
+set -euo pipefail
+
+REPO=NuvioMedia/NuvioDesktop
+CACHE=${NUVIO_BUILD_DIR:-$HOME/.cache/nuvio-build}
+# ~/.config/scripts bir dizin symlink'i: BASH_SOURCE'un dirname'i depoyu degil
+# ev dizinindeki bagi verir. readlink -f ikisini de cozer.
+SELF=$(readlink -f -- "${BASH_SOURCE[0]}")
+DOTFILES=$(cd -- "$(dirname -- "$SELF")/../.." && pwd)
+PKGBUILD=${NUVIO_PKGBUILD:-$DOTFILES/pkgbuild/nuvio/PKGBUILD}
+PKGDIR=$(dirname -- "$PKGBUILD")
+
+check_only=0
+tag=""
+for arg in "$@"; do
+  case $arg in
+    --check) check_only=1 ;;
+    -h|--help) sed -n '2,19p' "$SELF"; exit 0 ;;
+    -*) echo "error: unknown option: $arg" >&2; exit 2 ;;
+    *) tag=$arg ;;
+  esac
+done
+
+for tool in curl jq sha256sum makepkg; do
+  command -v "$tool" >/dev/null || { echo "error: $tool not found" >&2; exit 1; }
+done
+[[ -f $PKGBUILD ]] || { echo "error: no PKGBUILD at $PKGBUILD" >&2; exit 1; }
+
+# --- Surum ve varlik ---------------------------------------------------------
+
+if [[ -z $tag ]]; then
+  echo "==> asking for the latest release"
+  tag=$(curl -fsS "https://api.github.com/repos/$REPO/releases/latest" | jq -r .tag_name)
+  [[ -n $tag && $tag != null ]] || { echo "error: could not read the release" >&2; exit 1; }
+fi
+echo "==> tag: $tag"
+
+release_json=$(curl -fsS "https://api.github.com/repos/$REPO/releases/tags/$tag") || {
+  echo "error: tag '$tag' not found" >&2; exit 1; }
+
+if installed=$(pacman -Q nuvio-desktop-local 2>/dev/null); then
+  echo "==> installed: ${installed#* }"
+fi
+
+mapfile -t debs < <(jq -r '.assets[].name | select(endswith(".deb"))' <<<"$release_json")
+if ((${#debs[@]} == 0)); then
+  echo "error: this release has no .deb asset. All assets:" >&2
+  jq -r '.assets[].name' <<<"$release_json" | sed 's/^/  /' >&2
+  exit 1
+fi
+
+echo
+echo ".deb assets in this release:"
+for i in "${!debs[@]}"; do printf '  %d) %s\n' "$((i+1))" "${debs[$i]}"; done
+echo
+
+((${#debs[@]} == 1)) && default=1 || default=""
+prompt="Which asset? [1-${#debs[@]}"
+[[ -n $default ]] && prompt+=", empty = $default"
+prompt+="]: "
+
+while :; do
+  if [[ -t 0 ]]; then
+    read -rp "$prompt" choice || choice=""
+  elif ! read -r choice; then
+    echo "error: no choice on stdin and not a tty." >&2
+    echo "  Run it in your own terminal, or pipe the number in:" >&2
+    echo "    echo 1 | ${0##*/} $tag" >&2
+    exit 1
+  fi
+  choice=${choice:-$default}
+  [[ $choice =~ ^[0-9]+$ ]] && ((choice >= 1 && choice <= ${#debs[@]})) && break
+  echo "  invalid choice: '$choice'" >&2
+  [[ -t 0 ]] || exit 1
+done
+
+asset=${debs[$((choice-1))]}
+echo "==> selected: $asset"
+
+asset_ver=${asset##*-x86_64-}
+asset_ver=${asset_ver%.deb}
+if [[ $asset_ver == "$asset" ]]; then
+  echo "error: '$asset' does not match Nuvio-Linux-x86_64-<version>.deb;" >&2
+  echo "       _asset cannot be derived safely. Edit the PKGBUILD by hand." >&2
+  exit 1
+fi
+
+# --- Ozet --------------------------------------------------------------------
+
+dl_root="https://github.com/$REPO/releases/download/$tag"
+sum=""; source_of_sum=""
+
+if sums=$(curl -fsSL "$dl_root/SHA256SUMS.txt" 2>/dev/null); then
+  sum=$(awk -v f="$asset" '$2 == f {print $1}' <<<"$sums")
+  [[ -n $sum ]] && source_of_sum="upstream SHA256SUMS.txt" \
+    || echo "warning: SHA256SUMS.txt exists but has no line for '$asset'." >&2
+fi
+
+if [[ -z $sum ]]; then
+  echo "==> no SHA256SUMS.txt; downloading the .deb to compute the checksum"
+  echo "    (this is NOT an integrity proof against upstream)"
+  mkdir -p "$CACHE"
+  target="$CACHE/nuvio-$tag.deb"   # makepkg'in bekledigi ad: yeniden indirmez
+  curl -fL --progress-bar -o "$target" "$dl_root/$asset"
+  sum=$(sha256sum "$target" | cut -d' ' -f1)
+  source_of_sum="computed from the download"
+fi
+
+echo "==> checksum ($source_of_sum): $sum"
+
+three_lines="_tag=$tag
+_asset=$asset_ver
+sha256sums=('$sum')"
+
+if ((check_only)); then
+  printf '\n=========== for PKGBUILD ===========\n%s\n====================================\n' "$three_lines"
+  exit 0
+fi
+
+# --- PKGBUILD'i guncelle -----------------------------------------------------
+
+changed=0
+if grep -q "^_tag=$tag\$" "$PKGBUILD" &&
+   grep -q "^_asset=$asset_ver\$" "$PKGBUILD" &&
+   grep -q "^sha256sums=('$sum')\$" "$PKGBUILD"; then
+  echo "==> PKGBUILD already at this release; nothing to change"
+else
+  changed=1
+  backup=$(mktemp); cp -- "$PKGBUILD" "$backup"
+  sed -i \
+    -e "s|^_tag=.*|_tag=$tag|" \
+    -e "s|^_asset=.*|_asset=$asset_ver|" \
+    -e "s|^sha256sums=.*|sha256sums=('$sum')|" \
+    "$PKGBUILD"
+
+  # Her uc satirin da gercekten yerine oturdugu dogrulanir: sed eslesme
+  # bulamazsa sessizce basarili olur ve rc=0 doner.
+  missing=()
+  grep -q "^_tag=$tag\$"             "$PKGBUILD" || missing+=("_tag")
+  grep -q "^_asset=$asset_ver\$"     "$PKGBUILD" || missing+=("_asset")
+  grep -q "^sha256sums=('$sum')\$"   "$PKGBUILD" || missing+=("sha256sums")
+  if ((${#missing[@]})); then
+    cp -- "$backup" "$PKGBUILD"; rm -f -- "$backup"
+    echo "error: could not update: ${missing[*]}" >&2
+    echo "       PKGBUILD restored; its layout may have changed." >&2
+    exit 1
+  fi
+  rm -f -- "$backup"
+  echo "==> PKGBUILD updated"
+fi
+
+echo
+if git -C "$PKGDIR" rev-parse --git-dir >/dev/null 2>&1; then
+  git -C "$PKGDIR" --no-pager diff -- "$PKGBUILD" || true
+else
+  echo "(not a git repository, cannot show the diff)"
+fi
+echo
+
+# --- Derle ve kur ------------------------------------------------------------
+
+if [[ -t 0 ]]; then
+  read -rp "Build and install? [y/N]: " answer || answer=""
+else
+  read -r answer || answer=""
+fi
+case ${answer,,} in
+  y|yes|e|evet) ;;
+  *) echo "==> stopped."
+     ((changed)) && echo "    PKGBUILD left updated; to undo:
+     git -C $PKGDIR checkout -- $PKGBUILD"
+     exit 0 ;;
+esac
+
+# `makepkg -p` mutlak yolu reddediyor (rc=12); calisma dizinine symlink.
+mkdir -p "$CACHE"
+ln -sfn "$PKGBUILD" "$CACHE/PKGBUILD"
+cd "$CACHE"
+export BUILDDIR="$CACHE" SRCDEST="$CACHE" PKGDEST="$CACHE" LOGDEST="$CACHE"
+
+if makepkg -si; then
+  echo
+  echo "==> done: $(pacman -Q nuvio-desktop-local)"
+else
+  rc=$?
+  echo >&2
+  echo "error: makepkg rc=$rc. PKGBUILD left updated; to undo:" >&2
+  echo "     git -C $PKGDIR checkout -- $PKGBUILD" >&2
+  exit "$rc"
+fi

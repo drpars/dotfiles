@@ -4,7 +4,7 @@ Arch Linux + Hyprland kurulumunun yapılandırma dosyaları. Depo `~/.dotfiles`
 altında durur; ev dizinindeki dosyalar buraya **symlink**'tir, yani
 `~/.zshrc` düzenlenmez — `home/.zshrc` düzenlenir.
 
-Kurulumun tamamı **tek komutla** olmaz ve bu bilerek böyledir: sekiz üst
+Kurulumun tamamı **tek komutla** olmaz ve bu bilerek böyledir: dokuz üst
 klasörün üçü otomatik yerleştirilir, kalanı ya root ister, ya hedefi tahmin
 edilemez, ya da başka bir işletim sistemine aittir.
 
@@ -19,6 +19,7 @@ edilemez, ya da başka bir işletim sistemine aittir.
 | `browser/` | Firefox / Zen profil dizini | **Elle, makine başına bir kez** — profil klasörünün adı rastgele, sabit hedef yok |
 | `claude/` | `~/.claude` | **Elle** — kendi betiği var: `claude/install.sh` (geri yön: `save.sh`) |
 | `windows/` | Windows | **Elle** — PowerShell profili ve Scoop kurulum betiği, başka işletim sistemi |
+| `pkgbuild/` | pacman | **Elle, betikle** — depolarda olmayan paketlerin yerel PKGBUILD'leri; `nuvio/` → `nuvio-update` (`config/scripts/`) günceller, derler, kurar |
 | `docs/` | — | Kurulacak bir şey değil, belge |
 
 Otomatik olan üç bölüm archsetup'ın dotfiles ekranından seçilir; symlink ya da
