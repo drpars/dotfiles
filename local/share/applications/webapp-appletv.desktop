@@ -1,0 +1,26 @@
+[Desktop Entry]
+Type=Application
+Name=Apple TV
+Comment=Apple TV Turkiye (Chrome uygulama kipi)
+# Elle yazildi. Bicim ve ~ / \\$ kacis tuzagi icin bkz.
+# webapp-whatsapp.desktop.
+#
+# Bu girdi de special workspace'e baglanmaz (bkz. webapp-primevideo.desktop).
+#
+# 2026-08-06'da ELENMISTI: /tr 404 donuyordu. 2026-09-23'te yeniden olculdu:
+# /tr 200, sayfa "storefront":"tr" tasiyor -- Turkiye vitrini artik web'de
+# servis ediliyor. Arayuz dili ise "locale":"en-GB" (Turkce degil).
+# /de ve /gb 302 -> /tr (konum Turkiye taniniyor).
+#
+# URL'de SON EGIK CIZGI YOK, ve bu bilerek: /tr/ 301 ile /tr'ye yonleniyor,
+# sayfanin canonical'i da /tr. Chrome app_id'yi URL'den turettigi icin
+# (bkz. webapp-netflix.desktop) adres degisirse sinif da degisir. Asagidaki
+# sinif olculdu (2026-09-23, gtk-launch + hyprctl clients).
+Exec=sh -c "exec google-chrome-stable --app=https://tv.apple.com/tr --user-data-dir=\\$HOME/.local/share/webapps/appletv"
+StartupWMClass=chrome-tv.apple.com__tr-Default
+# Sitenin apple-touch-icon'u 180x180 ve sunulan en buyugu o (192/256/512
+# yok); 180 hicolor'in ilan ettiklerinden degil, o yuzden 128'e KUCULTULDU
+# (bkz. webapp-hbomax.desktop). manifest.json da sayfaya yonleniyor.
+Icon=webapp-appletv
+Terminal=false
+Categories=AudioVideo;Video;
