@@ -44,8 +44,8 @@
 # İKİ SÜRÜM DİZESİ, ve ayrı olmaları zorunlu — ölçüldü (2026-09-16): GitHub
 # etiketi `0.1.24-alpha-beta` iken varlıklar `…-0.1.24-alpha.deb` adıyla duruyor.
 # Tek değişkenle kurulan URL 404 alır. _tag yolu, _asset dosya adını verir.
-_tag=0.1.25-alpha
-_asset=0.1.25-alpha
+_tag=0.1.26-alpha
+_asset=0.1.26-alpha
 pkgname=nuvio-desktop-local
 pkgver=${_asset//-/}
 pkgrel=1
@@ -61,7 +61,7 @@ conflicts=('nuvio' 'nuvio-desktop' 'nuvio-desktop-bin' 'nuvio-linux-bin')
 options=('!strip' '!debug')
 source=("nuvio-${_tag}.deb::${url}/releases/download/${_tag}/Nuvio-Linux-${CARCH}-${_asset}.deb")
 noextract=("nuvio-${_tag}.deb")
-sha256sums=('436e3a336201f346e6120b2154fe8989ea0d9729103ebb9b7f16ec221657b777')
+sha256sums=('f7b24df4ef344e4a5971e632647610a8d7448114e29dc381b946b3fafea86c3e')
 
 package() {
   # .deb bir ar arşivi; bsdtar ikisini de okur. Sıkıştırma biçimi upstream
