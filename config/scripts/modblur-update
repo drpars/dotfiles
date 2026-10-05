@@ -1,0 +1,485 @@
+#!/usr/bin/env python3
+"""Firefox-Mod-Blur guncelleyicisi: upstream'i cek, browser/firefox/chrome'u
+guncelle, tokyonight duzenlemesini koru.
+
+  modblur-update            # upstream'in en yeni commit'i, tam akis
+  modblur-update <ref>      # belirli bir upstream commit'i/etiketi
+  modblur-update --check    # hicbir seyi degistirme, sadece raporu bas
+
+NE GUNCELLENIR:
+  - chrome/ altinda zaten duran her .css dosyasi: upstream'de AYNI ADLI dosya
+    (kokte ya da EXTRA MODS altinda, tek eslesme sart). Upstream'de olmayan yerel
+    dosyaya dokunulmaz. Yeni EXTRA MODS dosyasi eklenmez — hangi modlarin
+    kullanilacagi yerel karar.
+  - ASSETS/ upstream'in AYNASIDIR (ekler, gunceller, siler): userChrome.css ve
+    userContent.css onu yol yol referansliyor ve upstream dosyalari tasiyor
+    (olculdu 2026-10-05: oklar ASSETS/icons/ -> ASSETS/icons/arrow/).
+
+YEREL DUZENLEME NASIL KORUNUR — 3 yollu birlestirme:
+  taban = mod-blur.upstream'deki commit (yerel dosyalarin turedigi upstream),
+  yerel = depodaki dosya, hedef = upstream'in yeni hali.
+  - Koyu tema renk blogu ("D A R K   T H E M E   C O L O R S" basligindan
+    sonraki ilk `@media (prefers-color-scheme: dark)`) DEGISKEN BAZINDA
+    birlestirilir: yerelde tabandan farkli olan deger korunur, digerleri
+    upstream'den gelir, yerelin ekledigi (--tokyo-night-*) blogun basinda
+    kalir. Satir bazli birlestirme burada YANLIS sonuc verir: upstream bir
+    degiskeni blok icinde tasiyinca `git merge-file` tasinan satiri "yeni
+    ekleme" sayip upstream degerini sessizce alir (olculdu, a4302d7 -> accf13f).
+  - Dosyanin geri kalani `git merge-file` ile satir bazli birlestirilir. Catisma
+    cikarsa HICBIR dosya yazilmaz; catismali dosyalar onbellege birakilir.
+  - Upstream'in koyu bloga ekledigi YENI degiskenler upstream degeriyle gelir ve
+    raporlanir: sabit renk tasiyanlar tokyonight'a elle cevrilmeyi bekler.
+
+Yazmadan once browser/firefox'un temiz olmasi istenir: guncelleme tek basina,
+okunabilir bir `git diff` olarak kalsin. Firefox degisikligi yeniden
+baslatilinca gorur (chrome/ profile symlink).
+"""
+
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+UPSTREAM = "https://github.com/datguypiko/Firefox-Mod-Blur.git"
+CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "modblur-update"
+CLONE = CACHE / "Firefox-Mod-Blur"
+# ~/.config/scripts bir dizin symlink'i: depo koku betigin GERCEK yolundan bulunur.
+DOTFILES = Path(os.path.realpath(__file__)).parent.parent.parent
+FIREFOX = Path(os.environ.get("MODBLUR_DIR", DOTFILES / "browser/firefox"))
+CHROME = FIREFOX / "chrome"
+LOCK = FIREFOX / "mod-blur.upstream"
+DARK_HEADER = "D A R K   T H E M E   C O L O R S"
+DARK_MEDIA = re.compile(r"@media\s*\(prefers-color-scheme:\s*dark\)\s*\{")
+PLACEHOLDER = "/*@@MODBLUR-DARK-BLOCK@@*/"
+REPORT_KEYS = ("new", "kept", "deleted", "orphan_kept", "notes")
+COLOR_LITERAL = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\(|\bwhite\b|\bblack\b")
+
+
+def die(msg, code=1):
+    print(f"error: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def git(*args, cwd=CLONE, binary=False):
+    r = subprocess.run(["git", *args], cwd=cwd, capture_output=True)
+    if r.returncode != 0:
+        die(f"git {' '.join(args)}: {r.stderr.decode(errors='replace').strip()}")
+    return r.stdout if binary else r.stdout.decode()
+
+
+# ---------------------------------------------------------------- CSS agaci
+# Yalnizca koyu blogun ICINI ayristirir: bosluk, yorum, bildirim, ic ice kural.
+# Her ogenin ham metni tutulur; birlestirilmemis kisim bayt bayt geri yazilir.
+
+def parse_block(s, i):
+    """s[i:]'yi eslesen '}'ye kadar ayristir. (ogeler, '}'nin indeksi) doner."""
+    items = []
+    n = len(s)
+    while i < n:
+        if s[i].isspace():
+            j = i
+            while j < n and s[j].isspace():
+                j += 1
+            items.append(("ws", s[i:j]))
+            i = j
+        elif s.startswith("/*", i):
+            j = s.find("*/", i + 2)
+            if j < 0:
+                raise ValueError("kapanmamis yorum")
+            items.append(("comment", s[i:j + 2]))
+            i = j + 2
+        elif s[i] == "}":
+            return items, i
+        else:
+            j, depth, quote = i, 0, None
+            while j < n:
+                c = s[j]
+                if quote:
+                    if c == "\\":
+                        j += 1
+                    elif c == quote:
+                        quote = None
+                elif c in "\"'":
+                    quote = c
+                elif s.startswith("/*", j):
+                    j = s.find("*/", j + 2) + 1
+                elif c == "(":
+                    depth += 1
+                elif c == ")":
+                    depth -= 1
+                elif depth == 0 and c in ";{}":
+                    break
+                j += 1
+            if j >= n:
+                raise ValueError("blok kapanmadan dosya bitti")
+            if s[j] == "{":
+                children, end = parse_block(s, j + 1)
+                items.append(("rule", s[i:j], children))
+                i = end + 1
+            else:
+                text = s[i:j + 1] if s[j] == ";" else s[i:j]
+                name, _, value = text.partition(":")
+                items.append(("decl", name.strip(), value.rstrip(";").strip(), text))
+                i = j + 1 if s[j] == ";" else j
+    raise ValueError("blok kapanmadan dosya bitti")
+
+
+def render(items):
+    out = []
+    for it in items:
+        if it[0] == "rule":
+            out.append(it[1] + "{" + render(it[2]) + "}")
+        elif it[0] == "decl":
+            out.append(it[3])
+        else:
+            out.append(it[1])
+    return "".join(out)
+
+
+def norm(v):
+    return " ".join(v.split())
+
+
+def walk(items, path=()):
+    """Bloktaki her bildirim: (yol, ad, oge). Yol = ic ice kural basliklari."""
+    for it in items:
+        if it[0] == "decl":
+            yield path, it[1], it
+        elif it[0] == "rule":
+            yield from walk(it[2], path + (norm(it[1]),))
+
+
+def rule_map(items):
+    return {norm(it[1]): it for it in items if it[0] == "rule"}
+
+
+class Merge:
+    """Koyu blogun DEGISKEN ADIYLA birlestirilmesi.
+
+    Eslesme yola degil ada bakar, cunku upstream degiskenleri blok icinde
+    tasiyor: olculdu (a4302d7 -> accf13f), `--button-bgcolor`, `--dark-menu-*`
+    ve digerleri `:root`'tan `&#main-window:not(...)` kurallarina indi,
+    `&:not([lwtheme])` `&#main-window:not([lwtheme])` oldu. Yola bakan eslesme
+    bunlari "upstream kaldirdi" sayar; ada bakan, yeni yerinde yerel degeri yazar.
+    """
+
+    def __init__(self, up, base, loc):
+        self.base_vals = {}
+        for path, name, it in walk(base):
+            self.base_vals.setdefault((path, name), norm(it[2]))
+        self.base_names = {name for _, name, _ in walk(base)}
+        self.up_names = {name for _, name, _ in walk(up)}
+        self.loc_names = {name for _, name, _ in walk(loc)}
+        # Yerelin tabandan ayrildigi her bildirim: ad -> [(yol, oge)].
+        self.changed = {}
+        for path, name, it in walk(loc):
+            b = self.base_vals.get((path, name))
+            if b is None and name in self.base_names:
+                # Yerel baska bir yolda; tabandaki herhangi bir degerle ayniysa degismemis.
+                if norm(it[2]) in {v for (p, n), v in self.base_vals.items() if n == name}:
+                    continue
+            elif b is not None and norm(it[2]) == b:
+                continue
+            self.changed.setdefault(name, []).append((path, it))
+        self.used = set()
+        self.report = {k: [] for k in REPORT_KEYS}
+
+    def pick(self, path, name):
+        cands = self.changed.get(name, [])
+        same = [c for c in cands if c[0] == path]
+        return (same or cands or [None])[0]
+
+    def mark_all(self, items):
+        for _, _, it in walk(items):
+            self.used.add(id(it))
+
+    def items(self, up, base, loc, path=()):
+        # Upstream bu blogu degistirmediyse yerel blok OLDUGU GIBI kalir — yorum,
+        # bosluk ve sira dahil. Yoksa ilk guncelleme yerel bicimi upstream'inkine
+        # cevirip anlamsiz bir diff uretirdi.
+        if loc and render(up) == render(base):
+            self.mark_all(loc)
+            return loc
+        where = " > ".join(path) + " > " if path else ""
+
+        # Yerelin ekledigi bildirimler (ad ne tabanda ne upstream'de), onlerindeki
+        # yorum/bosluk zinciriyle: kuralin basina, yereldeki sirayla.
+        head, pending, after = [], [], None
+        for k, it in enumerate(loc):
+            if it[0] in ("ws", "comment"):
+                pending.append(it)
+            elif it[0] == "decl" and it[1] not in self.base_names and it[1] not in self.up_names:
+                head.extend(pending + [it])
+                self.used.add(id(it))
+                pending = []
+                nxt = loc[k + 1] if k + 1 < len(loc) else None
+                after = nxt if nxt and nxt[0] == "ws" else None
+            else:
+                pending = []
+        rest = list(up)
+        out = []
+        if head:
+            # Ekin ardindaki bosluk yerelden gelir (paletten sonraki bos satir),
+            # upstream'in ilk boslugu onun yerine gecer.
+            lead = rest.pop(0) if rest and rest[0][0] == "ws" else None
+            out.extend(head)
+            if after or lead:
+                out.append(after or lead)
+
+        base_rules, loc_rules = rule_map(base), rule_map(loc)
+        for it in rest:
+            if it[0] in ("ws", "comment"):
+                out.append(it)
+            elif it[0] == "decl":
+                name, upv = it[1], norm(it[2])
+                c = self.pick(path, name)
+                if c is not None:
+                    out.append(c[1])
+                    self.used.add(id(c[1]))
+                    b = self.base_vals.get((path, name))
+                    if b is not None and upv != b:
+                        self.report["kept"].append(
+                            f"{where}{name}: upstream {b!r} -> {upv!r}, yerel {norm(c[1][2])!r} korundu")
+                elif name in self.base_names and name not in self.loc_names:
+                    self.report["deleted"].append(f"{where}{name}")
+                else:
+                    out.append(it)
+                    if name not in self.base_names:
+                        tag = "renk" if COLOR_LITERAL.search(it[2]) else "renk degil"
+                        self.report["new"].append(f"{where}{name}: {norm(it[2])}  [{tag}]")
+            else:
+                key = norm(it[1])
+                b, l = base_rules.get(key), loc_rules.get(key)
+                children = self.items(it[2], b[2] if b else [], l[2] if l else [], path + (key,))
+                out.append(("rule", it[1], children))
+        return out
+
+    def run(self, up, base, loc):
+        out = self.items(up, base, loc)
+        # Yerelde degistirilmis ama upstream blokta hicbir yerde gecmeyen
+        # bildirimler DUSURULMEZ: cogu Firefox'un kendi degiskeni (--button-bgcolor,
+        # --dark-menu-*) ve mod'un CSS'inde kullanilmamasi olu oldugunu gostermez.
+        # Ilk ust duzey kuralin (:root) sonuna eklenir ve raporlanir.
+        left = [(p, it) for cands in self.changed.values() for p, it in cands if id(it) not in self.used]
+        if left:
+            i = next((k for k, it in enumerate(out) if it[0] == "rule"), None)
+            if i is None:
+                raise ValueError("koyu blokta kural yok")
+            rule = out[i]
+            kids = list(rule[2])
+            indent = next((x[1].split("\n")[-1] for x in kids if x[0] == "ws" and "\n" in x[1]), "  ")
+            tail = kids.pop() if kids and kids[-1][0] == "ws" else None
+            for p, it in left:
+                kids.extend([("ws", "\n" + indent), it])
+                self.report["orphan_kept"].append(
+                    f"{' > '.join(p) or '(kok)'} > {it[1]}: {norm(it[2])}")
+            if tail:
+                kids.append(tail)
+            out[i] = ("rule", rule[1], kids)
+        return out
+
+
+# ---------------------------------------------------------------- dosya birlestirme
+
+def find_dark(s):
+    """Koyu renk blogunun govdesi: (bas, son) — s[bas:son], '{' ile '}' arasi."""
+    h = s.find(DARK_HEADER)
+    if h < 0:
+        return None
+    m = DARK_MEDIA.search(s, h)
+    if not m:
+        return None
+    _, end = parse_block(s, m.end())
+    return m.end(), end
+
+
+def merge_file(name, base, loc, up, report):
+    """Uc metin -> (birlesmis metin, catisma var mi)."""
+    blocks = [find_dark(t) for t in (base, loc, up)]
+    merged_block = None
+    if all(blocks):
+        parts = []
+        for t, (a, b) in zip((base, loc, up), blocks):
+            parts.append(parse_block(t[:b] + "}", a)[0])
+        m = Merge(parts[2], parts[0], parts[1])
+        merged_block = render(m.run(parts[2], parts[0], parts[1]))
+        for k, v in m.report.items():
+            report[k].extend(f"{name}: {x}" for x in v)
+        base, loc, up = (t[:a] + PLACEHOLDER + t[b:] for t, (a, b) in zip((base, loc, up), blocks))
+    elif any(blocks):
+        report["notes"].append(f"{name}: koyu blok uc surumun hepsinde bulunamadi, satir bazli birlestirildi")
+
+    with tempfile.TemporaryDirectory() as d:
+        paths = []
+        for label, t in (("local", loc), ("base", base), ("upstream", up)):
+            p = Path(d, label)
+            p.write_text(t, newline="")
+            paths.append(str(p))
+        r = subprocess.run(["git", "merge-file", "-p", "--diff3",
+                            "-L", "yerel", "-L", "taban", "-L", "upstream", *paths],
+                           capture_output=True)
+    if r.returncode < 0 or r.returncode > 127:
+        die(f"git merge-file {name}: {r.stderr.decode(errors='replace')}")
+    text = r.stdout.decode()
+    if merged_block is not None:
+        if text.count(PLACEHOLDER) != 1:
+            return text, True
+        text = text.replace(PLACEHOLDER, merged_block)
+    return text, r.returncode != 0
+
+
+def decode(raw):
+    """(LF metin, CRLF miydi). Satir sonu dosya basina olculur: userContent.css
+    upstream'de CRLF, digerleri LF."""
+    t = raw.decode("utf-8")
+    crlf = "\r\n" in t
+    return t.replace("\r\n", "\n"), crlf
+
+
+# ---------------------------------------------------------------- akis
+
+def upstream_files(ref):
+    return git("ls-tree", "-r", "--name-only", "-z", ref).split("\0")[:-1]
+
+
+def by_basename(tree, base):
+    hits = [p for p in tree if p.rsplit("/", 1)[-1] == base and not p.startswith("ASSETS/")]
+    root = [p for p in hits if "/" not in p]
+    return root if root else hits
+
+
+def main():
+    args = sys.argv[1:]
+    check = "--check" in args
+    if "-h" in args or "--help" in args:
+        print(__doc__.strip())
+        return
+    refs = [a for a in args if not a.startswith("-")]
+    unknown = [a for a in args if a.startswith("-") and a != "--check"]
+    if unknown:
+        die(f"bilinmeyen secenek: {unknown[0]}", 2)
+
+    if not CHROME.is_dir():
+        die(f"{CHROME} yok")
+    if not LOCK.is_file():
+        die(f"{LOCK} yok: yerel dosyalarin turedigi upstream commit'i bilinmiyor")
+    base_ref = LOCK.read_text().split()[0]
+
+    CACHE.mkdir(parents=True, exist_ok=True)
+    if not (CLONE / ".git").is_dir():
+        print(f"upstream klonlaniyor: {UPSTREAM}")
+        git("clone", "-q", UPSTREAM, str(CLONE), cwd=CACHE)
+    else:
+        git("fetch", "-q", "--tags", "origin")
+    target = git("rev-parse", "--verify", (refs[0] if refs else "origin/HEAD") + "^{commit}").strip()
+    base_ref = git("rev-parse", "--verify", base_ref + "^{commit}").strip()
+
+    print(f"taban : {base_ref[:12]}  {git('log', '-1', '--format=%ad %s', '--date=short', base_ref).strip()}")
+    print(f"hedef : {target[:12]}  {git('log', '-1', '--format=%ad %s', '--date=short', target).strip()}")
+    if target == base_ref:
+        print("zaten guncel.")
+        return
+
+    up_tree, base_tree = upstream_files(target), upstream_files(base_ref)
+    report = {k: [] for k in REPORT_KEYS}
+    writes, deletes, conflicts, untouched = {}, [], [], []
+
+    for f in sorted(CHROME.glob("*.css")):
+        up_hits, base_hits = by_basename(up_tree, f.name), by_basename(base_tree, f.name)
+        if len(up_hits) != 1:
+            untouched.append(f"{f.name} (upstream'de {len(up_hits)} eslesme)")
+            continue
+        up_raw = git("show", f"{target}:{up_hits[0]}", binary=True)
+        loc_raw = f.read_bytes()
+        if len(base_hits) != 1:
+            report["notes"].append(f"{f.name}: tabanda yok, yerel surum korunarak upstream ile birlestirilemez — atlandi")
+            untouched.append(f.name)
+            continue
+        base_raw = git("show", f"{base_ref}:{base_hits[0]}", binary=True)
+        if loc_raw == base_raw:
+            if up_raw != loc_raw:
+                writes[f] = up_raw
+            continue
+        (base, _), (loc, _), (up, crlf) = decode(base_raw), decode(loc_raw), decode(up_raw)
+        text, conflict = merge_file(f.name, base, loc, up, report)
+        out = (text.replace("\n", "\r\n") if crlf else text).encode()
+        if conflict:
+            conflicts.append((f, out))
+        elif out != loc_raw:
+            writes[f] = out
+
+    # ASSETS: upstream'in aynasi.
+    up_assets = {p for p in up_tree if p.startswith("ASSETS/")}
+    for p in sorted(up_assets):
+        dst = CHROME / p
+        raw = git("show", f"{target}:{p}", binary=True)
+        if not dst.is_file() or dst.read_bytes() != raw:
+            writes[dst] = raw
+    for dst in sorted((CHROME / "ASSETS").rglob("*")):
+        if dst.is_file() and str(dst.relative_to(CHROME)) not in up_assets:
+            deletes.append(dst)
+
+    # ---- rapor
+    rel = lambda p: p.relative_to(CHROME)
+    print(f"\nyazilacak : {len(writes)} dosya")
+    for p in sorted(writes):
+        print(f"  {'~' if p.exists() else '+'} {rel(p)}")
+    print(f"silinecek : {len(deletes)} dosya")
+    for p in deletes:
+        print(f"  - {rel(p)}")
+    if untouched:
+        print("dokunulmayan yerel dosyalar:")
+        for u in untouched:
+            print(f"  = {u}")
+    titles = {
+        "new": "UPSTREAM'IN KOYU BLOGA EKLEDIGI DEGISKENLER (upstream degeriyle geldi; [renk] olanlar tokyonight'a cevrilmeyi bekliyor)",
+        "kept": "upstream'in degistirdigi ama yerel degerin korundugu degiskenler",
+        "deleted": "yerelde silinmis, upstream'de duran degiskenler (silik kaldi)",
+        "orphan_kept": "upstream'in koyu blokta artik HIC tanimlamadigi, yerel degeriyle :root sonuna eklenenler (olu olabilir, elle bak)",
+        "notes": "notlar",
+    }
+    for k, title in titles.items():
+        if report[k]:
+            print(f"\n{title}:")
+            for x in report[k]:
+                print(f"  {x}")
+
+    if conflicts:
+        cdir = CACHE / "conflicts"
+        cdir.mkdir(exist_ok=True)
+        print("\nCATISMA — hicbir dosya yazilmadi. Catismali dosyalar:")
+        for f, out in conflicts:
+            (cdir / f.name).write_bytes(out)
+            print(f"  {cdir / f.name}")
+        sys.exit(1)
+
+    if check:
+        print("\n--check: hicbir sey yazilmadi.")
+        return
+
+    # rc ayri denetlenir: depo disinda `git status` bos stdout + rc=128 doner ve
+    # bos cikti "temiz" okunurdu.
+    st = subprocess.run(["git", "status", "--porcelain", "--", str(FIREFOX)],
+                        cwd=FIREFOX, capture_output=True, text=True)
+    if st.returncode != 0:
+        die(f"git status {FIREFOX}: {st.stderr.strip()}")
+    if st.stdout:
+        die(f"{FIREFOX} temiz degil, once commit'le ya da geri al:\n{st.stdout}")
+
+    for p, raw in writes.items():
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(raw)
+    for p in deletes:
+        p.unlink()
+    for d in sorted((CHROME / "ASSETS").rglob("*"), reverse=True):
+        if d.is_dir() and not any(d.iterdir()):
+            d.rmdir()
+    LOCK.write_text(target + "\n")
+    print(f"\nyazildi. taban artik {target[:12]}. Gozden gecir: git -C {FIREFOX} diff --stat -- .")
+    print("Firefox degisikligi yeniden baslatilinca gorur.")
+
+
+if __name__ == "__main__":
+    main()

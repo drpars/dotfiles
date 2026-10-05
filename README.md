@@ -16,7 +16,7 @@ edilemez, ya da başka bir işletim sistemine aittir.
 | `home/` | `~` | **Otomatik** — archsetup |
 | `local/share/` | `~/.local/share` | **Otomatik** — archsetup (`applications`, `icons`, `color-schemes`) |
 | `greetd/` | `/etc/greetd`, `/etc/tuigreet`, `/etc/systemd/system` | **Elle / root** — kendi betiği var: `greetd/install.sh` (ayrışma denetimi: `install.sh check`) |
-| `browser/` | Firefox / Zen profil dizini | **Elle, makine başına bir kez** — profil klasörünün adı rastgele, sabit hedef yok |
+| `browser/` | Firefox / Zen profil dizini | **Elle, makine başına bir kez** — profil klasörünün adı rastgele, sabit hedef yok; mod güncellemesi `modblur-update` |
 | `claude/` | `~/.claude` | **Elle** — kendi betiği var: `claude/install.sh` (geri yön: `save.sh`) |
 | `windows/` | Windows | **Elle** — PowerShell profili ve Scoop kurulum betiği, başka işletim sistemi |
 | `pkgbuild/` | pacman | **Elle, betikle** — depolarda olmayan paketlerin yerel PKGBUILD'leri; `nuvio/` → `nuvio-update` (`config/scripts/`) günceller, derler, kurar |
@@ -38,6 +38,12 @@ rm -rf "$P/chrome" && ln -s ~/.dotfiles/browser/firefox/chrome "$P/chrome"
 
 `ln -sfn` ile yapılmaz: hedef **gerçek dizinken** bağ onun *içine* düşer.
 Otomatikleşmemesinin tek sebebi profil adının rastgele olması.
+
+Firefox-Mod-Blur güncellemesi `modblur-update` (`config/scripts/`) ile yapılır:
+upstream'i çeker, `chrome/`'daki dosyaları ve `ASSETS/`'i günceller, tokyonight
+düzenlemesini 3 yollu birleştirmeyle korur. Taban, yani yerel dosyaların
+türediği upstream commit'i, `browser/firefox/mod-blur.upstream`'de durur. Önce
+`modblur-update --check` raporu basar.
 
 ## Makineye özgü ayarlar
 
