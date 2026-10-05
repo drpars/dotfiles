@@ -22,6 +22,15 @@ local/share/applications/mimeinfo.cache
 # yazilsaydi gercek dosyayi da yok sayardi.
 local/share/applications/mimeapps.list
 
+# Ayni sebeple Waydroid her Android uygulamasi icin buraya bir girdi uretiyor;
+# Icon= satiri ~/.local/share/waydroid altindaki MUTLAK bir yolu gosteriyor,
+# yani girdi makineye ve o makinedeki Android kurulumuna bagli.
+local/share/applications/waydroid.*.desktop
+
+# ~/.local/share/icons da symlink: Steam bir oyunun kisayolunu olustururken
+# ikonunu buraya yaziyor. Karsiligi olan .desktop depoda yok, uretilmis dosya.
+local/share/icons/hicolor/*/apps/steam_icon_*.png
+
 
 # GTK dosya yoneticisi yer imleri: kullanici durumu ve yerele bagli
 # (masaustunde ~/Projects, dizustunde ~/Projeler). GTK bu dosyada degisken
