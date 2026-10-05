@@ -16,7 +16,7 @@ Comment=Apple TV Turkiye (Chrome uygulama kipi)
 # sayfanin canonical'i da /tr. Chrome app_id'yi URL'den turettigi icin
 # (bkz. webapp-netflix.desktop) adres degisirse sinif da degisir. Asagidaki
 # sinif olculdu (2026-09-23, gtk-launch + hyprctl clients).
-Exec=sh -c "exec google-chrome-stable --app=https://tv.apple.com/tr --user-data-dir=\\$HOME/.local/share/webapps/appletv"
+Exec=sh -c "exec google-chrome-stable --app=https://tv.apple.com/tr?l=tr --user-data-dir=\\$HOME/.local/share/webapps/appletv"
 StartupWMClass=chrome-tv.apple.com__tr-Default
 # Sitenin apple-touch-icon'u 180x180 ve sunulan en buyugu o (192/256/512
 # yok); 180 hicolor'in ilan ettiklerinden degil, o yuzden 128'e KUCULTULDU
