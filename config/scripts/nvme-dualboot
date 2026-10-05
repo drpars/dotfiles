@@ -1,0 +1,275 @@
+#!/usr/bin/env bash
+# nvme-dualboot — dual boot helper for a VFIO / GPU-passthrough setup.
+#
+# Two independent mechanisms, both included:
+#
+#   1. efibootmgr (UEFI BootOrder):
+#        toggle the firmware boot order between the Linux host (systemd-boot)
+#        and Windows (native, via its own firmware entry on the Crucial ESP).
+#
+#   2. systemd-boot menu (bootctl list):
+#        make Windows appear in the systemd-boot menu by copying the Windows
+#        bootloader directory onto the host ESP (systemd-boot auto-detects
+#        /EFI/Microsoft/Boot/Bootmgfw.efi), and hide it again by renaming the
+#        directory away.
+#
+# The Crucial NVMe may appear as /dev/nvme0n1 on some boots and /dev/nvme1n1 on
+# others. The script resolves it via /dev/disk/by-id, so the node name never
+# matters.
+#
+# Usage:
+#   nvme-dualboot                toggle BootOrder: host <-> native (default)
+#   nvme-dualboot host           force Linux/systemd-boot as the default
+#   nvme-dualboot windows        force Windows (Crucial NVMe) as the default
+#   nvme-dualboot next           one-shot: boot Windows on the next reboot only
+#   nvme-dualboot menu           show Windows in the systemd-boot menu (bootctl list)
+#   nvme-dualboot menu-hide      hide Windows from the systemd-boot menu
+#   nvme-dualboot status         show BootOrder mode + menu state
+#   nvme-dualboot disk           print the stable by-id path for the QEMU -drive line
+#
+# Needs root; when run unprivileged it re-execs itself via sudo (prompting for
+# the sudo password). The menu copy mounts the Crucial ESP read-only and writes
+# to the host ESP.
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+# by-id model substring of the passed-through NVMe (the drive MODEL, not brand).
+DISK_MODEL="CT1000P3PSSD8"
+# Case-insensitive marker of the Windows boot entry's device path.
+WINDOWS_PATH_MARKER="MICROSOFT"
+# Case-insensitive filename of the systemd-boot loader in its UEFI entry.
+LINUX_PATH_MARKER="SYSTEMD-BOOTX64.EFI"
+# Host ESP mount point + the copied Windows bootloader location.
+HOST_ESP="/efi"
+WINDOWS_SRC="EFI/Microsoft"
+WINDOWS_DST="${HOST_ESP}/EFI/Microsoft"
+WINDOWS_HIDDEN="${HOST_ESP}/EFI/Microsoft.disabled"
+
+die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
+info() { printf '%s\n' "$*"; }
+warn() { printf 'warning: %s\n' "$*" >&2; }
+
+command -v efibootmgr >/dev/null 2>&1 || die "efibootmgr not installed (pacman -S efibootmgr)"
+[ -d /sys/firmware/efi ]        || die "not booted in UEFI mode"
+
+# --- self-elevate to root (sudo prompts for the password itself) ---
+if [ "$(id -u)" -ne 0 ]; then
+  command -v sudo >/dev/null 2>&1 || die "root required and 'sudo' is not installed — run as root"
+  exec sudo "$(readlink -f "${BASH_SOURCE[0]}")" "$@"
+fi
+
+# ---------------------------------------------------------------------------
+# Disk discovery
+# ---------------------------------------------------------------------------
+find_disk() {
+  local id
+  id="$(find /dev/disk/by-id -maxdepth 1 -type l -name "*${DISK_MODEL}*" \
+         ! -name '*-part*' 2>/dev/null | sort | head -n1)"
+  if [ -z "$id" ]; then
+    id="$(lsblk -dno PATH,MODEL 2>/dev/null | awk -v m="$DISK_MODEL" 'index($0,m){print $1; exit}')"
+    [ -n "$id" ] || die "no disk matching '${DISK_MODEL}' found in /dev/disk/by-id or lsblk"
+    warn "no by-id symlink for '${DISK_MODEL}'; falling back to ${id} (node name may change)"
+  fi
+  printf '%s\n' "$id"
+}
+
+host_esp_partuuid() {
+  local target dev
+  target="$(findmnt -rno TARGET -t vfat | awk '$1=="/efi"||$1=="/boot/efi"||$1=="/boot"{print $1; exit}')"
+  [ -n "$target" ] || return 1
+  dev="$(findmnt -rno SOURCE --target "$target")"
+  lsblk -rno PARTUUID "$dev"
+}
+
+crucial_esp_partuuid() {
+  lsblk -rno NAME,FSTYPE,PARTUUID "$DISK_NODE" | awk '$2=="vfat"{print $3; exit}'
+}
+
+crucial_esp_path() {
+  lsblk -rno PATH,FSTYPE "$DISK_NODE" | awk '$2=="vfat"{print $1; exit}'
+}
+
+# Return the 4-hex boot number of the first entry matching a case-insensitive ERE.
+bootnum_matching() {
+  printf '%s\n' "$EFI_RAW" \
+    | grep -E '^Boot[0-9A-Fa-f]{4}\*?' \
+    | grep -Ei "$1" \
+    | head -n1 \
+    | sed -E 's/^Boot([0-9A-Fa-f]{4}).*/\1/' \
+    | tr 'a-f' 'A-F'
+}
+
+label_of() {
+  printf '%s\n' "$EFI_RAW" \
+    | grep -E "^Boot${1}\\*? " \
+    | head -n1 \
+    | sed -E 's/^Boot[0-9A-Fa-f]{4}\*? //; s/\t.*//'
+}
+
+load_efi() {
+  EFI_RAW="$(efibootmgr -v)"
+  BOOTORDER="$(printf '%s\n' "$EFI_RAW" | sed -nE 's/^BootOrder: *([0-9A-Fa-f,]+).*/\1/p' | tr 'a-f' 'A-F')"
+  [ -n "$BOOTORDER" ] || die "could not read BootOrder from efibootmgr"
+
+  HOST_ESP_PUUID="$(host_esp_partuuid || true)"
+  [ -n "$HOST_ESP_PUUID" ] || die "no vfat ESP mounted at /efi, /boot/efi, or /boot"
+
+  CRUCIAL_ESP_PUUID="$(crucial_esp_partuuid || true)"
+  [ -n "$CRUCIAL_ESP_PUUID" ] || die "no vfat/ESP partition found on ${DISK_NODE}"
+
+  LINUX_ENTRY="$(bootnum_matching "GPT,${HOST_ESP_PUUID}.*${LINUX_PATH_MARKER}")"
+  [ -n "$LINUX_ENTRY" ] || LINUX_ENTRY="$(bootnum_matching "${LINUX_PATH_MARKER}")"
+  [ -n "$LINUX_ENTRY" ] || die "no systemd-boot UEFI entry found (marker: ${LINUX_PATH_MARKER})"
+
+  WIN_ENTRY="$(bootnum_matching "GPT,${CRUCIAL_ESP_PUUID}.*${WINDOWS_PATH_MARKER}.*\.EFI")"
+  [ -n "$WIN_ENTRY" ] || WIN_ENTRY="$(bootnum_matching "${WINDOWS_PATH_MARKER}.*\.EFI")"
+  [ -n "$WIN_ENTRY" ] || die "no Windows Boot Manager entry found on ${DISK_NODE} (marker: ${WINDOWS_PATH_MARKER})"
+}
+
+current_mode() {
+  local first="${BOOTORDER%%,*}"
+  if   [ "$first" = "$WIN_ENTRY" ];   then printf 'native'
+  elif [ "$first" = "$LINUX_ENTRY" ]; then printf 'host'
+  else printf 'unknown'; fi
+}
+
+# Move $1 to the front of the current BootOrder, preserving the rest.
+reorder() {
+  local first="$1" out="$1" e
+  local IFS=,
+  for e in $BOOTORDER; do
+    [ "$e" = "$first" ] && continue
+    out="${out},${e}"
+  done
+  printf '%s' "$out"
+}
+
+apply_mode() {
+  local want="$1" entry label
+  case "$want" in
+    host)   entry="$LINUX_ENTRY"; label="Linux / systemd-boot (VM passthrough)";;
+    native) entry="$WIN_ENTRY";   label="Windows on Crucial NVMe (native)";;
+    *) die "internal: bad mode '$want'";;
+  esac
+
+  if [ "${BOOTORDER%%,*}" = "$entry" ]; then
+    info "already in ${want} mode (Boot${entry} is first)"
+    return 0
+  fi
+
+  efibootmgr -o "$(reorder "$entry")"
+  info "set ${want} mode — next default boot: ${label}"
+  info "  first entry now: Boot${entry}  $(label_of "$entry")"
+}
+
+# ---------------------------------------------------------------------------
+# systemd-boot menu (bootctl list)
+# ---------------------------------------------------------------------------
+menu_visible() { [ -e "$WINDOWS_DST" ]; }
+
+cmd_menu() {
+  local esp dir
+  esp="$(crucial_esp_path)"
+  [ -n "$esp" ] || die "no vfat ESP partition found on the Crucial disk"
+  dir="$(mktemp -d /run/nvme-dualboot.XXXXXX)" || die "mktemp failed"
+
+  if ! mount -o ro "$esp" "$dir"; then
+    rmdir "$dir"
+    die "cannot mount ${esp} read-only (is the disk passed to the VM?)"
+  fi
+  if [ ! -d "$dir/$WINDOWS_SRC" ]; then
+    umount "$dir"; rmdir "$dir"
+    die "no ${WINDOWS_SRC} on the Crucial disk's ESP (is Windows installed there?)"
+  fi
+
+  # Always re-sync from the Crucial ESP so the copy never goes stale.
+  rm -rf "$WINDOWS_DST" "$WINDOWS_HIDDEN"
+  cp -a "$dir/$WINDOWS_SRC" "$WINDOWS_DST"
+  umount "$dir"; rmdir "$dir"
+  info "re-copied Windows bootloader to ${WINDOWS_DST} — now in the systemd-boot menu"
+}
+
+cmd_menu_hide() {
+  if menu_visible; then
+    [ -e "$WINDOWS_HIDDEN" ] && rm -rf "$WINDOWS_HIDDEN"
+    mv "$WINDOWS_DST" "$WINDOWS_HIDDEN"
+    info "Windows hidden from the systemd-boot menu (moved to ${WINDOWS_HIDDEN})"
+  else
+    info "Windows already hidden from the systemd-boot menu"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+cmd_toggle() {
+  local m; m="$(current_mode)"
+  if [ "$m" = native ]; then apply_mode host; else apply_mode native; fi
+}
+
+cmd_next() {
+  efibootmgr -n "$WIN_ENTRY"
+  info "one-shot set: next reboot boots Windows (Boot${WIN_ENTRY}); persistent order unchanged"
+}
+
+cmd_status() {
+  info "dual-boot status"
+  info "  boot order mode:  $(current_mode)"
+  info "  menu (bootctl):   $([ -e "$WINDOWS_DST" ] && echo visible || echo hidden)"
+  info "  Crucial disk:     ${DISK_BYID}"
+  info "    node (now):     ${DISK_NODE}  (may change between boots)"
+  info "  Linux entry:      Boot${LINUX_ENTRY}  $(label_of "$LINUX_ENTRY")"
+  info "  Windows entry:    Boot${WIN_ENTRY}  $(label_of "$WIN_ENTRY")"
+  if [ "$(current_mode)" = unknown ]; then
+    warn "neither Linux nor Windows is first in BootOrder — run toggle/host/windows"
+  fi
+}
+
+cmd_disk() {
+  printf '%s\n' "$DISK_BYID"
+  printf 'current node: %s (may change between boots — prefer the by-id path)\n' "$DISK_NODE" >&2
+}
+
+usage() {
+  cat <<'EOF'
+Usage: nvme-dualboot [command]
+
+Commands (default: toggle)
+  toggle       flip BootOrder: host <-> native (Windows)
+  host         force Linux/systemd-boot as the default boot
+  windows      force Windows (Crucial NVMe) as the default boot
+  next         one-shot: boot Windows on the next reboot only
+  menu         show Windows in the systemd-boot menu (bootctl list)
+  menu-hide    hide Windows from the systemd-boot menu
+  status       show boot-order mode + menu state
+  disk         print the stable /dev/disk/by-id path for the QEMU -drive line
+
+Aliases: host=linux/vm, windows=native/win, next=once, menu=menu-show, menu-hide=menu-off.
+
+Root is required; when run unprivileged the script re-execs itself via sudo.
+EOF
+}
+
+main() {
+  DISK_BYID="$(find_disk)"
+  DISK_NODE="$(readlink -f "$DISK_BYID")"
+
+  local cmd="${1:-toggle}"
+  case "$cmd" in
+    toggle)                 load_efi; cmd_toggle;;
+    host|linux|vm)          load_efi; apply_mode host;;
+    windows|native|win)     load_efi; apply_mode native;;
+    next|once)              load_efi; cmd_next;;
+    menu|menu-show)         cmd_menu;;
+    menu-hide|menu-off)     cmd_menu_hide;;
+    status)                 load_efi; cmd_status;;
+    disk|path|byid)         cmd_disk;;
+    help|-h|--help)         usage;;
+    *)                      usage >&2; die "unknown command: $cmd";;
+  esac
+}
+
+main "$@"
