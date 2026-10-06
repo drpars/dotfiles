@@ -39,6 +39,9 @@ alias jpgtopng='mogrify -format png'
 # Kurulum
 alias install='yay -S --needed'
 alias remove='sudo pacman -R'
+# Arama: resmi depo + AUR. Satir basi kaynagi soyler (extra/, aur/), kurulu
+# olanlar "(Kuruldu)" isaretli; resmi depo sonuclari en altta.
+alias search='yay -Ss'
 # Güncelleme
 # update: yalnizca resmi Arch depolari (core/extra/multilib). AUR'a dokunmaz.
 # yay uzerinden degil pacman'la: yay-bin'in kendisi bir AUR paketi, bozuldugu
