@@ -1,0 +1,27 @@
+[Desktop Entry]
+Type=Application
+Name=Claude
+Comment=Claude (Chrome uygulama kipi)
+# Elle yazildi. Bicim ve ~ / \\$ kacis tuzagi icin bkz.
+# webapp-whatsapp.desktop.
+#
+# Bu girdi de special workspace'e baglanmaz (bkz. webapp-primevideo.desktop).
+#
+# curl claude.ai'ye 403 aliyor, ama bu bolge engeli degil: yanit
+# "cf-mitigated: challenge" tasiyor, yani Cloudflare'in bot sinamasi
+# (2026-10-08). Tarayicida acilinca sayfa yuklendi (baslik "Claude"); oturum
+# acma bu profilde ayrica yapilir.
+#
+# URL'deki SON EGIK CIZGI onemli (bkz. webapp-netflix.desktop): Chrome app_id'yi
+# URL'den turettigi icin .../ ile ... farkli sinif uretir.
+Exec=sh -c "exec google-chrome-stable --app=https://claude.ai/ --user-data-dir=\\$HOME/.local/share/webapps/claude"
+# Sinif olculdu (2026-10-08, gtk-launch + hyprctl clients): pencere basligi
+# "Claude".
+StartupWMClass=chrome-claude.ai__-Default
+# Kurulu hicbir temada claude ikonu yok (Gtk.IconTheme.lookup_icon: claude,
+# claude-ai, claude-desktop, anthropic -> None). Sitenin apple-touch-icon'u
+# 180x180; 180 hicolor'in ilan ettiklerinden degil, o yuzden 128'e
+# KUCULTULDU (bkz. webapp-hbomax.desktop).
+Icon=webapp-claude
+Terminal=false
+Categories=Utility;
