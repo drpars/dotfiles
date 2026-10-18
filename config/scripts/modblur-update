@@ -32,7 +32,8 @@ YEREL DUZENLEME NASIL KORUNUR — 3 yollu birlestirme:
 
 Yazmadan once browser/firefox'un temiz olmasi istenir: guncelleme tek basina,
 okunabilir bir `git diff` olarak kalsin. Firefox degisikligi yeniden
-baslatilinca gorur (chrome/ profile symlink).
+baslatilinca gorur (chrome/ profile symlink). Profilin chrome/'u bu depoyu
+gostermiyorsa her calismada uyari basilir.
 """
 
 import os
@@ -340,6 +341,37 @@ def decode(raw):
 
 # ---------------------------------------------------------------- akis
 
+def check_profiles():
+    """Firefox profilindeki chrome/ bu depoyu gostermiyorsa uyar. Guncelleme depoya
+    yazar; profil kopya tasiyorsa Firefox onu hic gormez. Olculdu (2026-10-18):
+    symlink bir makinede kopyayla degismisti, `git pull` depoyu guncel gosterirken
+    profil iki ay eski kaldi. Yalnizca chrome/'u OLAN profillere bakilir."""
+    roots = [Path.home() / ".mozilla/firefox",
+             Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "mozilla/firefox"]
+    want = os.path.realpath(CHROME)
+    seen = 0
+    for root in roots:
+        ini = root / "profiles.ini"
+        if not ini.is_file():
+            continue
+        for line in ini.read_text(errors="replace").splitlines():
+            if not line.startswith("Path="):
+                continue
+            prof = Path(line[5:].strip())
+            chrome = (root / prof if not prof.is_absolute() else prof) / "chrome"
+            if not chrome.exists() and not chrome.is_symlink():
+                continue
+            if os.path.realpath(chrome) == want:
+                seen += 1
+                continue
+            kind = "symlink, baska yeri gosteriyor" if chrome.is_symlink() else "gercek dizin, kopya"
+            print(f"UYARI: {chrome} {kind} — Firefox guncellemeyi gormez. Duzeltme:\n"
+                  f"  mv '{chrome}' '{chrome}.bak' && ln -s '{CHROME}' '{chrome}'",
+                  file=sys.stderr)
+    if not seen:
+        print(f"UYARI: hicbir Firefox profilinin chrome/'u {CHROME}'u gostermiyor", file=sys.stderr)
+
+
 def upstream_files(ref):
     return git("ls-tree", "-r", "--name-only", "-z", ref).split("\0")[:-1]
 
@@ -366,6 +398,8 @@ def main():
     if not LOCK.is_file():
         die(f"{LOCK} yok: yerel dosyalarin turedigi upstream commit'i bilinmiyor")
     base_ref = LOCK.read_text().split()[0]
+    # "zaten guncel" durumunda da calissin: sorun depo degil profil olabilir.
+    check_profiles()
 
     CACHE.mkdir(parents=True, exist_ok=True)
     if not (CLONE / ".git").is_dir():
