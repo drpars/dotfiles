@@ -44,8 +44,8 @@
 # İKİ SÜRÜM DİZESİ, ve ayrı olmaları zorunlu — ölçüldü (2026-09-16): GitHub
 # etiketi `0.1.24-alpha-beta` iken varlıklar `…-0.1.24-alpha.deb` adıyla duruyor.
 # Tek değişkenle kurulan URL 404 alır. _tag yolu, _asset dosya adını verir.
-_tag=0.1.26-alpha
-_asset=0.1.26-alpha
+_tag=0.1.31-alpha
+_asset=0.1.31-alpha
 pkgname=nuvio-desktop-local
 pkgver=${_asset//-/}
 pkgrel=1
@@ -61,7 +61,7 @@ conflicts=('nuvio' 'nuvio-desktop' 'nuvio-desktop-bin' 'nuvio-linux-bin')
 options=('!strip' '!debug')
 source=("nuvio-${_tag}.deb::${url}/releases/download/${_tag}/Nuvio-Linux-${CARCH}-${_asset}.deb")
 noextract=("nuvio-${_tag}.deb")
-sha256sums=('f7b24df4ef344e4a5971e632647610a8d7448114e29dc381b946b3fafea86c3e')
+sha256sums=('a810bd8b92556b450c80c33a8c755fc36b8190bb5aa315592d2df4f3a1cfa07c')
 
 package() {
   # .deb bir ar arşivi; bsdtar ikisini de okur. Sıkıştırma biçimi upstream
@@ -71,14 +71,11 @@ package() {
   install -dm755 "$pkgdir/usr/bin"
   ln -s /opt/nuvio/bin/Nuvio "$pkgdir/usr/bin/nuvio"
 
-  # jpackage .desktop'ı /usr/share/applications'a koymuyor; .deb'in postinst'i
-  # onu xdg-desktop-menu ile kuruyordu. Paket yolunu kendi sahiplensin.
-  install -Dm644 "$pkgdir/opt/nuvio/lib/nuvio-Nuvio.desktop" \
-                 "$pkgdir/usr/share/applications/nuvio.desktop"
-  # Upstream "Categories=Nuvio" yazıyor — kayıtlı bir freedesktop kategorisi
-  # değil, bazı menüler girdiyi o yüzden düşürüyor. .deb'in Section'ı AudioVideo.
-  sed -i 's|^Categories=.*|Categories=AudioVideo;Video;Player;|' \
-    "$pkgdir/usr/share/applications/nuvio.desktop"
+  # .desktop'a dokunulmaz: .deb usr/share/applications/nuvio.desktop'ı kendisi
+  # taşıyor (0.1.26'dan beri ölçüldü) — geçerli Categories, %u ve
+  # nuvio:/stremio: şema işleyicileri onda. Eski jpackage kopyası
+  # (opt/nuvio/lib/nuvio-Nuvio.desktop) 0.1.31'de kalktı; onu buraya kopyalayan
+  # satır hem upstream'inkini eziyordu hem de 0.1.31'de package()'ı düşürdü.
   install -Dm644 "$pkgdir/opt/nuvio/lib/Nuvio.png" \
                  "$pkgdir/usr/share/pixmaps/nuvio.png"
 }
