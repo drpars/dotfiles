@@ -21,10 +21,10 @@ require("session"):setup({
 })
 
 -- plugins:full-border
-require("full-border"):setup({
-	-- Available values: ui.Border.PLAIN, ui.Border.ROUNDED
-	type = ui.Border.ROUNDED,
-})
+require("full-border"):setup {
+	-- Available values: "plain", "rounded"
+	set = "rounded",
+}
 
 -- plugins:git
 -- Durum isaretleri (unstaged/staged/untracked...) theme.toml'un [git]
