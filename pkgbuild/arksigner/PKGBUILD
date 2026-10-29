@@ -1,0 +1,72 @@
+# ArkSigner — upstream'in Pardus .deb'ini yerelde Arch paketine çeviren PKGBUILD.
+# AUR'a girmez. Ölçümler ve kararlar yazarın özel notlarında; buradaki
+# yorumlar kendi başına yeter.
+#
+# KURULUM: `./setup.sh` (bu klasörde) — paketler, pcscd ve bu PKGBUILD'in
+# derlenip kurulması dahil her şeyi yapar. Aşağıdaki elle derleme aynı işin
+# yalnız paket kısmı.
+#
+# ELLE DERLEME. `makepkg -p` betiği çalışılan dizinin İÇİNDE istiyor (mutlak
+# yol rc=12 ile reddedilir, nuvio'da ölçüldü) — çare kopya değil symlink, ve
+# .install dosyası da aynı dizinde aranır:
+#
+#   B=<derleme-dizini>; mkdir -p "$B"; cd "$B"
+#   ln -sfn <bu-klasor>/PKGBUILD ./PKGBUILD
+#   ln -sfn <bu-klasor>/arksigner.install ./arksigner.install
+#   export BUILDDIR="$B" SRCDEST="$B" PKGDEST="$B" LOGDEST="$B"
+#   makepkg -si
+#
+# GÜNCELLEME: pacman bu paketi hiçbir depoda görmez, `pacman -Syu` yeni sürümü
+# haber vermez. `./setup.sh` https://arksigner.com/indir sayfasını okur; yeni
+# sürümün biçimi baseline.txt ile aynıysa onu bu dosyanın üretilmiş bir
+# kopyasıyla kendi kurar, bu dosyaya dokunmadan. Biçim farklıysa durur ve farkı
+# basar; o zaman elle (inceleyerek): _debver, _debdist, iki özet (SHA-1
+# sayfada), depends (yeni ikililerin NEEDED'i), arksigner.install (yeni
+# .deb'in bakımcı betikleri); sonra `./setup.sh --baseline` ve `./setup.sh`,
+# ve bu dosya + baseline.txt birlikte commit'lenir. Bu dosya son İNCELENMİŞ
+# sürümü tutar; kurulu sürüm ondan ileride olabilir.
+#
+# İKİ ÖZET, ve ikisinin de işi var: sha1sums üreticinin sayfasında yayımladığı
+# değer (upstream'e karşı bütünlük), sha256sums indirilen dosyadan hesaplandı.
+# makepkg tanımlı her diziyi ayrı ayrı doğrular.
+#
+# Yük /usr/lib/arksigner altında; kendi AKIS PKCS#11 sürücüsünü taşır
+# (drivers/akis/x64/libakisp11.so). Okuyucu sürücüsü (ACR38U-CCID dahil) depodaki
+# genel `ccid`'den gelir — .deb'in Depends'i de libccid diyor.
+
+# setup.sh yeni sürüm için bu dosyanın kopyasında şu beş satırı değiştirir:
+# _debver, _debdist, pkgrel, sha1sums, sha256sums. Her biri tek satır ve
+# satır başında kalmalı — değilse setup.sh güncellemeyi reddeder.
+_debver=3.0.12
+_debdist=pardus25.11
+pkgname=arksigner-local
+pkgver=${_debver}
+pkgrel=1
+pkgdesc="ArkSigner e-signature client — upstream Pardus .deb repackaged locally"
+arch=('x86_64')
+url="https://arksigner.com/indir"
+license=('LicenseRef-proprietary')
+# .deb'in Depends satırının değil, ikililerin NEEDED kayıtlarının Arch
+# karşılığı (readelf -d; dört ikili). nss: servis yerel TLS sertifikasını
+# tarayıcı NSS veritabanlarına `certutil` ile yazıyor (dizeden okundu).
+# python: .install'daki iki yardımcı betik.
+depends=('glibc' 'gcc-libs' 'zlib' 'openssl' 'curl' 'qpdf'
+         'qt5-base' 'qt5-svg' 'poppler-qt5'
+         'pcsclite' 'ccid' 'nss' 'python')
+provides=('arksigner')
+conflicts=('arksigner' 'arksigner-pub')
+options=('!strip' '!debug')
+install=arksigner.install
+source=("arksigner-${_debver}.deb::https://downloadark.com/arksigner_${_debver}_${_debdist}_amd64.deb")
+noextract=("arksigner-${_debver}.deb")
+sha1sums=('a658688083fd2ca80ce269f15342a61d4da33145')
+sha256sums=('010ae99b2e99ad718698abd5ae4fff5004f4433674b1cd9ce17e2c565308982e')
+
+package() {
+  # .deb bir ar arşivi; bsdtar ikisini de okur. Üye adı desenle, çünkü
+  # sıkıştırma biçimi değişebilir (bugün data.tar.xz).
+  bsdtar -O -xf "arksigner-${_debver}.deb" 'data.tar*' | bsdtar -C "$pkgdir" -xf -
+
+  # firefox-policy.py durum dosyasını buraya yazıyor; dizinin sahibi paket olsun.
+  install -dm755 "$pkgdir/var/lib/arksigner"
+}

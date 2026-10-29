@@ -1,0 +1,159 @@
+# setup.sh --baseline ile üretildi, elle düzenlenmez.
+# Kaynak: arksigner_3.0.12_pardus25.11_amd64.deb (PKGBUILD 3.0.12-1). Anlamı: setup.sh başlığı.
+control Depends libassuan9
+control Depends libatomic1
+control Depends libbrotli1
+control Depends libbz2-1.0
+control Depends libc6
+control Depends libccid
+control Depends libcom-err2
+control Depends libcurl3t64-gnutls
+control Depends libcurl4t64
+control Depends libdeflate0
+control Depends libdouble-conversion3
+control Depends libexpat1
+control Depends libffi8
+control Depends libfontconfig1
+control Depends libfreetype6
+control Depends libgcc-s1
+control Depends libgl1
+control Depends libglib2.0-0t64
+control Depends libglvnd0
+control Depends libglx0
+control Depends libgmp10
+control Depends libgnutls30t64
+control Depends libgpg-error0
+control Depends libgpgme11t64
+control Depends libgpgmepp6t64
+control Depends libgraphite2-3
+control Depends libgssapi-krb5-2
+control Depends libharfbuzz0b
+control Depends libhogweed6t64
+control Depends libicu76
+control Depends libidn2-0
+control Depends libjbig0
+control Depends libjpeg62-turbo
+control Depends libk5crypto3
+control Depends libkeyutils1
+control Depends libkrb5-3
+control Depends libkrb5support0
+control Depends liblcms2-2
+control Depends libldap2
+control Depends liblerc4
+control Depends liblzma5
+control Depends libmd4c0
+control Depends libnettle8t64
+control Depends libnghttp2-14
+control Depends libnghttp3-9
+control Depends libngtcp2-16
+control Depends libngtcp2-crypto-gnutls8
+control Depends libnspr4
+control Depends libnss3
+control Depends libnss3-tools
+control Depends libopenjp2-7
+control Depends libp11-kit0
+control Depends libpcre2-16-0
+control Depends libpcre2-8-0
+control Depends libpcsclite1
+control Depends libpng16-16t64
+control Depends libpoppler-qt5-1t64
+control Depends libpoppler147
+control Depends libpsl5t64
+control Depends libqpdf30
+control Depends libqt5core5t64
+control Depends libqt5gui5t64
+control Depends libqt5network5t64
+control Depends libqt5svg5
+control Depends libqt5widgets5t64
+control Depends libqt5xml5t64
+control Depends librtmp1
+control Depends libsasl2-2
+control Depends libsharpyuv0
+control Depends libssh2-1t64
+control Depends libssl3t64
+control Depends libstdc++6
+control Depends libtasn1-6
+control Depends libtiff6
+control Depends libunistring5
+control Depends libwebp7
+control Depends libx11-6
+control Depends libxau6
+control Depends libxcb1
+control Depends libxdmcp6
+control Depends libzstd1
+control Depends pcscd
+control Depends python3
+control Depends zlib1g
+script postinst 3ee0aaef7d6a945ea0b611b168b0ad522a1348eea223f435be6f7d00430fc527
+script prerm 6b60575f23033e15a6e66f91b3d51faf1ce8d35ef02cfe9ea3213630040f1e26
+path etc/chromium/native-messaging-hosts/com.ark.pw.websigner.json
+path etc/opt/chrome/native-messaging-hosts/com.ark.pw.websigner.json
+path etc/opt/edge/native-messaging-hosts/com.ark.pw.websigner.json
+path etc/xdg/autostart/arksigner-management.desktop
+path etc/xdg/autostart/arksigner-service.desktop
+path opt/google/chrome/extensions/pllcidbcfbamjfbfpemnnjohnfcliakf.json
+path usr/bin/arksigner-bes -> ../lib/arksigner/arksigner-bes
+path usr/bin/arksigner-management -> ../lib/arksigner/arksigner-management
+path usr/bin/arksigner-service -> ../lib/arksigner/arksigner-service
+path usr/lib/mozilla/native-messaging-hosts/com.ark.pw.websigner.json
+path usr/share/applications/arksigner-management.desktop
+path usr/share/pixmaps/arksigner.png
+elf usr/lib/arksigner/arksigner-bes NEEDED ld-linux-x86-64.so.2
+elf usr/lib/arksigner/arksigner-bes NEEDED libQt5Core.so.5
+elf usr/lib/arksigner/arksigner-bes NEEDED libQt5Gui.so.5
+elf usr/lib/arksigner/arksigner-bes NEEDED libQt5Network.so.5
+elf usr/lib/arksigner/arksigner-bes NEEDED libQt5Widgets.so.5
+elf usr/lib/arksigner/arksigner-bes NEEDED libc.so.6
+elf usr/lib/arksigner/arksigner-bes NEEDED libcrypto.so.3
+elf usr/lib/arksigner/arksigner-bes NEEDED libcurl.so.4
+elf usr/lib/arksigner/arksigner-bes NEEDED libgcc_s.so.1
+elf usr/lib/arksigner/arksigner-bes NEEDED libm.so.6
+elf usr/lib/arksigner/arksigner-bes NEEDED libpcsclite.so.1
+elf usr/lib/arksigner/arksigner-bes NEEDED libpoppler-qt5.so.1
+elf usr/lib/arksigner/arksigner-bes NEEDED libqpdf.so.30
+elf usr/lib/arksigner/arksigner-bes NEEDED libssl.so.3
+elf usr/lib/arksigner/arksigner-bes NEEDED libstdc++.so.6
+elf usr/lib/arksigner/arksigner-bes NEEDED libz.so.1
+elf usr/lib/arksigner/arksigner-bes RUNPATH /libs
+elf usr/lib/arksigner/arksigner-management NEEDED ld-linux-x86-64.so.2
+elf usr/lib/arksigner/arksigner-management NEEDED libQt5Core.so.5
+elf usr/lib/arksigner/arksigner-management NEEDED libQt5Gui.so.5
+elf usr/lib/arksigner/arksigner-management NEEDED libQt5Network.so.5
+elf usr/lib/arksigner/arksigner-management NEEDED libQt5Svg.so.5
+elf usr/lib/arksigner/arksigner-management NEEDED libQt5Widgets.so.5
+elf usr/lib/arksigner/arksigner-management NEEDED libc.so.6
+elf usr/lib/arksigner/arksigner-management NEEDED libcrypto.so.3
+elf usr/lib/arksigner/arksigner-management NEEDED libcurl.so.4
+elf usr/lib/arksigner/arksigner-management NEEDED libgcc_s.so.1
+elf usr/lib/arksigner/arksigner-management NEEDED libm.so.6
+elf usr/lib/arksigner/arksigner-management NEEDED libpcsclite.so.1
+elf usr/lib/arksigner/arksigner-management NEEDED libpoppler-qt5.so.1
+elf usr/lib/arksigner/arksigner-management NEEDED libqpdf.so.30
+elf usr/lib/arksigner/arksigner-management NEEDED libssl.so.3
+elf usr/lib/arksigner/arksigner-management NEEDED libstdc++.so.6
+elf usr/lib/arksigner/arksigner-management NEEDED libz.so.1
+elf usr/lib/arksigner/arksigner-management RUNPATH /libs
+elf usr/lib/arksigner/arksigner-service NEEDED ld-linux-x86-64.so.2
+elf usr/lib/arksigner/arksigner-service NEEDED libQt5Core.so.5
+elf usr/lib/arksigner/arksigner-service NEEDED libQt5Gui.so.5
+elf usr/lib/arksigner/arksigner-service NEEDED libQt5Network.so.5
+elf usr/lib/arksigner/arksigner-service NEEDED libQt5Widgets.so.5
+elf usr/lib/arksigner/arksigner-service NEEDED libc.so.6
+elf usr/lib/arksigner/arksigner-service NEEDED libcrypto.so.3
+elf usr/lib/arksigner/arksigner-service NEEDED libcurl.so.4
+elf usr/lib/arksigner/arksigner-service NEEDED libgcc_s.so.1
+elf usr/lib/arksigner/arksigner-service NEEDED libm.so.6
+elf usr/lib/arksigner/arksigner-service NEEDED libpcsclite.so.1
+elf usr/lib/arksigner/arksigner-service NEEDED libpoppler-qt5.so.1
+elf usr/lib/arksigner/arksigner-service NEEDED libqpdf.so.30
+elf usr/lib/arksigner/arksigner-service NEEDED libssl.so.3
+elf usr/lib/arksigner/arksigner-service NEEDED libstdc++.so.6
+elf usr/lib/arksigner/arksigner-service NEEDED libz.so.1
+elf usr/lib/arksigner/arksigner-service RUNPATH /libs
+elf usr/lib/arksigner/drivers/akis/x64/libakisp11.so NEEDED ld-linux-x86-64.so.2
+elf usr/lib/arksigner/drivers/akis/x64/libakisp11.so NEEDED libc.so.6
+elf usr/lib/arksigner/drivers/akis/x64/libakisp11.so NEEDED libdl.so.2
+elf usr/lib/arksigner/drivers/akis/x64/libakisp11.so NEEDED libgcc_s.so.1
+elf usr/lib/arksigner/drivers/akis/x64/libakisp11.so NEEDED libpcsclite.so.1
+elf usr/lib/arksigner/drivers/akis/x64/libakisp11.so NEEDED libpthread.so.0
+elf usr/lib/arksigner/drivers/akis/x64/libakisp11.so NEEDED librt.so.1

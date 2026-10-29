@@ -1,0 +1,23 @@
+# Upstream .deb'in postinst/prerm betiklerinin karşılığı.
+#
+# Bilerek alınmayan iki satır:
+# - `systemctl start pcscd.socket`: Arch'ta paket servis başlatmaz; soketi
+#   kurulum betiği etkinleştirir (enable --now).
+# - `systemctl disable --now arksignerd.service`: eski sürümlerden kalan birim;
+#   bu makinede hiç kurulmadı.
+
+post_install() {
+  # Firefox'a ArkSigner eklentisini kurduran politikayı
+  # /etc/firefox/policies/policies.json'a birleştirir; yöneticinin başka
+  # ayarlarına dokunmaz, farklı bir ArkSigner girdisi varsa reddeder.
+  python3 /usr/lib/arksigner/firefox-policy.py install
+}
+
+post_upgrade() {
+  post_install
+}
+
+pre_remove() {
+  python3 /usr/lib/arksigner/stop-runtime.py
+  python3 /usr/lib/arksigner/firefox-policy.py remove
+}
