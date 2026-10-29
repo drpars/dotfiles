@@ -37,6 +37,16 @@
 [open]
 prepend_rules = [
 	{ mime = "folder/trash", use = [ "open", "trash" ] },
+	# AppImage: gomulu varsayilanda kurali yok, `url = "*"` -> `open`
+	# (xdg-open) dalina dusup tarayicida aciliyordu. Ilk secenek calistirmak.
+	{ url = "*.{AppImage,appimage}", use = [ "run", "reveal" ] },
+]
+
+# Indirilen AppImage'in calistirma biti genelde yok; orphan oldugu icin
+# `chmod` olmadan hata sessizce kaybolur.
+[opener]
+run = [
+	{ run = "chmod +x %s1 && %s1", desc = "Run", for = "unix", orphan = true },
 ]
 
 [mgr]
