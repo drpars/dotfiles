@@ -31,12 +31,15 @@
 # geri dönüş `sudo pacman -U /var/cache/pacman/pkg/arksigner-local-<sürüm>-*`.
 #
 # Kullanım:
-#   ./setup.sh             kur, yeni sürüm varsa ve biçimi aynıysa güncelle, sına
-#   ./setup.sh --check     yalnız sına ve yeni sürüme bak, hiçbir şey kurma
-#   ./setup.sh --rebuild   PKGBUILD'in sürümünü yeniden derle ve kur (kurulu
-#                          sürüm ondan ilerideyse reddeder — düşürmez)
-#   ./setup.sh --baseline  PKGBUILD'in .deb'inden baseline.txt'yi yeniden üret
-#                          (PKGBUILD incelenip güncellendikten sonra)
+#   SELF             kur, yeni sürüm varsa ve biçimi aynıysa güncelle, sına
+#   SELF --check     yalnız sına ve yeni sürüme bak, hiçbir şey kurma
+#   SELF --rebuild   PKGBUILD'in sürümünü yeniden derle ve kur (kurulu
+#   PAD             sürüm ondan ilerideyse reddeder — düşürmez)
+#   SELF --baseline  PKGBUILD'in .deb'inden baseline.txt'yi yeniden üret
+#   PAD             (PKGBUILD incelenip güncellendikten sonra)
+#
+# PATH'teki ad arksigner-update (config/scripts/ içinde bu dosyaya symlink);
+# bu klasörden ./setup.sh de aynıdır. Yardım çağrılan adı basar.
 #
 # Çıkış kodu: 0 tamam. 3: kurulum/sınama tamam ama DİKKAT var — yeni sürüm
 # kurulmadı ya da sayfa okunamadı (çıktının sonunda yazar); "güncel" ile
@@ -52,6 +55,7 @@
 set -euo pipefail
 
 here=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+self=$(basename "$0")
 pkgname=arksigner-local
 akis_lib=/usr/lib/arksigner/drivers/akis/x64/libakisp11.so
 baseline=$here/baseline.txt
@@ -68,7 +72,8 @@ say() { printf '\n==> %s\n' "$*"; }
 die() { printf 'HATA: %s\n' "$*" >&2; exit 1; }
 
 usage() {
-  sed -n '/^# Kullanım:/,/^#$/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '/^# Kullanım:/,/^#$/p' "${BASH_SOURCE[0]}" |
+    sed -e 's/^# \{0,1\}//' -e "s/SELF/$self/" -e "s/PAD/${self//?/ }/"
   exit "${1:-0}"
 }
 
@@ -250,7 +255,7 @@ install_upstream() {  # kurulu sürüm (boş olabilir)
   local -a elfs
   say "Yeni sürüm $up_ver: indir, doğrula, tabanla karşılaştır"
   if [[ ! -r $baseline ]]; then
-    attention+=("baseline.txt yok — $up_ver karşılaştırılamadı, kurulmadı (./setup.sh --baseline)")
+    attention+=("baseline.txt yok — $up_ver karşılaştırılamadı, kurulmadı ($self --baseline)")
     return 1
   fi
   mkdir -p "$work/src" || return 1
@@ -319,7 +324,7 @@ arksigner_step() {
 
   if upstream_newer "$have" "$want"; then
     if [[ $mode == check ]]; then
-      attention+=("yeni sürüm var: $up_ver ($up_date) — ./setup.sh biçimi tabanla aynıysa kurar")
+      attention+=("yeni sürüm var: $up_ver ($up_date) — $self biçimi tabanla aynıysa kurar")
       return
     fi
     if install_upstream "$have"; then return; fi
