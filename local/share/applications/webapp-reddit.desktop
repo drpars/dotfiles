@@ -1,0 +1,26 @@
+[Desktop Entry]
+Type=Application
+Name=Reddit
+Comment=Reddit (Chrome uygulama kipi)
+# Elle yazildi. Bicim ve ~ / \\$ kacis tuzagi icin bkz.
+# webapp-whatsapp.desktop.
+#
+# Bu girdi de special workspace'e baglanmaz (bkz. webapp-primevideo.desktop).
+#
+# Turkiye'den aciliyor (olculdu 2026-11-08): www.reddit.com/ 200 donuyor,
+# yonlendirme yok.
+#
+# URL'deki SON EGIK CIZGI onemli (bkz. webapp-netflix.desktop): Chrome app_id'yi
+# URL'den turettigi icin .../ ile ... farkli sinif uretir.
+Exec=sh -c "exec google-chrome-stable --app=https://www.reddit.com/ --user-data-dir=\\$HOME/.local/share/webapps/reddit"
+# Sinif olculdu (2026-11-08, gtk-launch + hyprctl clients). Taze profilde
+# sayfa basligi "Reddit - Prove your humanity": Reddit'in insan sinamasi,
+# profilde bir kez gecilir.
+StartupWMClass=chrome-www.reddit.com__-Default
+# Kurulu hicbir temada reddit ikonu yok (Gtk.IconTheme.lookup_icon: reddit,
+# web-reddit, im-reddit, reddit-desktop -> None). Ikon sitenin kendi
+# favicon'u: redditstatic.com/shreddit/assets/favicon/128x128.png, dogal
+# 128x128 -- kucultme gerekmedi (bkz. webapp-hbomax.desktop).
+Icon=webapp-reddit
+Terminal=false
+Categories=Network;News;
