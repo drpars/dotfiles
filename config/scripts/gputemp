@@ -209,6 +209,16 @@ nvidia_read() {
   IFS=', ' read -r t u m < <(timeout 3 nvidia-smi \
         --query-gpu=temperature.gpu,utilization.gpu,memory.used \
         --format=csv,noheader,nounits 2>/dev/null)
+
+  # 620 prints the temperature with two decimals ("44.12"); 615 printed an
+  # integer. Rejecting the decimal form dropped every reading, so state_write
+  # never ran, st_when stayed 0, the backoff never engaged and the card was
+  # polled -- and kept at D0 -- once a second for the whole session. Rounded
+  # here with shell arithmetic rather than printf %.0f, which follows LC_NUMERIC
+  # and rejects "44.12" under a comma-decimal locale such as tr_TR.
+  if [[ $t =~ ^([0-9]+)\.([0-9]) ]]; then
+    t=$((10#${BASH_REMATCH[1]} + (BASH_REMATCH[2] >= 5)))
+  fi
   [[ $t =~ ^[0-9]+$ ]] || return 0
 
   busy=0
