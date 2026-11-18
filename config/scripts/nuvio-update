@@ -104,6 +104,24 @@ if [[ $asset_ver == "$asset" ]]; then
   exit 1
 fi
 
+# Kurulu surum ile hedef karsilastirilir: "guncelleme var mi" sorusunun TEK
+# cevabi bu satirdir. Asagidaki git diff bunu soylemez — o, son commit ile
+# calisma agacini karsilastirir; commit'lenmemis bir onceki bump'i her kosuda
+# yeniden gosterir (2026-11-18).
+target_ver=${asset_ver//-/}          # PKGBUILD'deki pkgver=${_asset//-/} ile ayni
+inst_ver=""
+if [[ -n ${installed:-} ]]; then inst_ver=${installed#* }; inst_ver=${inst_ver%-*}; fi
+if [[ -z $inst_ver ]]; then
+  verdict="not installed"; up_to_date=0
+else
+  cmp=$(vercmp "$inst_ver" "$target_ver")
+  if ((cmp < 0)); then verdict="UPDATE AVAILABLE: $inst_ver -> $target_ver"; up_to_date=0
+  elif ((cmp == 0)); then verdict="up to date ($inst_ver)"; up_to_date=1
+  else verdict="installed $inst_ver is newer than $target_ver"; up_to_date=1
+  fi
+fi
+echo "==> status: $verdict"
+
 # --- Ozet --------------------------------------------------------------------
 
 dl_root="https://github.com/$REPO/releases/download/$tag"
@@ -133,6 +151,7 @@ sha256sums=('$sum')"
 
 if ((check_only)); then
   printf '\n=========== for PKGBUILD ===========\n%s\n====================================\n' "$three_lines"
+  echo "==> status: $verdict"
   exit 0
 fi
 
@@ -168,8 +187,23 @@ else
   echo "==> PKGBUILD updated"
 fi
 
+uncommitted=0
+if git -C "$PKGDIR" rev-parse --git-dir >/dev/null 2>&1 &&
+   ! git -C "$PKGDIR" diff --quiet -- "$PKGBUILD"; then
+  uncommitted=1
+fi
+
+if ((!changed && up_to_date)); then
+  echo "==> nothing to do: installed package matches this PKGBUILD"
+  ((uncommitted)) && echo "    note: PKGBUILD differs from the last commit (an earlier bump
+          was not committed); commit it:
+          git -C $PKGDIR commit -- $PKGBUILD"
+  exit 0
+fi
+
 echo
 if git -C "$PKGDIR" rev-parse --git-dir >/dev/null 2>&1; then
+  echo "--- PKGBUILD: last commit vs working tree ---"
   git -C "$PKGDIR" --no-pager diff -- "$PKGBUILD" || true
 else
   echo "(not a git repository, cannot show the diff)"
