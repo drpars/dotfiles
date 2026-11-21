@@ -1,0 +1,71 @@
+#!/bin/bash
+# Cloudflare WARP (wgcf profili, /etc/wireguard/wgcf.conf) için waybar modülü.
+#   warp status  → waybar JSON (return-type: json)
+#   warp toggle  → tünel açıksa kapatır, kapalıysa açar
+#
+# Durum SERVİSTEN değil ARAYÜZDEN okunur: tünel `wg-quick up wgcf` ile elle
+# açıldığında `systemctl is-active wg-quick@wgcf` inactive/failed der (ölçüldü
+# 2026-11-21: elle açık tünelin üstüne servis başlatılınca "wgcf already
+# exists" ile failed oldu). /sys/class/net/wgcf root'suz okunur, ağ istemez.
+
+SIGNAL=13
+IFACE=wgcf
+UNIT="wg-quick@$IFACE"
+
+is_up() { [ -e "/sys/class/net/$IFACE" ]; }
+
+notify() { command -v notify-send >/dev/null && notify-send -a WARP "$1" "${2:-}"; }
+
+case "${1:-status}" in
+  status)
+    if is_up; then
+      addr=$(ip -brief addr show "$IFACE" 2>/dev/null | awk '{print $3}')
+      printf '{"text":"WARP+","class":"on","tooltip":"WARP açık — %s %s\\nTıkla: kapat"}\n' "$IFACE" "$addr"
+    else
+      printf '{"text":"WARP+","class":"off","tooltip":"WARP kapalı\\nTıkla: aç"}\n'
+    fi
+    ;;
+  toggle)
+    # Üst üste tıklama: ikinci tıklama ilki bitene kadar HİÇBİR ŞEY yapmaz.
+    # Kilitsiz hâli ölçüldü (2026-11-21): beş tıklama beş onay penceresi açtı,
+    # reddedilenler pam_faillock'u tetikledi ve kullanıcı sudo'dan kilitlendi.
+    exec 9>"${XDG_RUNTIME_DIR:-/tmp}/warp-toggle.lock"
+    flock -n 9 || exit 0
+    # waybar'dan sudo iki ayrı sebeple düştü (ölçüldü 2026-11-21):
+    # (1) waybar tty1'i denetim terminali olarak miras alıyor; -A'sız sudo
+    #     parolayı oradan sorup "conversation failed" veriyor ve HER deneme
+    #     faillock'a sayılıyor (üçü kullanıcıyı 10 dk kilitledi) → `sudo -A`.
+    # (2) waybar ortamında SSH_AUTH_SOCK yok; sudoplz onaydan sonra parolayı
+    #     çözemiyor ("No SSH_AUTH_SOCK available") → .zshrc'deki geri dönüşün
+    #     aynısı.
+    if [ -z "$SSH_AUTH_SOCK" ] && [ -S "$XDG_RUNTIME_DIR/ssh-agent.socket" ]; then
+      export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+    fi
+    if is_up; then
+      # Servisle açıldıysa servis durdurulur (yoksa "active" olarak kalır);
+      # elle açıldıysa wg-quick down.
+      if systemctl is-active --quiet "$UNIT"; then
+        sudo -A systemctl stop "$UNIT"
+      else
+        sudo -A wg-quick down "$IFACE"
+      fi
+    else
+      # Elle açılan tünelden kalan "failed" durumu start'ı engellemez.
+      sudo -A systemctl start "$UNIT"
+    fi
+    rc=$?
+    pkill -RTMIN+$SIGNAL -x waybar 2>/dev/null || true
+    if [ $rc -ne 0 ]; then
+      notify "WARP: işlem başarısız" "rc=$rc"
+    elif is_up; then
+      trace=$(curl -s --max-time 5 https://www.cloudflare.com/cdn-cgi/trace | grep '^warp=')
+      notify "WARP açıldı" "${trace:-trace okunamadı}"
+    else
+      notify "WARP kapandı"
+    fi
+    ;;
+  *)
+    echo "kullanım: warp status|toggle" >&2
+    exit 2
+    ;;
+esac

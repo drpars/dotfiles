@@ -58,6 +58,7 @@ tooltip label {
 #custom-weather,
 #custom-hypridle,
 #custom-refreshrate,
+#custom-warp,
 #idle_inhibitor {
   background: #1a1b26;
   opacity: 0.8;
@@ -259,6 +260,25 @@ tooltip label {
    `#bluetooth.off` ile aynı: durum bilgisi, uyarı değil. */
 #network.disabled {
   color: #565f89;
+}
+
+/* WARP tüneli: network ile wireplumber arasında kendi kapsülü. Kapalı gri,
+   açık barın beyazı — #bluetooth.off / .connected ile aynı dil. */
+#custom-warp {
+  margin-right: 10px;
+  border-radius: 10px;
+  padding: 0 20px;
+  /* #custom-language ile aynı: barın tek metin rozeti o, boyu ona eşit. */
+  font-size: 10px;
+  font-weight: bold;
+}
+
+#custom-warp.off {
+  color: #565f89;
+}
+
+#custom-warp.on {
+  color: #c0caf5;
 }
 
 #wireplumber {

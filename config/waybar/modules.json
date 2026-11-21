@@ -510,6 +510,19 @@
     "on-click": "~/.config/scripts/refreshrate toggle"
   },
 
+  "custom/warp": {
+    "exec": "~/.config/scripts/warp status",
+    "return-type": "json",
+    "format": "{}",
+    "tooltip": true,
+    // Durum /sys/class/net/wgcf'ten okunur (ucuz, ağ istemez). Tıklama
+    // sinyalle anında tazeler; interval yalnız dışarıdan (terminalden
+    // wg-quick) yapılan değişikliği yakalamak için.
+    "interval": 5,
+    "signal": 13,
+    "on-click": "~/.config/scripts/warp toggle"
+  },
+
   "wireplumber": {
     "format": "{icon}",
     "format-muted": "",
