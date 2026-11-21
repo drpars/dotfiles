@@ -63,6 +63,8 @@ prepend_keymap = [
 	# Yol yazilmiyor, XDG veritabani soruluyor -- ayni gerekce: `g d` ustte.
 	{ on = [ "g", "D" ], run = 'shell "ya emit cd $(xdg-user-dir DOCUMENTS)"', desc = "Go to the XDG documents directory" },
 	{ on = [ "g", "p" ], run = 'shell "ya emit cd $(xdg-user-dir PICTURES)"', desc = "Go to the XDG pictures directory" },
+	# `g r` = Google Drive (rclone-gdrive.service'in baglama noktasi).
+	{ on = [ "g", "r" ], run = "cd ~/GoogleDrive", desc = "Go to Google Drive (rclone mount)" },
 
 	# Tabs
 	# Tek tuslu `t`: varsayilan `t t`/`t r` zincirlerini kapatir -- olculdu,

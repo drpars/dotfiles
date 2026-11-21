@@ -1,0 +1,25 @@
+[Unit]
+Description=Google Drive'i ~/GoogleDrive'a baglar (rclone mount)
+# rclone.conf depoda DEGIL: OAuth token'i tasir. Yeni makinede once
+# `rclone config` ile `gdrive` adli remote kurulur; yoksa servis sessizce
+# atlanir, yeniden baslatma dongusune girmez.
+ConditionPathExists=%h/.config/rclone/rclone.conf
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=notify
+ExecStartPre=/usr/bin/mkdir -p %h/GoogleDrive
+# --vfs-cache-mode full: yazma, yeniden adlandirma ve kismi okuma icin
+# gerekli; onbellek ~/.cache/rclone altinda, ust siniri 5G.
+ExecStart=/usr/bin/rclone mount gdrive: %h/GoogleDrive \
+    --vfs-cache-mode full \
+    --vfs-cache-max-size 5G \
+    --dir-cache-time 5m
+ExecStop=/usr/bin/fusermount3 -u %h/GoogleDrive
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target
