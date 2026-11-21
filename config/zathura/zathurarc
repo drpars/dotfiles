@@ -36,6 +36,7 @@ set index-active-fg "#1a1b26"     # Aktif index metin
 # ---------- Görünüm Ayarları ----------
 set font "JetBrainsMono Nerd Font 11"  # Yazı tipi
 set window-title-basename true         # Pencerede sadece dosya adını göster
+set adjust-open "width"                # Açılışta sayfayı pencere genişliğine sığdır
 # set selection-clipboard clipboard      # Kopyalama için panoyu kullan
 
 # ---------- GUI Bileşenleri ----------
