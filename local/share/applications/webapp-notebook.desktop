@@ -1,0 +1,27 @@
+[Desktop Entry]
+Type=Application
+Name=Gemini Notebook
+GenericName=NotebookLM
+Comment=Gemini Notebook / NotebookLM (Chrome uygulama kipi)
+# Elle yazildi. Bicim ve ~ / \\$ kacis tuzagi icin bkz.
+# webapp-whatsapp.desktop.
+#
+# Bu girdi de special workspace'e baglanmaz (bkz. webapp-primevideo.desktop).
+#
+# Turkiye'den aciliyor (olculdu 2026-11-21): notebook.google.com/ 200 donuyor;
+# eski adres notebooklm.google.com/ buraya yonleniyor, sayfa basligi
+# "Gemini Notebook".
+#
+# URL'deki SON EGIK CIZGI onemli (bkz. webapp-netflix.desktop): Chrome app_id'yi
+# URL'den turettigi icin .../ ile ... farkli sinif uretir.
+Exec=sh -c "exec google-chrome-stable --app=https://notebook.google.com/ --user-data-dir=\\$HOME/.local/share/webapps/notebook"
+# Sinif olculdu (2026-11-21, gtk-launch + hyprctl clients). Taze profilde
+# Google hesabiyla bir kez giris yapilir.
+StartupWMClass=chrome-notebook.google.com__-Default
+# Kurulu hicbir temada ikon yok (Gtk.IconTheme.lookup_icon: notebooklm,
+# google-notebooklm, notebook-lm, web-notebooklm -> None; "notebook" Qogir'in
+# genel defter ikonu). Ikon sitenin dark_mode apple-touch-icon'u (180x180,
+# seffaf zemin), 128x128'e kucultuldu (bkz. webapp-hbomax.desktop).
+Icon=webapp-notebook
+Terminal=false
+Categories=Office;
