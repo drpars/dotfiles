@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+"""sozluk -- English -> Turkish dictionary REPL on top of sdcv (StarDict).
+
+Bound to SUPER+D as a scratchpad (keybindings.lua, the qalc pattern:
+`scratchtoggle sozluk scratch-dict kitty --class=scratch-dict sozluk`).
+Usable on its own too: `sozluk house` prints and drops into the prompt;
+`echo house | sozluk house` prints and exits.
+
+Dictionary: FreeDict eng-tur 0.3, StarDict format, under ~/.stardict/dic/
+(tur-eng left out: 1026 words, mostly noise in fuzzy results). Neither sdcv
+nor the dictionary is installed by this repo -- on a machine without them the
+bind opens a terminal that says so; package lists are archsetup's job.
+sdcv prints FreeDict entries as HTML (<ol><li><div>...); this script flattens
+them into numbered plain text.
+
+Lookup: exact match first; if nothing, sdcv's fuzzy search, shown as a list of
+suggested headwords. `q` or Ctrl-D quits (empty line is ignored, so a stray
+Enter does not close the scratchpad); history via readline.
+
+Origin: reference implementation in pars/soru-cevap/sozluk.py (2026-11-22).
+"""
+import json
+import shutil
+import subprocess
+import sys
+import textwrap
+from html.parser import HTMLParser
+
+try:
+    import readline  # noqa: F401  (line editing + history)
+except ImportError:
+    pass
+
+BOLD, DIM, CYAN, RESET = "\033[1m", "\033[2m", "\033[36m", "\033[0m"
+
+
+class Flatten(HTMLParser):
+    """Top-level <li> -> one sense; its <div> texts joined with ', '."""
+
+    def __init__(self):
+        super().__init__()
+        self.depth = 0          # <ol> nesting
+        self.senses = []        # finished top-level senses
+        self.parts = []         # div texts of the current top-level sense
+        self.buf = []           # text of the current div
+        self.loose = []         # text outside any <ol> (entries without a list)
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "ol":
+            self.depth += 1
+        elif tag == "div":
+            self.buf = []
+
+    def handle_endtag(self, tag):
+        if tag == "ol":
+            self.depth -= 1
+        elif tag == "div":
+            text = " ".join("".join(self.buf).split())
+            self.buf = []
+            if not text:
+                return
+            if self.depth == 0:
+                self.loose.append(text)
+            else:
+                self.parts.append(text)
+        elif tag == "li" and self.depth == 1:
+            if self.parts:
+                self.senses.append(", ".join(self.parts))
+            self.parts = []
+
+    def handle_data(self, data):
+        self.buf.append(data)
+
+
+def sdcv(word, exact):
+    args = ["sdcv", "-n", "-j"] + (["-e"] if exact else []) + [word]
+    out = subprocess.run(args, capture_output=True, text=True).stdout
+    try:
+        return json.loads(out) if out.strip() else []
+    except json.JSONDecodeError:
+        return []
+
+
+def show(entries):
+    width = min(shutil.get_terminal_size().columns, 110)
+    for e in entries:
+        p = Flatten()
+        p.feed(e["definition"])
+        senses = p.senses or p.loose
+        print(f"\n{BOLD}{CYAN}{e['word']}{RESET}  {DIM}{e['dict']}{RESET}")
+        for i, s in enumerate(senses, 1):
+            head = f"{i:>3}. "
+            print(textwrap.fill(s, width, initial_indent=head,
+                                subsequent_indent=" " * len(head)))
+    print()
+
+
+def lookup(word):
+    hits = sdcv(word, exact=True)
+    if hits:
+        show(hits)
+        return
+    near = []
+    for e in sdcv(word, exact=False):
+        if e["word"] not in near:
+            near.append(e["word"])
+    if near:
+        print(f"{DIM}Tam eslesme yok. Yakin:{RESET} " + ", ".join(near[:15]) + "\n")
+    else:
+        print(f"{DIM}Bulunamadi.{RESET}\n")
+
+
+def main():
+    if not shutil.which("sdcv"):
+        # Scratchpad'de bu satir gorunsun diye pencere hemen kapanmasin.
+        print("sdcv kurulu degil (pacman -S sdcv + FreeDict eng-tur StarDict)")
+        if sys.stdin.isatty():
+            try:
+                input("Enter ile kapat ")
+            except (EOFError, KeyboardInterrupt):
+                pass
+        sys.exit(1)
+    for w in sys.argv[1:]:
+        lookup(w)
+    if sys.argv[1:] and not sys.stdin.isatty():
+        return
+    while True:
+        try:
+            word = input(f"{BOLD}en→tr>{RESET} ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return
+        if not word:
+            continue
+        if word in ("q", ":q"):
+            return
+        lookup(word)
+
+
+if __name__ == "__main__":
+    main()

@@ -8,7 +8,9 @@ local C = _G.ctrlMod
 
 -- ── Temel Uygulamalar ──────────────────────────────
 hl.bind(M .. " + RETURN", hl.dsp.exec_cmd(_G.terminal))
-hl.bind(M .. " + D",      hl.dsp.exec_cmd(_G.fileManager))
+-- Dosya yoneticisi yazi (SUPER+Y). SUPER+D eskiden dolphin'di; 2026-11-22'de
+-- sozluk scratchpad'ine verildi (asagida, "Scratchpad'ler"). Dolphin kurulu,
+-- rofi'den acilir.
 hl.bind(M .. " + Y",      hl.dsp.exec_cmd(_G.terminal .. " yazi"))
 
 -- ── Pencere Yönetimi ───────────────────────────────
@@ -114,6 +116,15 @@ hl.bind(M .. " + T", hl.dsp.exec_cmd(
 hl.bind(M .. " + C", hl.dsp.exec_cmd(
     _G.scriptsDir .. "/scratchtoggle hesap scratch-calc " ..
     _G.terminal .. " --class=scratch-calc qalc"))
+
+-- Sozluk (en -> tr). Motor sdcv + FreeDict eng-tur StarDict (~/.stardict/dic/);
+-- REPL config/scripts/sozluk, sdcv'nin HTML ciktisini duz metne indiriyor.
+-- Hesap makinesiyle ayni desen: sarmalayicida tirnakli arguman yok.
+-- Paket ve sozluk bu depo tarafindan KURULMUYOR; yoksa pencere bunu soyler.
+-- `--class` SART -- gerekcesi SUPER+T'nin yukarisinda.
+hl.bind(M .. " + D", hl.dsp.exec_cmd(
+    _G.scriptsDir .. "/scratchtoggle sozluk scratch-dict " ..
+    _G.terminal .. " --class=scratch-dict " .. _G.scriptsDir .. "/sozluk"))
 
 -- Herhangi bir pencereyi scratchpad'e gonder (dagitimin ornegindeki desen).
 hl.bind(M .. " + SHIFT + N", hl.dsp.window.move({ workspace = "special:notlar" }))

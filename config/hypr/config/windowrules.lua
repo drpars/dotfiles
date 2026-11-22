@@ -162,6 +162,17 @@ hl.window_rule({
     size      = { 1100, 700 },
 })
 
+-- Sozluk: kitty + config/scripts/sozluk (sdcv), kendi sinifiyla.
+-- Hesapla ayni boy: 1100x700'de kitty 119 sutun (hesap kuralinda olculdu),
+-- betik anlamlari 110 sutunda kiriyor -- satir tasmaz.
+hl.window_rule({
+    match     = { class = "scratch-dict" },
+    workspace = "special:sozluk silent",
+    float     = true,
+    center    = true,
+    size      = { 1100, 700 },
+})
+
 -- ── Waybar tiklamasiyla acilan TUI pencereleri ─────
 -- Bunlar scratchpad DEGIL: special workspace de toggle da yok. Istenen sey
 -- yalnizca "hep ayni geometride acilsin"di ve onu veren sey special alan degil

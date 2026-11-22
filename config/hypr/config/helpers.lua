@@ -9,7 +9,6 @@ _G.ctrlMod = "CTRL"
 
 -- Uygulamalar
 _G.terminal    = "kitty"
-_G.fileManager = "dolphin"
 _G.menu        = "rofi -replace -show drun -theme ~/.config/rofi/applications.rasi"
 _G.launcher    = "rofi -replace -show drun -theme ~/.config/rofi/applications.rasi"
 
