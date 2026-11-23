@@ -15,9 +15,12 @@
   "enabledPlugins": {
     "lua-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true
+    "pyright-lsp@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true
   },
-  "theme": "auto",
+  "theme": "dark",
+  "autoCompactEnabled": false,
+  "useAutoModeDuringPlan": false,
   "disableDeepLinkRegistration": "disable",
   "enableWorkflows": true
 }
