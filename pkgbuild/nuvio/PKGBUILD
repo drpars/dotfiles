@@ -44,8 +44,8 @@
 # İKİ SÜRÜM DİZESİ, ve ayrı olmaları zorunlu — ölçüldü (2026-09-16): GitHub
 # etiketi `0.1.24-alpha-beta` iken varlıklar `…-0.1.24-alpha.deb` adıyla duruyor.
 # Tek değişkenle kurulan URL 404 alır. _tag yolu, _asset dosya adını verir.
-_tag=0.1.38-alpha
-_asset=0.1.38-alpha
+_tag=0.1.39-alpha
+_asset=0.1.39-alpha
 pkgname=nuvio-desktop-local
 pkgver=${_asset//-/}
 pkgrel=1
@@ -61,7 +61,7 @@ conflicts=('nuvio' 'nuvio-desktop' 'nuvio-desktop-bin' 'nuvio-linux-bin')
 options=('!strip' '!debug')
 source=("nuvio-${_tag}.deb::${url}/releases/download/${_tag}/Nuvio-Linux-${CARCH}-${_asset}.deb")
 noextract=("nuvio-${_tag}.deb")
-sha256sums=('6ceb908f5f14204b596760510a00bfb6f89b588e1d1f57d41c0802f3e8c1e0de')
+sha256sums=('e7c06e3ea0af7044d7511154a2705d0bd5a216c8f6c53cb675fec270f110f969')
 
 package() {
   # .deb bir ar arşivi; bsdtar ikisini de okur. Sıkıştırma biçimi upstream
@@ -76,6 +76,23 @@ package() {
   # nuvio:/stremio: şema işleyicileri onda. Eski jpackage kopyası
   # (opt/nuvio/lib/nuvio-Nuvio.desktop) 0.1.31'de kalktı; onu buraya kopyalayan
   # satır hem upstream'inkini eziyordu hem de 0.1.31'de package()'ı düşürdü.
+  #
+  # İKON: 0.1.39'da upstream opt/nuvio/lib/Nuvio.png'ye jpackage'ın 32x32 Java
+  # yer tutucusunu koydu (rofi'de logo kayboldu). Logo uygulama jar'ında
+  # duruyor: app_icon_original_transparent.png, 0.1.38'in Nuvio.png'siyle bayt
+  # bayt aynı (256x256, ölçüldü 2026-11-27). .desktop Icon= mutlak yolla o
+  # dosyayı gösterdiği için logo onun yerine yazılır. Jar adı hash taşıyor,
+  # glob'la bulunur; kaynak yoksa derleme düşmez, upstream'inki kalır.
+  local _icon='composeResources/nuvio.composeapp.generated.resources/drawable/app_icon_original_transparent.png'
+  local _jar
+  for _jar in "$pkgdir"/opt/nuvio/lib/app/composeApp-desktop-*.jar; do
+    if bsdtar -O -xf "$_jar" "$_icon" > "$srcdir/nuvio-logo.png" 2>/dev/null \
+       && [[ -s "$srcdir/nuvio-logo.png" ]]; then
+      install -m644 "$srcdir/nuvio-logo.png" "$pkgdir/opt/nuvio/lib/Nuvio.png"
+    else
+      echo "UYARI: $_icon jar'da yok; upstream Nuvio.png kalıyor" >&2
+    fi
+  done
   install -Dm644 "$pkgdir/opt/nuvio/lib/Nuvio.png" \
                  "$pkgdir/usr/share/pixmaps/nuvio.png"
 }
