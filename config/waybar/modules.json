@@ -389,15 +389,23 @@
     // Fişteki iki durum da AYNI glifi gösteriyor (şimşek değil, fiş): barın
     // söylediği tek şey "fişte". Şarj oluyor mu yoksa sınırda mı — bu ayrımı
     // artık yalnızca tooltip taşıyor (aşağıda -charging ↔ -not-charging).
-    // Kasıtlı; glifle de ayrılsın istenirse -charging'e şimşek geri yazılır.
+    // Kasıtlı; glifle de ayrılsın istenirse format-icons'un "charging"ine şimşek yazılır.
     // Seviye ikonunu bu iki satırdan düşürmek ancak Plugged yükseltmesi kapalı
     // olduğu için güvenli — fişteyken ağır yükte pil gerçekten boşalırsa durum
     // "discharging" olur ve seviye ikonu görünür. Yükseltme açıkken o düşüş bu
     // satırların altında gizlenirdi, o yüzden ikon zorunluydu. Üçü birlikte
-    // değişir: adapter, bu iki format, ve seviye ikonunun anlamı.
-    "format-charging": "",
-    "format-not-charging": "",
-    "format-icons": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+    // değişir: adapter, bu iki ikon, ve seviye ikonunun anlamı.
+    // Fiş glifi format-<durum> ile DEĞİL format-icons'un durum anahtarıyla
+    // veriliyor: format-<durum> tanımlıysa update() onu format_'ın yerine
+    // koyuyor ve sol tıkın format-alt'ı o durumda HİÇ görünmüyordu — fişteyken
+    // tıklama "dolmasına kalan süre"yi gösteremiyordu (battery.cpp 0.16.0,
+    // update(); getIcon {durum-state, durum, state} anahtarlarını sırayla
+    // dener, bulamazsa "default").
+    "format-icons": {
+      "charging": "",
+      "not-charging": "",
+      "default": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"]
+    },
     "format-time": "{H} sa {M} dk",
     "tooltip": true,
     // Durum anahtarı /sys/class/power_supply/BAT0/status'un küçük harflisi,
