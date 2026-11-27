@@ -14,11 +14,12 @@
 # Kanal notify-send'dir; depoda zaten yerlesik desen (bkz. scripts/gamemode).
 set -u
 
-# Bu makinede uc misafir tanimli (`virsh list --all`): win11, win11-nvme,
-# win11-test. Hedef NVMe diskteki olan (kullanici karari, 2026-08-19).
+# Hedef win11-test (kullanici karari, 2026-11-27: kalici; gerekcesi
+# sorulmadi). Onceki hedef win11-nvme idi (2026-08-19). 2026-11-27'de
+# `virsh list --all` yalniz win11-test'i listeliyor.
 # Adin gectigi tek yer burasi: hem `win` alias'i hem win11.desktop bu
 # betigi cagiriyor, ikisi de bu satiri izler.
-DOMAIN=win11-nvme
+DOMAIN=win11-test
 VIRSH=(virsh --connect=qemu:///system)
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/win/client.log"
 
