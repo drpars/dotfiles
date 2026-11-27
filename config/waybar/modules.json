@@ -7,16 +7,18 @@
   },
 
   "custom/weather": {
-    "exec": "~/.config/scripts/weather Çankırı",
+    // Şehir listesi exec ile on-click'te AYNI olmalı: --next seçimi listede
+    // bir ileri kaydırır, gösterilen şehir exec'in listesinden okunur.
+    "exec": "~/.config/scripts/weather Çankırı Ankara",
     "return-type": "json",
     "format": "{}",
     "tooltip": true,
     "interval": 3600,
     // Tıklama betiği doğrudan çağırırsa çıktı hiçbir yere gitmez (modül kendi
     // exec'ini okur) — yalnızca boşuna bir wttr.in isteği olurdu. Doğrusu
-    // modüle sinyal göndermek.
+    // seçimi kaydırıp (--next, ağ isteği yok) modüle sinyal göndermek.
     "signal": 10,
-    "on-click": "pkill -SIGRTMIN+10 waybar"
+    "on-click": "~/.config/scripts/weather --next Çankırı Ankara; pkill -SIGRTMIN+10 waybar"
   },
 
   "hyprland/workspaces": {

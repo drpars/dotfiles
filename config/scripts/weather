@@ -1,66 +1,165 @@
 #!/usr/bin/env bash
-# waybar custom/weather -- wttr.in'den tek satirlik durum + tooltip.
+# waybar custom/weather -- wttr.in'den tek satirlik durum + ayrintili tooltip.
+#
+# Kullanim:
+#   weather <sehir> [<sehir> ...]          secili sehrin JSON'unu basar
+#   weather --next <sehir> [<sehir> ...]   secimi listede bir ileri kaydirir
+# Secim $XDG_STATE_HOME/waybar-weather/city'de durur; dosya yoksa ya da
+# icindeki sehir listede degilse ilk sehir gosterilir. Modul tiklamada once
+# --next, sonra sinyal ile yeniden calistirilir (modules.json).
+#
+# Veri tek istekte gelir: `?format=j1&lang=tr` (gecerli durum + 3 gun x 8
+# saatlik dilim + gunes/ay). Metin satiri da bundan kurulur, o yuzden ikinci
+# bir `format=1` istegi yok.
 #
 # SOZLESME: sonuc alinamazsa cikti {"text":"drpars","tooltip":"drpars"}.
-# Bu satir onceki surumde de YAZILIYDI ama pratikte ULASILAMAZDI, cunku hata
-# dali yalnizca CURL'UN KENDISI dustugunde kosuyordu. Dort dal olculdu
-# (2026-08-24, izole HTTP sunucusuyla) ve dordu de bara cop basiyordu:
-#   - HTTP 503        : `curl -s` rc=0 doner -> "Service Temporarily Unavailable"
-#                       hava durumu sanilip basiliyordu
-#   - wttr.in kotasi  : "Sorry, we are running out of queries..." HTTP 200 ile
-#                       gelir ve icinde ne "unknown" ne "error" gecer
-#   - govdede " varsa : printf ile kurulan JSON BOZULUR; waybar ayristiramaz ve
-#                       modul tumden kaybolur -- "drpars" degil, HICBIR SEY
-#   - bos govde       : {"text":""} -> bos modul
-#
-# Iki degisiklik bu dordunu birden kapatiyor:
-#  1) POZITIF dogrulama. Kara liste ("unknown|error") yalnizca akla geleni
-#     yakalar; wttr.in'in her yeni hata metni yeniden sizar. Onun yerine
-#     yanitin hava durumu OLDUGU aranir: icinde rakam+derece gecmeli.
-#     Iki canli bicimde de olculdu ("+19°C", "Cankiri: ... 🌡️+19°C ...").
-#     Desen bilerek gevsek -- wttr.in sureti degisirse gecerli veriyi
-#     reddedip surekli "drpars" yazmasin diye.
-#  2) JSON'u `jq` kuruyor, `printf` degil: tirnak ve ters bolu kacisi artik
-#     bizim isimiz degil.
-#
-# `-f` SART: `-s` tek basina 4xx/5xx'i basari sayar. Ikisi birlikte gider.
+# Gecmis (2026-08-24, (77)): kara liste ("unknown|error") wttr.in'in HTTP 503'unu
+# (`curl -s` rc=0) ve HTTP 200'le gelen kota metnini kaciriyordu, printf'le
+# kurulan JSON govdedeki " yuzunden bozulup modulu tumden kaybediyordu.
+# Bugunku karsiliklari:
+#  1) POZITIF dogrulama: yanit, `current_condition[0].temp_C` sayiya
+#     cevrilebilen bir JSON olmali. Kota metni, HTML hata sayfasi, bos govde
+#     hepsi jq'da duser.
+#  2) JSON'u ve Pango markup kacisini `jq` yapiyor, `printf` degil.
+#  3) `-f` SART: `-s` tek basina 4xx/5xx'i basari sayar.
 set -u
 
-location="${1:-}"
+fallback="drpars"
 max_retries=5
 timeout=10
 retry_delay=2
-fallback="drpars"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/waybar-weather"
+state_file="$state_dir/city"
 
-emit() { jq -nc --arg t "$1" --arg tt "$2" '{text:$t, tooltip:$tt}'; }
-
-# HATA CIKTISI `jq`'YA BAGLI DEGIL, ve bu bilincli. `$fallback` sabit bir
-# tanimlayici -- kacis gerektiren karakteri yok --, o yuzden printf ile
-# kurulmasi ispatlanabilir sekilde guvenli. Bagli olsaydi jq'nun EKSIK oldugu
-# makinede betik hicbir sey basmazdi: olculdu (2026-08-24, jq PATH'te
-# golgelenerek) -- iki dal da 0 bayt. Bu, bu betigin bugun duzeltilen
-# arizasinin ta kendisi olurdu, yalnizca bir kat asagida.
+# HATA CIKTISI `jq`'YA BAGLI DEGIL, ve bu bilincli: `$fallback` sabit bir
+# tanimlayici, printf ile kurulmasi guvenli. Bagli olsaydi jq'nun eksik oldugu
+# makinede betik hicbir sey basmazdi (olculdu 2026-08-24, iki dal da 0 bayt).
 fail() { printf '{"text":"%s","tooltip":"%s"}\n' "$fallback" "$fallback"; exit 0; }
 
-# Hava durumu mu, hata metni mi? Bayt duzeyinde de calisir, yani waybar'a
-# bos bir LANG ile gelinse de hukum degismez.
-is_weather() { [[ "$1" =~ [0-9]° ]]; }
+mode=show
+if [ "${1:-}" = "--next" ]; then mode=next; shift; fi
+cities=("$@")
+[ "${#cities[@]}" -gt 0 ] || fail
 
-fetch() { curl -sf -m "$timeout" "https://wttr.in/${location}?format=$1"; }
+# Secili sehrin listedeki sirasi; bulunamazsa 0.
+current_index() {
+  local saved i
+  saved=$(cat "$state_file" 2>/dev/null) || saved=""
+  for i in "${!cities[@]}"; do
+    [ "${cities[$i]}" = "$saved" ] && { echo "$i"; return; }
+  done
+  echo 0
+}
 
-[ -n "$location" ] || fail
+if [ "$mode" = next ]; then
+  idx=$(current_index)
+  mkdir -p "$state_dir"
+  printf '%s\n' "${cities[$(((idx + 1) % ${#cities[@]}))]}" >"$state_file"
+  exit 0
+fi
+
+city="${cities[$(current_index)]}"
+pos="$(($(current_index) + 1))/${#cities[@]}"
+
+# Tooltip ve metin satiri. Girdi wttr.in j1; $city, $now ("YYYY-MM-DD HH"),
+# $pos disaridan. Her dis metin `esc`'ten gecer: waybar tooltip'i Pango
+# markup olarak okur, cozulemeyen markup tooltip'i bos birakir.
+read -r -d '' JQ_PROG <<'JQ'
+def esc: gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;");
+def desc: (.lang_tr[0].value // .weatherDesc[0].value // "?") | sub("\\s+$"; "") | esc;
+
+# wttr.in'in WWO kodu -> emoji (wttr.in'in kendi eslemesinin sadelesmis hali)
+def icon($night):
+  (.weatherCode | tonumber) as $c
+  | if   $c == 113 then (if $night then "🌙" else "☀️" end)
+    elif $c == 116 then (if $night then "☁️" else "⛅" end)
+    elif $c == 119 or $c == 122 then "☁️"
+    elif [143,248,260] | index($c) then "🌫️"
+    elif [200,386,389,392] | index($c) then "⛈️"
+    elif [227,230,320,323,326,329,332,335,338,368,371,395] | index($c) then "🌨️"
+    elif [179,182,185,281,284,311,314,317,350,362,365,374,377] | index($c) then "🌧️"
+    elif [176,263,353] | index($c) then "🌦️"
+    else "🌧️" end;
+
+# "07:47 AM" -> "07:47"; tanimadigi metni ("No moonrise") oldugu gibi birakir
+def h24:
+  capture("^(?<h>\\d+):(?<m>\\d+) (?<p>AM|PM)$") as $t
+  | (($t.h | tonumber) % 12 + (if $t.p == "PM" then 12 else 0 end)) as $h
+  | "\(if $h < 10 then "0" else "" end)\($h):\($t.m)"
+  // .;
+
+# Ruzgarin GELDIGI yon (wttr.in'le ayni: ok esintinin gittigi yonu gosterir)
+def wind:
+  ((((.winddirDegree | tonumber) + 22.5) / 45 | floor) % 8) as $i
+  | "\(["↓","↙","←","↖","↑","↗","→","↘"][$i]) \(.windspeedKmph) km/sa (\(["K","KD","D","GD","G","GB","B","KB"][$i]))";
+
+def moon:
+  {"New Moon":"🌑","Waxing Crescent":"🌒","First Quarter":"🌓","Waxing Gibbous":"🌔",
+   "Full Moon":"🌕","Waning Gibbous":"🌖","Last Quarter":"🌗","Waning Crescent":"🌘"}[.] // "🌙";
+
+def pad($n): tostring | if length < $n then (" " * ($n - length)) + . else . end;
+def deg: "\(.)°";
+
+def dayname($i):
+  if $i == 0 then "Bugün" elif $i == 1 then "Yarın"
+  else (.date | strptime("%Y-%m-%d") | mktime | strftime("%w") | tonumber) as $w
+       | ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"][$w]
+  end;
+
+(.current_condition[0]) as $cc
+| ($cc.temp_C | tonumber) as $_valid          # sayi degilse jq hata verir
+| (.weather[0]) as $today
+| ($today.astronomy[0]) as $astro
+| ($astro.sunrise | h24) as $rise
+| ($astro.sunset  | h24) as $set
+| ($now[11:13] + ":00") as $hm
+| ($hm < $rise or $hm >= $set) as $night
+| ($cc | icon($night)) as $ic
+| ($city | esc) as $cityE
+
+# Simdiden itibaren 8 saatlik dilim (3 saat aralikli), gun sinirini asarak
+| [ .weather[] as $d | $d.hourly[]
+      | . + {key: "\($d.date) \((.time | tonumber / 100) | floor | tostring | if length < 2 then "0" + . else . end)"} ]
+  as $slots
+| ($now[0:11] + (($now[11:13] | tonumber / 3 | floor) * 3 | tostring | if length < 2 then "0" + . else . end)) as $nowkey
+| [ $slots[] | select(.key >= $nowkey) ][0:8] as $next
+
+| {
+  text: "\($city) \($ic) \($cc.temp_C | deg)C",
+  tooltip: ([
+    "<span size='x-large'><b>\($cityE)</b></span>   <i>\($cc | desc)</i>",
+    "<span size='xx-large'><b>\($ic) \($cc.temp_C | deg)C</b></span>   hissedilen <b>\($cc.FeelsLikeC | deg)</b>   ·   ↓ \($today.mintempC | deg)  ↑ \($today.maxtempC | deg)",
+    "",
+    "💧 Nem <b>%\($cc.humidity)</b>      🌬️ Rüzgâr <b>\($cc | wind)</b>",
+    "🧭 Basınç <b>\($cc.pressure) hPa</b>   👁️ Görüş <b>\($cc.visibility) km</b>",
+    "☁️ Bulut <b>%\($cc.cloudcover)</b>     ☔ Yağış <b>\($cc.precipMM) mm</b>     🕶️ UV <b>\($cc.uvIndex)</b>",
+    "🌅 <b>\($rise)</b>   🌇 <b>\($set)</b>   \($astro.moon_phase | moon) Ay <b>%\($astro.moon_illumination)</b>",
+    "",
+    "<b>Saatlik</b>",
+    ( $next[] as $h
+      | ($h.key[11:13] + ":00") as $t
+      | ($t < $rise or $t >= $set) as $n
+      | "<tt>\($t)  \($h | icon($n))  \($h.tempC | deg | pad(4))  ☔\("%" + $h.chanceofrain | pad(4))  🌬️\($h.windspeedKmph | pad(3)) km/sa</tt>  <i>\($h | desc)</i>" ),
+    "",
+    "<b>Önümüzdeki günler</b>",
+    ( .weather | to_entries[] | .key as $i | .value
+      | (.hourly[4]) as $noon
+      | ([.hourly[].chanceofrain | tonumber] | max) as $rain
+      | ([.hourly[].chanceofsnow | tonumber] | max) as $snow
+      | "<tt>\(dayname($i) | . + (" " * (10 - length)))\($noon | icon(false))  \(.mintempC | deg | pad(4)) / \(.maxtempC | deg | pad(4))  ☔\("%\($rain)" | pad(4))\(if $snow > 0 then "  ❄️%\($snow)" else "" end)</tt>  <i>\($noon | desc)</i>" ),
+    "",
+    "<span size='small'>\($pos) · sol tık: şehir değiştir · wttr.in</span>"
+  ] | join("\n"))
+}
+JQ
 
 for ((i = 1; i <= max_retries; i++)); do
-  text=$(fetch 1)          || { sleep "$retry_delay"; continue; }
-  is_weather "$text"       || { sleep "$retry_delay"; continue; }
-
-  # Tooltip ikincil: alinamazsa isi bozmaz, metnin kendisine duser. Yoksa
-  # gecerli bir sicaklik olcumu tooltip yuzunden "drpars"a cevrilirdi.
-  tooltip=$(fetch 4) && is_weather "$tooltip" || tooltip="$text"
-
-  # jq eksikse emit dusuyor; o zaman bos cikti yerine gorunur bir isaret ver.
-  emit "$(echo "$text" | sed -E 's/\s+/ /g')" \
-       "$(echo "$tooltip" | sed -E 's/\s+/ /g')" || fail
+  raw=$(curl -sf -m "$timeout" --get --data-urlencode "format=j1" --data-urlencode "lang=tr" \
+        "https://wttr.in/${city}") || { sleep "$retry_delay"; continue; }
+  out=$(jq -c --arg city "$city" --arg now "$(date '+%Y-%m-%d %H')" --arg pos "$pos" \
+        "$JQ_PROG" <<<"$raw" 2>/dev/null) || { sleep "$retry_delay"; continue; }
+  [ -n "$out" ] || { sleep "$retry_delay"; continue; }
+  printf '%s\n' "$out"
   exit 0
 done
 
