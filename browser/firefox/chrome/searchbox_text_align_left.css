@@ -1,3 +1,5 @@
-#urlbar #urlbar-input {
+/* Local: `:root` raises specificity. userChrome.css has the same selector
+   with `center !important`, and @import rules lose ties to the importer. */
+:root #urlbar #urlbar-input {
   text-align: left !important;
 }
